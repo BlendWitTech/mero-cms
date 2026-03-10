@@ -279,13 +279,18 @@ model Project {
   heroVideo      String?  // Video for the 35% slot
   gallery        String[] // Array of Media URLs or IDs
   model3dUrl     String?  // URL to GLTF/GLB or Vimeo
-  status         String          @default("COMPLETED") // COMPLETED, IN_PROGRESS, CONCEPT
+  status         String          @default("COMPLETED") // COMPLETED, IN_PROGRESS, CONCEPT, available, limited, sold
   categoryId     String?
   category       ProjectCategory? @relation(fields: [categoryId], references: [id])
   client         String?
   completionDate DateTime?
   location       String?
   featured       Boolean  @default(false)
+  // Real-estate / multi-use fields
+  content        String?  @db.Text  // Full markdown description for detail page
+  priceFrom      String?            // e.g., "1500000" (NPR)
+  areaFrom       String?            // e.g., "3 Anna"
+  areaTo         String?            // e.g., "16 Anna"
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   seoMeta        SeoMeta?

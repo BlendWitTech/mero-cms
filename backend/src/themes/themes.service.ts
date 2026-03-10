@@ -2,8 +2,12 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import * as AdmZip from 'adm-zip';
 import * as path from 'path';
 import * as fs from 'fs';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { PrismaService } from '../prisma/prisma.service';
+import { SetupService } from '../setup/setup.service';
 
+const execAsync = promisify(exec);
 @Injectable()
 export class ThemesService {
     /** Themes uploaded via the UI (ZIP upload) */
@@ -18,7 +22,10 @@ export class ThemesService {
     /** Media uploads directory */
     private readonly mediaUploadPath = path.join(process.cwd(), 'uploads');
 
-    constructor(private prisma: PrismaService) {
+    constructor(
+        private prisma: PrismaService,
+        private setupService: SetupService,
+    ) {
         this.ensureDir(this.uploadPath);
         this.ensureDir(this.mediaUploadPath);
     }
@@ -89,7 +96,7 @@ export class ThemesService {
         return themes;
     }
 
-    async setupTheme(themeName: string) {
+    async setupTheme(themeName: string, importDemoContent: boolean = true) {
         const themePath = this.findThemePath(themeName);
         if (!themePath) throw new BadRequestException(`Theme "${themeName}" not found`);
 
@@ -99,8 +106,11 @@ export class ThemesService {
         }
 
         try {
+            await this.installDependencies(themePath);
+
             const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-            const seed = config.seed || config;
+            // Support both `seedData` (new) and `seed` (legacy) keys, or the root object
+            const seed = config.seedData || config.seed || {};
 
             const results: Record<string, number> = {
                 posts: 0,
@@ -115,39 +125,42 @@ export class ThemesService {
                 media: 0,
             };
 
-            if (this.isModuleEnabled('blogs') && seed.posts?.length) {
-                results.posts = await this.setupPosts(seed.posts);
-            }
-            if (this.isModuleEnabled('pages') && seed.pages?.length) {
-                results.pages = await this.setupPages(seed.pages);
-            }
-            if (this.isModuleEnabled('menus') && seed.menus?.length) {
-                results.menus = await this.setupMenus(seed.menus);
-            }
-            if (this.isModuleEnabled('projects', 'project-categories') && seed.projectCategories?.length) {
-                results.categories = await this.setupProjectCategories(seed.projectCategories);
-            }
-            if (this.isModuleEnabled('projects') && seed.projects?.length) {
-                results.projects = await this.setupProjects(seed.projects);
-            }
-            if (this.isModuleEnabled('team') && seed.team?.length) {
-                results.team = await this.setupTeam(seed.team);
-            }
-            if (this.isModuleEnabled('testimonials') && seed.testimonials?.length) {
-                results.testimonials = await this.setupTestimonials(seed.testimonials);
-            }
-            if (this.isModuleEnabled('services') && seed.services?.length) {
-                results.services = await this.setupServices(seed.services);
-            }
-            if (this.isModuleEnabled('timeline') && seed.milestones?.length) {
-                results.milestones = await this.setupMilestones(seed.milestones);
-            }
+            if (importDemoContent) {
+                if (this.isModuleEnabled('blogs') && seed.posts?.length) {
+                    results.posts = await this.setupPosts(seed.posts);
+                }
+                if (this.isModuleEnabled('pages') && seed.pages?.length) {
+                    results.pages = await this.setupPages(seed.pages);
+                }
+                if (this.isModuleEnabled('menus') && seed.menus?.length) {
+                    results.menus = await this.setupMenus(seed.menus);
+                }
+                if (this.isModuleEnabled('projects', 'project-categories') && seed.projectCategories?.length) {
+                    results.categories = await this.setupProjectCategories(seed.projectCategories);
+                }
+                if (this.isModuleEnabled('projects') && seed.projects?.length) {
+                    results.projects = await this.setupProjects(seed.projects);
+                }
+                if (this.isModuleEnabled('team') && seed.team?.length) {
+                    results.team = await this.setupTeam(seed.team);
+                }
+                if (this.isModuleEnabled('testimonials') && seed.testimonials?.length) {
+                    results.testimonials = await this.setupTestimonials(seed.testimonials);
+                }
+                if (this.isModuleEnabled('services') && seed.services?.length) {
+                    results.services = await this.setupServices(seed.services);
+                }
+                if (this.isModuleEnabled('timeline') && seed.milestones?.length) {
+                    results.milestones = await this.setupMilestones(seed.milestones);
+                }
 
-            // Import media files from theme's media/ directory
-            results.media = await this.setupMedia(themePath, seed.media || []);
+                // Import media files from theme's media/ directory
+                results.media = await this.setupMedia(themePath, seed.media || []);
+            }
 
             return { message: `Theme "${themeName}" setup completed`, results };
         } catch (error) {
+            console.error("SetupTheme Error:", error);
             throw new BadRequestException(`Failed to setup theme: ${error.message}`);
         }
     }
@@ -192,6 +205,31 @@ export class ThemesService {
         };
     }
 
+    async prepareThemeModules(themeName: string) {
+        const themePath = this.findThemePath(themeName);
+        if (!themePath) throw new BadRequestException(`Theme "${themeName}" not found`);
+
+        const configPath = path.join(themePath, 'theme.json');
+        if (!fs.existsSync(configPath)) {
+            throw new BadRequestException(`Theme "${themeName}" is missing theme.json`);
+        }
+
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        const requiredModules: string[] = config.requiredModules || [];
+
+        const enabledModules = await this.setupService.getEnabledModules();
+        const missingModules = requiredModules.filter(rm => !enabledModules.includes(rm));
+
+        if (missingModules.length > 0) {
+            const allModules = [...new Set([...enabledModules, ...missingModules])];
+            // This rebuilds the Prisma schema, runs db push, and sets a 1.5s timeout to process.exit(0)
+            await this.setupService.updateEnabledModules(allModules);
+            return { missingModules, needsRestart: true };
+        }
+
+        return { missingModules: [], needsRestart: false };
+    }
+
     async listThemesWithDetails() {
         const names = await this.listThemes();
         return Promise.all(names.map(name => this.getThemeDetails(name)));
@@ -220,9 +258,19 @@ export class ThemesService {
         return { deployedUrl: url };
     }
 
-    async setActiveTheme(themeName: string) {
+    async setActiveTheme(themeName: string, clearData: boolean = false, importDemoContent: boolean = false) {
         const themePath = this.findThemePath(themeName);
         if (!themePath) throw new BadRequestException(`Theme "${themeName}" not found`);
+
+        if (clearData) {
+            await this.purgeDatabase();
+        }
+
+        if (clearData && importDemoContent) {
+            await this.setupTheme(themeName, true);
+        } else {
+            await this.installDependencies(themePath);
+        }
 
         await this.prisma.setting.upsert({
             where: { key: 'active_theme' },
@@ -231,6 +279,53 @@ export class ThemesService {
         });
 
         return { message: `Theme "${themeName}" is now active` };
+    }
+
+    private async installDependencies(themePath: string) {
+        if (!fs.existsSync(path.join(themePath, 'node_modules'))) {
+            try {
+                await execAsync('npm install', { cwd: themePath });
+            } catch (error) {
+                console.error(`Failed to install dependencies for ${themePath}:`, error);
+                throw new BadRequestException('Failed to install theme dependencies');
+            }
+        }
+    }
+
+    private async purgeDatabase() {
+        try {
+            if (this.isModuleEnabled('blogs')) {
+                await (this.prisma as any).post.deleteMany({});
+            }
+            if (this.isModuleEnabled('pages')) {
+                await (this.prisma as any).page.deleteMany({});
+            }
+            if (this.isModuleEnabled('menus')) {
+                await (this.prisma as any).menuItem.deleteMany({});
+                await (this.prisma as any).menu.deleteMany({});
+            }
+            if (this.isModuleEnabled('projects')) {
+                await (this.prisma as any).project.deleteMany({});
+                if (this.isModuleEnabled('project-categories')) {
+                    await (this.prisma as any).projectCategory.deleteMany({});
+                }
+            }
+            if (this.isModuleEnabled('team')) {
+                await (this.prisma as any).teamMember.deleteMany({});
+            }
+            if (this.isModuleEnabled('testimonials')) {
+                await (this.prisma as any).testimonial.deleteMany({});
+            }
+            if (this.isModuleEnabled('services')) {
+                await (this.prisma as any).service.deleteMany({});
+            }
+            if (this.isModuleEnabled('timeline')) {
+                await (this.prisma as any).milestone.deleteMany({});
+            }
+        } catch (e) {
+            console.error('Failed to purge database:', e);
+            throw new BadRequestException('Failed to clear old data');
+        }
     }
 
     async getActiveTheme() {
@@ -334,11 +429,36 @@ export class ThemesService {
     private async setupProjects(projects: any[]): Promise<number> {
         for (const proj of projects) {
             const slug = proj.slug || proj.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-            const { slug: _slug, ...rest } = proj;
+
+            // Resolve category slug → categoryId
+            let categoryId: string | undefined;
+            if (proj.category && typeof proj.category === 'string') {
+                const cat = await (this.prisma as any).projectCategory.findFirst({ where: { slug: proj.category } });
+                categoryId = cat?.id;
+            } else if (proj.categoryId) {
+                categoryId = proj.categoryId;
+            }
+
+            // Only include fields that exist in the Project Prisma model
+            const data: any = {
+                title: proj.title,
+                description: proj.description || '',
+                content: proj.content || null,
+                coverImage: proj.coverImage || proj.featuredImage || null,
+                featured: proj.featured ?? false,
+                location: proj.location || null,
+                status: proj.status || 'COMPLETED',
+                // Real-estate specific fields (added in schema)
+                priceFrom: proj.priceFrom || null,
+                areaFrom: proj.areaFrom || null,
+                areaTo: proj.areaTo || null,
+            };
+            if (categoryId) data.categoryId = categoryId;
+
             await (this.prisma as any).project.upsert({
                 where: { slug },
-                update: rest,
-                create: { ...rest, slug },
+                update: data,
+                create: { ...data, slug },
             });
         }
         return projects.length;
@@ -358,11 +478,21 @@ export class ThemesService {
 
     private async setupTestimonials(testimonials: any[]): Promise<number> {
         for (const t of testimonials) {
-            const existing = await (this.prisma as any).testimonial.findFirst({ where: { clientName: t.clientName } });
+            // Normalise field names: theme.json may use `name`/`role`/`avatarUrl`,
+            // Prisma schema uses `clientName`/`clientRole`/`clientPhoto`
+            const data: any = {
+                clientName: t.clientName || t.name,
+                clientRole: t.clientRole || t.role || null,
+                clientCompany: t.clientCompany || null,
+                content: t.content,
+                rating: t.rating ?? 5,
+                clientPhoto: t.clientPhoto || t.avatarUrl || null,
+            };
+            const existing = await (this.prisma as any).testimonial.findFirst({ where: { clientName: data.clientName } });
             if (existing) {
-                await (this.prisma as any).testimonial.update({ where: { id: existing.id }, data: t });
+                await (this.prisma as any).testimonial.update({ where: { id: existing.id }, data });
             } else {
-                await (this.prisma as any).testimonial.create({ data: t });
+                await (this.prisma as any).testimonial.create({ data });
             }
         }
         return testimonials.length;

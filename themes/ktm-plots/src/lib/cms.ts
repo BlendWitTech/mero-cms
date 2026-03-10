@@ -2,20 +2,33 @@ const API = process.env.CMS_API_URL || 'http://localhost:3001';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export interface SiteSettings {
+  siteTitle: string;
+  tagline: string;
+  logoUrl: string | null;
+  faviconUrl: string | null;
+  primaryColor: string | null;
+  footerText: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  address: string | null;
+  socialLinks: Record<string, string> | null;
+  activeTheme: string | null;
+  // Customisable section content (editable via Admin > Settings)
+  heroTitle: string | null;
+  heroSubtitle: string | null;
+  heroBgImage: string | null;
+  heroBgVideo: string | null;
+  aboutTitle: string | null;
+  aboutContent: string | null;
+  aboutImage: string | null;
+  ctaText: string | null;
+  ctaUrl: string | null;
+  metaDescription: string | null;
+}
+
 export interface SiteData {
-  settings: {
-    siteTitle: string;
-    tagline: string;
-    logoUrl: string | null;
-    faviconUrl: string | null;
-    primaryColor: string | null;
-    footerText: string | null;
-    contactEmail: string | null;
-    contactPhone: string | null;
-    address: string | null;
-    socialLinks: Record<string, string> | null;
-    activeTheme: string | null;
-  };
+  settings: SiteSettings;
   menus: Menu[];
   services: Service[];
   testimonials: Testimonial[];
@@ -40,18 +53,19 @@ export interface MenuItem {
 export interface Service {
   id: string;
   title: string;
-  slug: string;
+  slug?: string;
   description: string;
   icon: string | null;
+  order?: number;
 }
 
 export interface Testimonial {
   id: string;
-  name: string;
-  role: string | null;
+  name: string;        // mapped from clientName in backend
+  role: string | null; // mapped from clientRole in backend
   content: string;
   rating: number | null;
-  avatarUrl: string | null;
+  avatarUrl: string | null; // mapped from clientPhoto in backend
 }
 
 export interface Post {
@@ -60,7 +74,7 @@ export interface Post {
   slug: string;
   excerpt: string | null;
   content: string;
-  featuredImageUrl: string | null;
+  featuredImageUrl: string | null; // mapped from coverImage in backend
   status: string;
   featured: boolean;
   publishedAt: string | null;
@@ -75,8 +89,8 @@ export interface Project {
   slug: string;
   description: string | null;
   content: string | null;
-  featuredImageUrl: string | null;
-  images?: string[];
+  featuredImageUrl: string | null; // mapped from coverImage in backend
+  images: string[];
   featured: boolean;
   status: string | null;
   location: string | null;
@@ -94,14 +108,37 @@ export interface ProjectsResponse {
   limit: number;
 }
 
-export interface Page {
-  id: string;
-  title: string;
-  slug: string;
-  content: string;
-  metaTitle: string | null;
-  metaDescription: string | null;
-}
+// ─── Fallback data (used when backend is unreachable) ─────────────────────────
+
+const FALLBACK_SITE_DATA: SiteData = {
+  settings: {
+    siteTitle: 'KTM Plots',
+    tagline: "Kathmandu Valley's Trusted Land Partner",
+    logoUrl: null,
+    faviconUrl: null,
+    primaryColor: '#1B4332',
+    footerText: null,
+    contactEmail: null,
+    contactPhone: null,
+    address: null,
+    socialLinks: null,
+    activeTheme: 'ktm-plots',
+    heroTitle: null,
+    heroSubtitle: null,
+    heroBgImage: null,
+    heroBgVideo: null,
+    aboutTitle: null,
+    aboutContent: null,
+    aboutImage: null,
+    ctaText: null,
+    ctaUrl: null,
+    metaDescription: null,
+  },
+  menus: [],
+  services: [],
+  testimonials: [],
+  recentPosts: [],
+};
 
 // ─── Fetchers ─────────────────────────────────────────────────────────────────
 
@@ -109,27 +146,18 @@ export async function getSiteData(): Promise<SiteData> {
   try {
     const res = await fetch(`${API}/public/site-data`, { next: { revalidate: 60 } });
     if (!res.ok) throw new Error(`${res.status}`);
-    return res.json();
-  } catch {
+    const data = await res.json();
     return {
-      settings: {
-        siteTitle: 'KTM Plots',
-        tagline: "Kathmandu Valley's Trusted Land Partner",
-        logoUrl: null,
-        faviconUrl: null,
-        primaryColor: '#1B4332',
-        footerText: null,
-        contactEmail: null,
-        contactPhone: null,
-        address: null,
-        socialLinks: null,
-        activeTheme: 'ktm-plots',
-      },
-      menus: [],
-      services: [],
-      testimonials: [],
-      recentPosts: [],
+      ...FALLBACK_SITE_DATA,
+      ...data,
+      settings: { ...FALLBACK_SITE_DATA.settings, ...data.settings },
+      menus: data.menus ?? [],
+      services: data.services ?? [],
+      testimonials: data.testimonials ?? [],
+      recentPosts: data.recentPosts ?? [],
     };
+  } catch {
+    return FALLBACK_SITE_DATA;
   }
 }
 
@@ -165,7 +193,9 @@ export async function getPlotBySlug(slug: string): Promise<Project | null> {
   try {
     const res = await fetch(`${API}/projects/public/${slug}`, { next: { revalidate: 120 } });
     if (!res.ok) return null;
-    return res.json();
+    const p = await res.json();
+    if (!p) return null;
+    return { ...p, featuredImageUrl: p.featuredImageUrl ?? p.coverImage ?? null, images: p.images ?? p.gallery ?? [] };
   } catch {
     return null;
   }
@@ -175,8 +205,7 @@ export async function getPosts(params?: {
   page?: number;
   limit?: number;
 }): Promise<{ data: Post[]; total: number }> {
-  const q = new URLSearchParams();
-  q.set('status', 'published');
+  const q = new URLSearchParams({ status: 'PUBLISHED' });
   if (params?.page) q.set('page', String(params.page));
   if (params?.limit) q.set('limit', String(params.limit));
   try {
@@ -198,16 +227,6 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   }
 }
 
-export async function getPageBySlug(slug: string): Promise<Page | null> {
-  try {
-    const res = await fetch(`${API}/public/pages/${slug}`, { next: { revalidate: 300 } });
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
-  }
-}
-
 export async function submitLead(data: {
   name: string;
   email: string;
@@ -222,7 +241,7 @@ export async function submitLead(data: {
       body: JSON.stringify(data),
     });
     const json = await res.json();
-    if (!res.ok) return { success: false, message: json.message || 'Failed to submit.' };
+    if (!res.ok && !json.success) return { success: false, message: json.message || 'Failed to submit.' };
     return { success: true };
   } catch {
     return { success: false, message: 'Network error. Please try again.' };

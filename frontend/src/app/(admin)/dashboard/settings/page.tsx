@@ -20,7 +20,9 @@ import {
     EnvelopeIcon,
     CloudIcon,
     ServerStackIcon,
-    PuzzlePieceIcon
+    PuzzlePieceIcon,
+    ShareIcon,
+    BuildingOffice2Icon,
 } from '@heroicons/react/24/outline';
 import { apiRequest } from '@/lib/api';
 import Alert from '@/components/ui/Alert';
@@ -164,6 +166,7 @@ export default function SettingsPage() {
 
     const tabs = [
         { id: 'branding', label: 'Branding & Identity', icon: GlobeAltIcon },
+        { id: 'website', label: 'Website & Social', icon: BuildingOffice2Icon },
         { id: 'modules', label: 'Modules', icon: PuzzlePieceIcon },
         { id: 'email', label: 'Email Services', icon: EnvelopeIcon },
         { id: 'media', label: 'Media Cloud', icon: CloudIcon },
@@ -284,6 +287,196 @@ export default function SettingsPage() {
                                     Push Global Update
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Website & Social Tab */}
+                {activeTab === 'website' && (
+                    <div className="space-y-10">
+                        {/* Contact Info */}
+                        <div className="bg-white rounded-[3rem] p-10 lg:p-12 shadow-2xl shadow-slate-200/40 border border-slate-200/60 space-y-8">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/20 text-white">
+                                        <BuildingOffice2Icon className="h-6 w-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-900">Contact Information</h3>
+                                        <p className="text-sm text-slate-400">Shown in the footer, contact page, and CTA sections.</p>
+                                    </div>
+                                </div>
+                                {!isSectionEditing('contact', ['contact_email', 'contact_phone', 'address']) && (
+                                    <button onClick={() => toggleEdit('contact')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
+                                        Edit
+                                    </button>
+                                )}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {[
+                                    { key: 'contact_email', label: 'Contact Email', placeholder: 'info@yourcompany.com', type: 'email' },
+                                    { key: 'contact_phone', label: 'Phone Number', placeholder: '+977 9800000000', type: 'text' },
+                                    { key: 'footer_text', label: 'Footer Text / Tagline', placeholder: 'Your tagline here', type: 'text' },
+                                    { key: 'primary_color', label: 'Brand Primary Color', placeholder: '#1B4332', type: 'text' },
+                                ].map(f => (
+                                    <div key={f.key} className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">{f.label}</label>
+                                        <input
+                                            type={f.type}
+                                            disabled={!isSectionEditing('contact', ['contact_email', 'contact_phone', 'address'])}
+                                            value={settings[f.key] || ''}
+                                            onChange={(e) => setSettings({ ...settings, [f.key]: e.target.value })}
+                                            placeholder={f.placeholder}
+                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-blue-600/5 focus:bg-white focus:border-blue-600/20 transition-all disabled:opacity-60"
+                                        />
+                                    </div>
+                                ))}
+                                <div className="md:col-span-2 space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Address</label>
+                                    <textarea
+                                        rows={2}
+                                        disabled={!isSectionEditing('contact', ['contact_email', 'contact_phone', 'address'])}
+                                        value={settings.address || ''}
+                                        onChange={(e) => setSettings({ ...settings, address: e.target.value })}
+                                        placeholder="123 Main Street, Kathmandu, Nepal"
+                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-blue-600/5 focus:bg-white focus:border-blue-600/20 transition-all disabled:opacity-60 resize-none"
+                                    />
+                                </div>
+                            </div>
+                            {isSectionEditing('contact', ['contact_email', 'contact_phone', 'address']) && editModes['contact'] && (
+                                <div className="flex gap-4 pt-4">
+                                    <button onClick={() => handleSave('contact')} className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all">Save</button>
+                                    <button onClick={() => handleCancel('contact')} className="bg-slate-100 text-slate-500 px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Social Media Links */}
+                        <div className="bg-white rounded-[3rem] p-10 lg:p-12 shadow-2xl shadow-slate-200/40 border border-slate-200/60 space-y-8">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-violet-600 rounded-2xl shadow-xl shadow-violet-500/20 text-white">
+                                        <ShareIcon className="h-6 w-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-900">Social Media Links</h3>
+                                        <p className="text-sm text-slate-400">Used in the footer, header, and wherever social icons appear on the theme.</p>
+                                    </div>
+                                </div>
+                                {!isSectionEditing('social', ['social_facebook', 'social_instagram']) && (
+                                    <button onClick={() => toggleEdit('social')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
+                                        Edit
+                                    </button>
+                                )}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {[
+                                    { key: 'social_facebook', label: 'Facebook', placeholder: 'https://facebook.com/yourpage', color: '#1877F2' },
+                                    { key: 'social_instagram', label: 'Instagram', placeholder: 'https://instagram.com/yourhandle', color: '#E4405F' },
+                                    { key: 'social_twitter', label: 'Twitter / X', placeholder: 'https://x.com/yourhandle', color: '#000000' },
+                                    { key: 'social_linkedin', label: 'LinkedIn', placeholder: 'https://linkedin.com/company/yourco', color: '#0A66C2' },
+                                    { key: 'social_youtube', label: 'YouTube', placeholder: 'https://youtube.com/@yourchannel', color: '#FF0000' },
+                                    { key: 'social_whatsapp', label: 'WhatsApp', placeholder: '+977 9800000000 (number only)', color: '#25D366' },
+                                    { key: 'social_tiktok', label: 'TikTok', placeholder: 'https://tiktok.com/@yourhandle', color: '#000000' },
+                                ].map(f => (
+                                    <div key={f.key} className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2" style={{ color: f.color }}>
+                                            {f.label}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            disabled={!isSectionEditing('social', ['social_facebook', 'social_instagram'])}
+                                            value={settings[f.key] || ''}
+                                            onChange={(e) => setSettings({ ...settings, [f.key]: e.target.value })}
+                                            placeholder={f.placeholder}
+                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-violet-500/5 focus:bg-white focus:border-violet-500/20 transition-all disabled:opacity-60"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            {isSectionEditing('social', ['social_facebook', 'social_instagram']) && editModes['social'] && (
+                                <div className="flex gap-4 pt-4">
+                                    <button onClick={() => handleSave('social')} className="bg-violet-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-violet-500/20 hover:bg-violet-700 transition-all">Save Social Links</button>
+                                    <button onClick={() => handleCancel('social')} className="bg-slate-100 text-slate-500 px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Page Section Content */}
+                        <div className="bg-white rounded-[3rem] p-10 lg:p-12 shadow-2xl shadow-slate-200/40 border border-slate-200/60 space-y-8">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-emerald-600 rounded-2xl shadow-xl shadow-emerald-500/20 text-white">
+                                        <Cog6ToothIcon className="h-6 w-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-900">Page Section Content</h3>
+                                        <p className="text-sm text-slate-400">Customise hero text, about section, and CTA buttons — overrides theme defaults.</p>
+                                    </div>
+                                </div>
+                                {!isSectionEditing('pagecontent', ['hero_title', 'about_title']) && (
+                                    <button onClick={() => toggleEdit('pagecontent')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
+                                        Edit
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Hero Section</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Hero Headline</label>
+                                        <input type="text" disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.hero_title || ''} onChange={(e) => setSettings({ ...settings, hero_title: e.target.value })} placeholder="Find Your Perfect Land Plot" className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Hero Background Image URL</label>
+                                        <input type="text" disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.hero_bg_image || ''} onChange={(e) => setSettings({ ...settings, hero_bg_image: e.target.value })} placeholder="/uploads/hero-bg.jpg" className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60" />
+                                    </div>
+                                    <div className="md:col-span-2 space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Hero Subtitle</label>
+                                        <textarea rows={2} disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.hero_subtitle || ''} onChange={(e) => setSettings({ ...settings, hero_subtitle: e.target.value })} placeholder="Premium residential and commercial plots with clear legal titles..." className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none transition-all disabled:opacity-60 resize-none" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">About Section (Home Page)</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">About Title</label>
+                                        <input type="text" disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.about_title || ''} onChange={(e) => setSettings({ ...settings, about_title: e.target.value })} placeholder="Kathmandu Valley's Most Trusted Land Partner" className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none transition-all disabled:opacity-60" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">About Image URL</label>
+                                        <input type="text" disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.about_image || ''} onChange={(e) => setSettings({ ...settings, about_image: e.target.value })} placeholder="/uploads/about.jpg" className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none transition-all disabled:opacity-60" />
+                                    </div>
+                                    <div className="md:col-span-2 space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">About Content</label>
+                                        <textarea rows={3} disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.about_content || ''} onChange={(e) => setSettings({ ...settings, about_content: e.target.value })} placeholder="Founded with a vision to make land ownership accessible..." className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none transition-all disabled:opacity-60 resize-none" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Call-to-Action Button</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">CTA Button Label</label>
+                                        <input type="text" disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.cta_text || ''} onChange={(e) => setSettings({ ...settings, cta_text: e.target.value })} placeholder="Browse Plots" className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none transition-all disabled:opacity-60" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">CTA Button URL</label>
+                                        <input type="text" disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.cta_url || ''} onChange={(e) => setSettings({ ...settings, cta_url: e.target.value })} placeholder="/plots" className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none transition-all disabled:opacity-60" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {isSectionEditing('pagecontent', ['hero_title', 'about_title']) && editModes['pagecontent'] && (
+                                <div className="flex gap-4 pt-4">
+                                    <button onClick={() => handleSave('pagecontent')} className="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 transition-all">Save Section Content</button>
+                                    <button onClick={() => handleCancel('pagecontent')} className="bg-slate-100 text-slate-500 px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

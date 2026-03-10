@@ -155,40 +155,39 @@ export class ProjectsService {
         });
     }
 
-    // Public methods
+    // Public methods — visible to unauthenticated theme visitors
     async findPublished(page: number = 1, limit: number = 10, category?: string) {
         const skip = (page - 1) * limit;
-        const where: any = { status: 'COMPLETED' };
+        // Exclude only hidden / draft-style statuses; all others are public
+        const where: any = { NOT: { status: 'CONCEPT' } };
         if (category) where.category = { slug: category };
 
         const [projects, total] = await Promise.all([
             this.prisma.project.findMany({
                 where,
-                orderBy: { completionDate: 'desc' },
+                orderBy: { createdAt: 'desc' },
                 skip,
                 take: limit,
-                include: { category: true }
+                include: { category: true },
             }),
             this.prisma.project.count({ where }),
         ]);
 
         return {
-            projects,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit),
-            },
+            data: projects.map((p: any) => ({ ...p, featuredImageUrl: p.coverImage || null, images: p.gallery || [] })),
+            total,
+            page,
+            limit,
         };
     }
 
     async findFeatured() {
-        return this.prisma.project.findMany({
-            where: { featured: true, status: 'COMPLETED' },
-            orderBy: { completionDate: 'desc' },
+        const projects = await this.prisma.project.findMany({
+            where: { featured: true, NOT: { status: 'CONCEPT' } },
+            orderBy: { createdAt: 'desc' },
             take: 6,
-            include: { category: true }
+            include: { category: true },
         });
+        return projects.map((p: any) => ({ ...p, featuredImageUrl: p.coverImage || null, images: p.gallery || [] }));
     }
 }

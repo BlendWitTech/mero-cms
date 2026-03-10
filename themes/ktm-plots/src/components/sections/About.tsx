@@ -1,6 +1,19 @@
 import Link from 'next/link';
+import Image from 'next/image';
+import type { SiteData } from '@/lib/cms';
+import { getImageUrl } from '@/lib/cms';
 
-export default function About() {
+interface Props {
+  siteData: SiteData;
+}
+
+export default function About({ siteData }: Props) {
+  const { settings } = siteData;
+
+  const title = settings.aboutTitle || "Kathmandu Valley's Most Trusted Land Partner";
+  const content = settings.aboutContent || 'Founded with a vision to make land ownership accessible and transparent, KTM Plots has helped over 500 families and investors secure their piece of the Kathmandu Valley. We specialise in residential, commercial, and agricultural plots across Kathmandu, Lalitpur, Bhaktapur, and surrounding districts.';
+  const aboutImageUrl = getImageUrl(settings.aboutImage);
+
   const features = [
     {
       icon: (
@@ -23,7 +36,8 @@ export default function About() {
     {
       icon: (
         <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
       ),
       title: 'Dedicated Support',
@@ -50,10 +64,10 @@ export default function About() {
               About KTM Plots
             </div>
             <h2 className="section-title" style={{ marginBottom: '1rem' }}>
-              Kathmandu Valley&apos;s<br />Most Trusted Land Partner
+              {title}
             </h2>
             <p style={{ color: '#4B5563', marginBottom: '1.5rem', lineHeight: 1.8 }}>
-              Founded with a vision to make land ownership accessible and transparent, KTM Plots has helped over 500 families and investors secure their piece of the Kathmandu Valley. We specialise in residential, commercial, and agricultural plots across Kathmandu, Lalitpur, Bhaktapur, and surrounding districts.
+              {content}
             </p>
             <p style={{ color: '#4B5563', marginBottom: '2rem', lineHeight: 1.8 }}>
               Our team of legal experts, property consultants, and local specialists ensures that every transaction is smooth, secure, and stress-free — from your first site visit to the final registration at the Land Revenue Office.
@@ -63,25 +77,31 @@ export default function About() {
             </Link>
           </div>
 
-          {/* Feature grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-            {features.map((f) => (
-              <div
-                key={f.title}
-                style={{
-                  background: '#FFFFFF',
-                  borderRadius: '10px',
-                  padding: '1.5rem',
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                  borderTop: '3px solid #1B4332',
-                }}
-              >
-                <div style={{ color: '#1B4332', marginBottom: '0.75rem' }}>{f.icon}</div>
-                <h4 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.4rem', color: '#1B4332' }}>{f.title}</h4>
-                <p style={{ fontSize: '0.825rem', color: '#6B7280', lineHeight: 1.6 }}>{f.desc}</p>
-              </div>
-            ))}
-          </div>
+          {/* Image or feature grid */}
+          {aboutImageUrl ? (
+            <div style={{ borderRadius: '16px', overflow: 'hidden', aspectRatio: '4/3', position: 'relative', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+              <Image src={aboutImageUrl} alt="About KTM Plots" fill style={{ objectFit: 'cover' }} />
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+              {features.map((f) => (
+                <div
+                  key={f.title}
+                  style={{
+                    background: '#FFFFFF',
+                    borderRadius: '10px',
+                    padding: '1.5rem',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+                    borderTop: '3px solid #1B4332',
+                  }}
+                >
+                  <div style={{ color: '#1B4332', marginBottom: '0.75rem' }}>{f.icon}</div>
+                  <h4 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.4rem', color: '#1B4332' }}>{f.title}</h4>
+                  <p style={{ fontSize: '0.825rem', color: '#6B7280', lineHeight: 1.6 }}>{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

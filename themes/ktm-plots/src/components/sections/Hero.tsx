@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { SiteData } from '@/lib/cms';
+import { getImageUrl } from '@/lib/cms';
 
 interface Props {
   siteData: SiteData;
@@ -8,21 +10,39 @@ interface Props {
 export default function Hero({ siteData }: Props) {
   const { settings } = siteData;
 
+  // Use CMS-managed content if available, fall back to defaults
+  const title = settings.heroTitle || 'Find Your Perfect Land Plot';
+  const subtitle = settings.heroSubtitle || 'Premium residential and commercial plots with clear legal titles, transparent pricing, and full registration support. Your dream home starts here.';
+  const bgImageUrl = getImageUrl(settings.heroBgImage);
+  const ctaText = settings.ctaText || 'Browse Plots';
+  const ctaUrl = settings.ctaUrl || '/plots';
+
   return (
     <section
       style={{
-        background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 60%, #1B4332 100%)',
         position: 'relative',
         overflow: 'hidden',
         minHeight: '88vh',
         display: 'flex',
         alignItems: 'center',
+        background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 60%, #1B4332 100%)',
       }}
     >
+      {/* Background image (if set in CMS settings) */}
+      {bgImageUrl && (
+        <Image
+          src={bgImageUrl}
+          alt="Hero background"
+          fill
+          style={{ objectFit: 'cover', opacity: 0.25 }}
+          priority
+        />
+      )}
+
       {/* Decorative mountain silhouette */}
       <svg
         viewBox="0 0 1440 320"
-        style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', opacity: 0.15 }}
+        style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', opacity: bgImageUrl ? 0.05 : 0.15 }}
         preserveAspectRatio="none"
       >
         <path fill="#52B788" d="M0,320 L0,200 L180,100 L360,180 L540,60 L720,140 L900,40 L1080,120 L1260,70 L1440,130 L1440,320 Z" />
@@ -56,7 +76,7 @@ export default function Hero({ siteData }: Props) {
           >
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#D4A017', display: 'inline-block' }} />
             <span style={{ color: '#D4A017', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.05em' }}>
-              KATHMANDU VALLEY&apos;S TRUSTED LAND PARTNER
+              {settings.tagline || "KATHMANDU VALLEY'S TRUSTED LAND PARTNER"}
             </span>
           </div>
 
@@ -69,9 +89,17 @@ export default function Hero({ siteData }: Props) {
               marginBottom: '1.25rem',
             }}
           >
-            Find Your Perfect
-            <span style={{ color: '#D4A017', display: 'block' }}>Land Plot</span>
-            in Kathmandu Valley
+            {title.includes('\n')
+              ? title.split('\n').map((line, i) => (
+                  <span key={i} style={i > 0 ? { color: '#D4A017', display: 'block' } : undefined}>{line}</span>
+                ))
+              : (
+                <>
+                  {title.split(' ').slice(0, -3).join(' ')}{' '}
+                  <span style={{ color: '#D4A017' }}>{title.split(' ').slice(-3).join(' ')}</span>
+                </>
+              )
+            }
           </h1>
 
           <p
@@ -83,12 +111,12 @@ export default function Hero({ siteData }: Props) {
               lineHeight: 1.7,
             }}
           >
-            Premium residential and commercial plots with clear legal titles, transparent pricing, and full registration support. Your dream home starts here.
+            {subtitle}
           </p>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '3rem' }}>
-            <Link href="/plots" className="btn-primary" style={{ fontSize: '1rem', padding: '0.85rem 2.25rem' }}>
-              Browse Plots
+            <Link href={ctaUrl} className="btn-primary" style={{ fontSize: '1rem', padding: '0.85rem 2.25rem' }}>
+              {ctaText}
             </Link>
             <Link href="/contact" className="btn-outline" style={{ fontSize: '1rem', padding: '0.85rem 2.25rem' }}>
               Free Consultation
