@@ -1,0 +1,38 @@
+// Bundled: Post, Category, Tag (Comment is in comments.prisma)
+model Post {
+  id          String     @id @default(uuid())
+  title       String
+  slug        String     @unique
+  content     String
+  excerpt     String?
+  coverImage  String?
+  status      String     @default("DRAFT")
+  authorId    String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  featured    Boolean    @default(false)
+  publishedAt DateTime?
+  comments    Comment[]
+  author      User       @relation(fields: [authorId], references: [id])
+  categories  Category[] @relation("CategoryToPost")
+  tags        Tag[]      @relation("PostToTag")
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  posts       Post[]   @relation("CategoryToPost")
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  posts     Post[]   @relation("PostToTag")
+}

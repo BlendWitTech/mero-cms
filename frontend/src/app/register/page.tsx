@@ -88,7 +88,7 @@ function RegisterForm() {
             if (res.ok) {
                 setSuccess(true);
                 setTimeout(() => {
-                    window.location.href = '/login';
+                    window.location.href = '/';
                 }, 3000);
             } else {
                 const data = await res.json();
@@ -123,7 +123,7 @@ function RegisterForm() {
                     <p className="text-xs text-slate-400 font-medium px-4">{error}</p>
                 </div>
                 <button
-                    onClick={() => window.location.href = '/login'}
+                    onClick={() => window.location.href = '/'}
                     className="inline-flex items-center gap-2 text-blue-600 text-[10px] font-black uppercase tracking-widest hover:gap-4 transition-all"
                 >
                     Back to Terminal <ArrowRightIcon className="h-3 w-3" />

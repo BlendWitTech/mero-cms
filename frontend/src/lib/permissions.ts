@@ -46,23 +46,29 @@ export const checkPermission = (
 };
 
 /**
- * Filter navigation items based on user permissions
+ * Filter navigation items based on user permissions and enabled modules
  * @param navigation - Array of navigation items
  * @param userPermissions - User's permission object
+ * @param enabledModules - Array of enabled module names (optional)
  * @returns Filtered navigation array
  */
 export const getVisibleNavItems = (
     navigation: any[],
-    userPermissions: UserPermissions | null | undefined
+    userPermissions: UserPermissions | null | undefined,
+    enabledModules?: string[]
 ): any[] => {
     if (!userPermissions) return [];
 
     return navigation
         .filter(item => {
-            // If no permission required, show to everyone
+            // Module check: hide items for disabled modules
+            if (item.requiresModule && enabledModules !== undefined) {
+                if (!enabledModules.includes(item.requiresModule)) return false;
+            }
+
+            // Permission check: if no permission required, show to everyone
             if (!item.requiredPermission) return true;
 
-            // Check if user has required permission
             return checkPermission(userPermissions, item.requiredPermission);
         })
         .map(item => {
@@ -70,7 +76,7 @@ export const getVisibleNavItems = (
             if (item.children) {
                 return {
                     ...item,
-                    children: getVisibleNavItems(item.children, userPermissions)
+                    children: getVisibleNavItems(item.children, userPermissions, enabledModules)
                 };
             }
             return item;

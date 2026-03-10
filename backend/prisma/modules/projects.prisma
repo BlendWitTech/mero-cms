@@ -1,0 +1,31 @@
+// Bundled: Project, ProjectCategory (no SeoMeta FK — use pageType/pageId pattern instead)
+model Project {
+  id             String           @id @default(uuid())
+  title          String
+  slug           String           @unique
+  description    String           @db.Text
+  coverImage     String?
+  bannerImage    String?
+  heroVideo      String?
+  gallery        String[]
+  model3dUrl     String?
+  status         String           @default("COMPLETED")
+  categoryId     String?
+  category       ProjectCategory? @relation(fields: [categoryId], references: [id])
+  client         String?
+  completionDate DateTime?
+  location       String?
+  featured       Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model ProjectCategory {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  projects    Project[]
+}

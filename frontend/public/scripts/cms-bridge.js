@@ -5,7 +5,7 @@
 
 class CMSBridge {
     constructor(options = {}) {
-        this.apiUrl = options.apiUrl || 'http://localhost:3001';
+        this.apiUrl = options.apiUrl || 'http://127.0.0.1:3001';
         this.debug = options.debug || false;
         this.init();
     }

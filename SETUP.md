@@ -76,7 +76,35 @@ You can start both the frontend and backend development servers from the root di
 npm run dev
 ```
 
-### Accessing the System
+## Credential Distinction (Important)
+
+During setup, you will encounter two different types of "admin" credentials. It is important to understand the difference:
+
+### 1. Database Infrastructure (`admin`)
+- **Purpose**: Used by the backend to connect to the PostgreSQL database.
+- **Where**: Defined in `backend/.env` as `DATABASE_URL`.
+- **Usage**: You generally do **not** type these into a login screen. They are for the system.
+
+### 2. CMS Application (`superadmin@blendwit.com`)
+- **Purpose**: Used for logging into the actual CMS dashboard.
+- **Where**: These are shown below and seeded during `npm run db:seed`.
+- **Usage**: Type these into the login form at `http://localhost:3000/login`.
+
+---
+
+### Resetting the Project
+
+If you need to start from scratch (e.g., to test a fresh installation or clear all data), you can use the reset script:
+
+```bash
+npm run reset
+```
+
+**Warning**: This will delete all `node_modules`, build artifacts, `.env` files, and **completely wipe your database**.
+
+---
+
+## Accessing the System
 
 - **Frontend (Next.js)**: [http://localhost:3000/login](http://localhost:3000/login)
 - **Backend API (NestJS)**: [http://localhost:3001](http://localhost:3001)

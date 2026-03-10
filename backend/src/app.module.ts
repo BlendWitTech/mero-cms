@@ -1,4 +1,5 @@
-import { Module, Global } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -14,8 +15,6 @@ import { TagsModule } from './tags/tags.module';
 import { CommentsModule } from './comments/comments.module';
 import { MediaModule } from './media/media.module';
 import { AuditLogModule } from './audit-log/audit-log.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
 import { MailModule } from './mail/mail.module';
 import { SeoMetaModule } from './seo-meta/seo-meta.module';
 import { RedirectsModule } from './redirects/redirects.module';
@@ -34,9 +33,40 @@ import { PagesModule } from './pages/pages.module';
 import { ThemesModule } from './themes/themes.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { TasksModule } from './tasks/tasks.module';
+import { SetupModule } from './setup/setup.module';
+import { PublicModule } from './public/public.module';
+import { ModuleEnabledGuard } from './setup/module-enabled.guard';
+
+/**
+ * Read ENABLED_MODULES once at startup.
+ * Format: comma-separated optional module keys, e.g. "blogs,projects,team"
+ * Core modules (auth, users, roles, settings, media, etc.) are always loaded.
+ *
+ * Selective loading only applies when BOTH:
+ *   - SETUP_COMPLETE=true  (setup wizard has run)
+ *   - ENABLED_MODULES is non-empty (modules were explicitly selected)
+ *
+ * In dev / unconfigured state, ALL modules load so nothing breaks.
+ */
+const SETUP_COMPLETE = process.env.SETUP_COMPLETE === 'true';
+const rawEnabled = (process.env.ENABLED_MODULES || '').trim();
+const USE_SELECTIVE = SETUP_COMPLETE && rawEnabled.length > 0;
+
+const ENABLED = new Set(
+  rawEnabled.split(',').map(s => s.trim()).filter(Boolean),
+);
+
+/** Returns the modules array only when the key is enabled (or when not in selective mode). */
+function when(...keys: string[]) {
+  return (...mods: any[]): any[] => {
+    if (!USE_SELECTIVE) return mods;
+    return keys.some(k => ENABLED.has(k)) ? mods : [];
+  };
+}
 
 @Module({
   imports: [
+    // ── Core modules — always loaded ──────────────────────────────────────────
     PrismaModule,
     UsersModule,
     AccessControlModule,
@@ -44,33 +74,50 @@ import { TasksModule } from './tasks/tasks.module';
     RolesModule,
     SettingsModule,
     MediaModule,
-    TagsModule,
-    CategoriesModule,
-    CommentsModule,
-    BlogsModule,
     InvitationsModule,
     AuditLogModule,
     MailModule,
-    SeoMetaModule,
-    RedirectsModule,
-    AnalyticsModule,
-    SitemapModule,
-    RobotsModule,
-    MenusModule,
-    ProjectsModule,
-    TeamModule,
-    TimelineModule,
-    ServicesModule,
-    TestimonialsModule,
-    LeadsModule,
-    ProjectCategoriesModule,
-    PagesModule,
-    ThemesModule,
     NotificationsModule,
     TasksModule,
+    SetupModule,
+    PublicModule,
+
+    // ── Optional modules — loaded only when ENABLED_MODULES contains the key ──
+
+    // Blog ecosystem: enabling categories/tags/comments also loads BlogsModule
+    // because those tables are bundled in blogs.prisma
+    ...when('blogs', 'categories', 'tags', 'comments')(BlogsModule),
+    ...when('blogs', 'categories')(CategoriesModule),
+    ...when('blogs', 'tags')(TagsModule),
+    ...when('blogs', 'comments')(CommentsModule),
+
+    // Portfolio ecosystem: project-categories bundled with projects
+    ...when('projects', 'project-categories')(ProjectsModule),
+    ...when('projects', 'project-categories')(ProjectCategoriesModule),
+
+    ...when('team')(TeamModule),
+    ...when('services')(ServicesModule),
+    ...when('testimonials')(TestimonialsModule),
+    ...when('timeline')(TimelineModule),
+
+    ...when('menus')(MenusModule),
+    ...when('pages')(PagesModule),
+    ...when('leads')(LeadsModule),
+    ...when('themes')(ThemesModule),
+
+    ...when('seo')(SeoMetaModule),
+    ...when('redirects')(RedirectsModule),
+    ...when('analytics')(AnalyticsModule),
+    ...when('sitemap')(SitemapModule),
+    ...when('robots')(RobotsModule),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ModuleEnabledGuard,
+    },
+  ],
 })
 export class AppModule { }
-

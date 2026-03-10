@@ -4,7 +4,9 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Permission } from '../auth/permissions.enum';
+import { RequireModule } from '../setup/require-module.decorator';
 
+@RequireModule('testimonials')
 @Controller('testimonials')
 export class TestimonialsController {
     constructor(private readonly testimonialsService: TestimonialsService) { }

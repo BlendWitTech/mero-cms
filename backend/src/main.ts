@@ -17,7 +17,16 @@ async function bootstrap() {
     console.error('Failed to prepare uploads directory:', e.message);
   }
 
-  app.enableCors();
+  const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3002')
+    .split(',')
+    .map(o => o.trim());
+
+  app.enableCors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
 
   app.use('/uploads', (req: any, res: any, next: any) => {
     next();
@@ -25,6 +34,10 @@ async function bootstrap() {
 
   const designsPath = join(process.cwd(), 'designs');
   app.use('/designs', express.static(designsPath));
+
+  // Serve built-in theme preview images from the project root themes/ directory
+  const builtInThemesPath = join(process.cwd(), '..', 'themes');
+  app.use('/themes-preview', express.static(builtInThemesPath));
 
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
   await app.listen(process.env.PORT ?? 3001);

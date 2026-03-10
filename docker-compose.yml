@@ -1,20 +1,46 @@
 services:
-  postgres:
+  db:
     image: postgres:15-alpine
-    container_name: blendwit-cms-db
+    container_name: ${ORG_NAME:-blendwit}-cms-db
     restart: always
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: blendwit_cms
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password123}
+      POSTGRES_DB: ${DB_NAME:-blendwit_cms}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  backend:
+    build:
+      context: ./backend
+    container_name: ${ORG_NAME:-blendwit}-cms-backend
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-admin}:${DB_PASSWORD:-password123}@db:5432/${DB_NAME:-blendwit_cms}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-supersercretkey123}
+      PORT: 3001
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: ${ORG_NAME:-blendwit}-cms-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+    depends_on:
+      - backend
+
   pgadmin:
     image: dpage/pgadmin4
-    container_name: blendwit-cms-pgadmin
+    container_name: ${ORG_NAME:-blendwit}-cms-pgadmin
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@blendwit.com
@@ -22,7 +48,7 @@ services:
     ports:
       - "5050:80"
     depends_on:
-      - postgres
+      - db
 
 volumes:
   postgres_data:

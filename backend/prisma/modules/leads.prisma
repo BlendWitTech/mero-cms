@@ -1,0 +1,12 @@
+model Lead {
+  id         String   @id @default(uuid())
+  name       String
+  email      String
+  phone      String?
+  message    String?  @db.Text
+  originPage String?
+  status     String   @default("NEW")
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

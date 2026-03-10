@@ -20,6 +20,7 @@ import {
 import { apiRequest } from '@/lib/api';
 import { useSettings } from '@/context/SettingsContext';
 import { usePermissions } from '@/context/PermissionsContext';
+import { useModules } from '@/context/ModulesContext';
 import { getVisibleNavItems, checkPermission } from '@/lib/permissions';
 import { useForm } from '@/context/FormContext';
 import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
@@ -58,14 +59,14 @@ const initialNavigation = [
         icon: DocumentTextIcon,
         requiredPermission: ['content_view', 'content_create', 'content_edit'],
         children: [
-            { name: 'Menus', href: '/dashboard/menus', icon: Bars3Icon, requiredPermission: 'content_edit' },
-            { name: 'Projects', href: '/dashboard/projects', requiredPermission: ['content_view', 'content_create'] },
-            { name: 'Services', href: '/dashboard/services', requiredPermission: ['content_view', 'content_create'] },
-            { name: 'Team', href: '/dashboard/team', requiredPermission: ['content_view', 'content_create'] },
-            { name: 'Timeline', href: '/dashboard/timeline', requiredPermission: ['content_view', 'content_create'] },
-            { name: 'Testimonials', href: '/dashboard/testimonials', requiredPermission: ['content_view', 'content_create'] },
-            { name: 'Blog Posts', href: '/dashboard/blog', requiredPermission: ['content_view', 'content_create'] },
-            { name: 'Categories', href: '/dashboard/categories', requiredPermission: ['content_view', 'content_create'] },
+            { name: 'Menus', href: '/dashboard/menus', icon: Bars3Icon, requiredPermission: 'content_edit', requiresModule: 'menus' },
+            { name: 'Projects', href: '/dashboard/projects', requiredPermission: ['content_view', 'content_create'], requiresModule: 'projects' },
+            { name: 'Services', href: '/dashboard/services', requiredPermission: ['content_view', 'content_create'], requiresModule: 'services' },
+            { name: 'Team', href: '/dashboard/team', requiredPermission: ['content_view', 'content_create'], requiresModule: 'team' },
+            { name: 'Timeline', href: '/dashboard/timeline', requiredPermission: ['content_view', 'content_create'], requiresModule: 'timeline' },
+            { name: 'Testimonials', href: '/dashboard/testimonials', requiredPermission: ['content_view', 'content_create'], requiresModule: 'testimonials' },
+            { name: 'Blog Posts', href: '/dashboard/blog', requiredPermission: ['content_view', 'content_create'], requiresModule: 'blogs' },
+            { name: 'Categories', href: '/dashboard/categories', requiredPermission: ['content_view', 'content_create'], requiresModule: 'categories' },
         ]
     },
     { name: 'Media', href: '/dashboard/media', icon: PhotoIcon, requiredPermission: 'media_view' },
@@ -83,11 +84,12 @@ const initialNavigation = [
         icon: ChartBarIcon,
         requiredPermission: ['analytics_view', 'seo_manage'],
         children: [
-            { name: 'Analytics', href: '/dashboard/analytics', requiredPermission: 'analytics_view' },
-            { name: 'SEO Manager', href: '/dashboard/seo', requiredPermission: 'seo_manage' },
+            { name: 'Analytics', href: '/dashboard/analytics', requiredPermission: 'analytics_view', requiresModule: 'analytics' },
+            { name: 'SEO Manager', href: '/dashboard/seo', requiredPermission: 'seo_manage', requiresModule: 'seo' },
         ]
     },
-    { name: 'Themes', href: '/dashboard/themes', icon: SwatchIcon, requiredPermission: 'settings_edit' },
+    { name: 'Leads', href: '/dashboard/leads', icon: ChartBarIcon, requiredPermission: 'leads_view', requiresModule: 'leads' },
+    { name: 'Themes', href: '/dashboard/themes', icon: SwatchIcon, requiredPermission: 'settings_edit', requiresModule: 'themes' },
     { name: 'Settings', href: '/dashboard/settings', icon: Cog6ToothIcon, requiredPermission: 'settings_edit' },
 ];
 
@@ -262,18 +264,19 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
     const { permissions, isLoading: permissionsLoading } = usePermissions();
+    const { enabledModules, isLoading: modulesLoading } = useModules();
     const [navItems, setNavItems] = useState(initialNavigation);
     const { isDirty, setIsDirty, saveHandler } = useForm();
     const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
     const [showDiscardAlert, setShowDiscardAlert] = useState(false);
 
-    // Filter navigation based on permissions
+    // Filter navigation based on permissions AND enabled modules
     useEffect(() => {
-        if (!permissionsLoading && permissions) {
-            const filtered = getVisibleNavItems(initialNavigation, permissions);
+        if (!permissionsLoading && !modulesLoading && permissions) {
+            const filtered = getVisibleNavItems(initialNavigation, permissions, enabledModules);
             setNavItems(filtered);
         }
-    }, [permissions, permissionsLoading]);
+    }, [permissions, permissionsLoading, enabledModules, modulesLoading]);
 
     // Keyboard Shortcuts
     useEffect(() => {

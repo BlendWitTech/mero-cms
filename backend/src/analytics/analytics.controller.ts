@@ -5,9 +5,10 @@ import { AuditLogService } from '../audit-log/audit-log.service';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Permission } from '../auth/permissions.enum';
+import { RequireModule } from '../setup/require-module.decorator';
 
+@RequireModule('analytics')
 @Controller('analytics')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class AnalyticsController {
     constructor(
         private readonly analyticsService: AnalyticsService,
@@ -15,12 +16,12 @@ export class AnalyticsController {
     ) { }
 
     @Get('config')
-    @RequirePermissions(Permission.SETTINGS_EDIT)
     async getConfig() {
         return this.analyticsService.getConfig();
     }
 
     @Post('config')
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @RequirePermissions(Permission.SETTINGS_EDIT)
     async updateConfig(@Body() data: any, @Request() req) {
         try {
@@ -34,12 +35,14 @@ export class AnalyticsController {
     }
 
     @Post('test')
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @RequirePermissions(Permission.SETTINGS_EDIT)
     async testConfig(@Body() data: any) {
         return this.analyticsService.testConnection(data);
     }
 
     @Get('dashboard')
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @RequirePermissions(Permission.ANALYTICS_VIEW)
     async getDashboard() {
         try {

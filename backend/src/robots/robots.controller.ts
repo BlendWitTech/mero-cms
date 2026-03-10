@@ -5,7 +5,9 @@ import { AuditLogService } from '../audit-log/audit-log.service';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Permission } from '../auth/permissions.enum';
+import { RequireModule } from '../setup/require-module.decorator';
 
+@RequireModule('robots')
 @Controller()
 export class RobotsController {
     constructor(

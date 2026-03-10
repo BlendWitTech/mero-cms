@@ -9,8 +9,10 @@ import { AuditLogService } from '../audit-log/audit-log.service';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Permission } from '../auth/permissions.enum';
+import { RequireModule } from '../setup/require-module.decorator';
 
 @UseGuards(JwtAuthGuard, IpGuard, PermissionsGuard)
+@RequireModule('blogs')
 @Controller('blogs')
 export class BlogsController {
     constructor(
@@ -99,6 +101,7 @@ export class BlogsController {
 }
 
 // Public Blog Controller (No Auth Required)
+@RequireModule('blogs')
 @Controller('posts/public')
 export class PublicBlogsController {
     constructor(private readonly blogsService: BlogsService) { }

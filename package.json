@@ -9,7 +9,9 @@
   "scripts": {
     "dev:backend": "npm run start:dev -w backend",
     "dev:frontend": "npm run dev -w frontend",
+    "dev:theme": "npm run dev --prefix themes/mero-cms-marketing",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:theme\"",
     "build": "npm run build -w backend && npm run build -w frontend",
     "install:all": "npm install",
     "setup": "powershell -ExecutionPolicy Bypass -File ./scripts/setup.ps1",
@@ -20,5 +22,8 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.2"
   }
 }

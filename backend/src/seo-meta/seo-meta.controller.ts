@@ -5,7 +5,9 @@ import { AuditLogService } from '../audit-log/audit-log.service';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Permission } from '../auth/permissions.enum';
+import { RequireModule } from '../setup/require-module.decorator';
 
+@RequireModule('seo')
 @Controller('seo-meta')
 // @UseGuards(JwtAuthGuard) - Removed global guard to verify per-endpoint
 export class SeoMetaController {

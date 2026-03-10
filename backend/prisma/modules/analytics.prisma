@@ -1,0 +1,12 @@
+model AnalyticsConfig {
+  id                  String   @id @default(uuid())
+  ga4MeasurementId    String?
+  ga4PropertyId       String?
+  serviceAccountEmail String?
+  privateKey          String?  @db.Text
+  gscPropertyUrl      String?
+  fbPixelId           String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}

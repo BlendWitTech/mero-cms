@@ -1,0 +1,138 @@
+model User {
+  id                  String        @id @default(uuid())
+  email               String        @unique
+  password            String
+  name                String?
+  roleId              String
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  forcePasswordChange Boolean       @default(false)
+  ipWhitelist         String[]      @default([])
+  twoFactorEnabled    Boolean       @default(false)
+  twoFactorSecret     String?
+  failedLoginAttempts Int           @default(0)
+  lockoutUntil        DateTime?
+  preferences         Json?
+  avatar              String?
+  bio                 String?
+  status              String        @default("ACTIVE")
+  lastActive          DateTime?
+  activityLogs        ActivityLog[]
+  comments            Comment[]
+  posts               Post[]
+  role                Role          @relation(fields: [roleId], references: [id])
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  status    String   @default("INFO")
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Invitation {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  roleId      String
+  ipWhitelist String[] @default([])
+  token       String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  status      String   @default("PENDING")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  permissions Json
+  level       Int      @default(10)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  icon        String?
+  users       User[]
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  userId     String?
+  type       String
+  title      String
+  message    String
+  link       String?
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  targetRole String?
+}
+
+model Media {
+  id        String   @id @default(uuid())
+  filename  String
+  url       String
+  mimetype  String
+  size      Int
+  createdAt DateTime @default(now())
+  altText   String?
+  folder    String   @default("root")
+  height    Int?
+  metadata  Json?
+  updatedAt DateTime @updatedAt
+  width     Int?
+}
+
+model Collection {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  slug        String           @unique
+  description String?
+  type        String           @default("COLLECTION")
+  fields      Json
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  items       CollectionItem[]
+}
+
+model CollectionItem {
+  id           String     @id @default(uuid())
+  collectionId String
+  data         Json
+  slug         String?
+  isPublished  Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@index([collectionId])
+}
+
+model Form {
+  id          String           @id @default(uuid())
+  name        String
+  slug        String           @unique
+  description String?
+  fields      Json
+  settings    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  submissions FormSubmission[]
+}
+
+model FormSubmission {
+  id        String   @id @default(uuid())
+  formId    String
+  data      Json
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+}

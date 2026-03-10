@@ -48,17 +48,30 @@ async function main() {
         { key: 'cms_title', value: 'Blendwit CMS' },
         { key: 'cms_subtitle', value: 'Elevate Your Content Strategy' },
         { key: 'cms_login_avatar', value: '/assets/boy_idea_shock.png' },
+        {
+            key: 'enabled_modules',
+            value: JSON.stringify([
+                'auth', 'users', 'roles', 'settings', 'media',
+                'audit-log', 'mail', 'notifications', 'invitations', 'tasks',
+                'blogs', 'categories', 'tags', 'comments',
+                'seo', 'redirects', 'analytics', 'sitemap', 'robots',
+                'menus', 'pages', 'themes',
+                'projects', 'project-categories', 'team', 'timeline',
+                'services', 'testimonials', 'leads',
+            ])
+        },
+        { key: 'setup_complete', value: 'true' },
     ];
 
     for (const setting of defaultSettings) {
         await prisma.setting.upsert({
             where: { key: setting.key },
-            update: {},
+            update: { value: setting.value },
             create: setting,
         });
     }
 
-    console.log('Default settings initialized.');
+    console.log('Default settings and modules initialized.');
     console.log('--- Seeding Completed ---');
 }
 

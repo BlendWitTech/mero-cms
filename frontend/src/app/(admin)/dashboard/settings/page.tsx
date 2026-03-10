@@ -19,15 +19,26 @@ import {
     ExclamationTriangleIcon,
     EnvelopeIcon,
     CloudIcon,
-    ServerStackIcon
+    ServerStackIcon,
+    PuzzlePieceIcon
 } from '@heroicons/react/24/outline';
 import { apiRequest } from '@/lib/api';
 import Alert from '@/components/ui/Alert';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import { useNotification } from '@/context/NotificationContext';
+import { useModules } from '@/context/ModulesContext';
 
 function classNames(...classes: (string | boolean | undefined)[]) {
     return classes.filter(Boolean).join(' ');
+}
+
+const MODULE_GROUPS = ['Content', 'Marketing', 'Site', 'SEO & Analytics'];
+
+interface ModuleMeta {
+    key: string;
+    label: string;
+    description: string;
+    group: string;
 }
 
 export default function SettingsPage() {
@@ -35,6 +46,12 @@ export default function SettingsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('branding');
     const { showToast } = useNotification();
+    const { enabledModules, refresh: refreshModules } = useModules();
+
+    // Modules state
+    const [availableModules, setAvailableModules] = useState<ModuleMeta[]>([]);
+    const [selectedModules, setSelectedModules] = useState<string[]>([]);
+    const [modulesSaving, setModulesSaving] = useState(false);
 
     // Audit Logs State
     const [globalLogs, setGlobalLogs] = useState<any[]>([]);
@@ -77,7 +94,38 @@ export default function SettingsPage() {
                 setIsLoading(false);
             })
             .catch(err => console.error(err));
+
+        // Load available modules for the Modules tab
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/setup/modules`)
+            .then(r => r.json())
+            .then(data => setAvailableModules(data.optional || []))
+            .catch(() => { });
     }, []);
+
+    // Sync selected modules with currently enabled ones
+    useEffect(() => {
+        if (enabledModules.length > 0) {
+            setSelectedModules(enabledModules.filter(m =>
+                !['auth', 'users', 'roles', 'settings', 'media', 'audit-log', 'mail', 'notifications', 'invitations', 'tasks'].includes(m)
+            ));
+        }
+    }, [enabledModules]);
+
+    const saveModules = async () => {
+        setModulesSaving(true);
+        try {
+            await apiRequest('/setup/modules', {
+                method: 'POST',
+                body: { enabledModules: selectedModules },
+            });
+            await refreshModules();
+            showToast('Modules updated successfully.', 'success');
+        } catch (err: any) {
+            showToast(err.message || 'Failed to update modules.', 'error');
+        } finally {
+            setModulesSaving(false);
+        }
+    };
 
     const fetchGlobalLogs = async () => {
         setIsLogsLoading(true);
@@ -116,6 +164,7 @@ export default function SettingsPage() {
 
     const tabs = [
         { id: 'branding', label: 'Branding & Identity', icon: GlobeAltIcon },
+        { id: 'modules', label: 'Modules', icon: PuzzlePieceIcon },
         { id: 'email', label: 'Email Services', icon: EnvelopeIcon },
         { id: 'media', label: 'Media Cloud', icon: CloudIcon },
         { id: 'security', label: 'Security & Access', icon: ShieldCheckIcon },
@@ -233,6 +282,72 @@ export default function SettingsPage() {
                                 <p className="text-xs font-semibold text-slate-400 mt-2 relative z-10 leading-relaxed mb-8">Updates are broadcasted instantly to all active frontend instances via the core hub.</p>
                                 <button onClick={() => handleSave('global')} className="w-full bg-white text-slate-900 hover:bg-blue-600 hover:text-white py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all active:scale-95 shadow-xl relative z-10">
                                     Push Global Update
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Modules Tab */}
+                {activeTab === 'modules' && (
+                    <div className="space-y-8">
+                        <div className="bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-200/40 border border-slate-200/60">
+                            <div className="flex items-center justify-between mb-8">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/20 text-white">
+                                        <PuzzlePieceIcon className="h-6 w-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-900">Installed Modules</h3>
+                                        <p className="text-xs text-slate-400 mt-0.5">Enable or disable features for this CMS instance.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {MODULE_GROUPS.map(group => {
+                                const groupModules = availableModules.filter(m => m.group === group);
+                                if (groupModules.length === 0) return null;
+                                return (
+                                    <div key={group} className="mb-8">
+                                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{group}</h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                            {groupModules.map(mod => {
+                                                const isEnabled = selectedModules.includes(mod.key);
+                                                return (
+                                                    <button
+                                                        key={mod.key}
+                                                        onClick={() => setSelectedModules(prev =>
+                                                            prev.includes(mod.key)
+                                                                ? prev.filter(k => k !== mod.key)
+                                                                : [...prev, mod.key]
+                                                        )}
+                                                        className={`text-left p-4 rounded-2xl border transition-all ${isEnabled
+                                                            ? 'bg-blue-50 border-blue-200 text-slate-900'
+                                                            : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <span className="text-sm font-bold">{mod.label}</span>
+                                                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${isEnabled ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                                                                {isEnabled ? '✓' : ''}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-xs text-slate-400 leading-snug">{mod.description}</p>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            <div className="flex gap-3 mt-6 pt-6 border-t border-slate-100">
+                                <button
+                                    onClick={saveModules}
+                                    disabled={modulesSaving}
+                                    className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all disabled:opacity-50"
+                                >
+                                    {modulesSaving ? 'Saving...' : 'Save Module Settings'}
                                 </button>
                             </div>
                         </div>

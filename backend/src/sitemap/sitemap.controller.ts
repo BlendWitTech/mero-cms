@@ -1,6 +1,8 @@
 import { Controller, Get, Header } from '@nestjs/common';
 import { SitemapService } from './sitemap.service';
+import { RequireModule } from '../setup/require-module.decorator';
 
+@RequireModule('sitemap')
 @Controller()
 export class SitemapController {
     constructor(private readonly sitemapService: SitemapService) { }

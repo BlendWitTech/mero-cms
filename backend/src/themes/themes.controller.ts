@@ -1,11 +1,13 @@
-import { Controller, Post, UseInterceptors, UploadedFile, Get, BadRequestException, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, Get, BadRequestException, Param, Patch, Body, UseGuards } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ThemesService } from './themes.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Permission } from '../auth/permissions.enum';
+import { RequireModule } from '../setup/require-module.decorator';
 
+@RequireModule('themes')
 @Controller('themes')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ThemesController {
@@ -39,5 +41,23 @@ export class ThemesController {
     @RequirePermissions(Permission.THEMES_MANAGE)
     async activateTheme(@Param('name') name: string) {
         return this.themesService.setActiveTheme(name);
+    }
+
+    @Get('details')
+    @RequirePermissions(Permission.THEMES_MANAGE)
+    async listThemesWithDetails() {
+        return this.themesService.listThemesWithDetails();
+    }
+
+    @Get(':name/details')
+    @RequirePermissions(Permission.THEMES_MANAGE)
+    async getThemeDetails(@Param('name') name: string) {
+        return this.themesService.getThemeDetails(name);
+    }
+
+    @Patch(':name/deployed-url')
+    @RequirePermissions(Permission.THEMES_MANAGE)
+    async setDeployedUrl(@Param('name') name: string, @Body('url') url: string) {
+        return this.themesService.setDeployedUrl(name, url);
     }
 }

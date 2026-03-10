@@ -17,7 +17,8 @@ export async function apiRequest(endpoint: string, options: RequestOptions = {})
     };
 
     try {
-        const response = await fetch(`http://127.0.0.1:3001${endpoint}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const response = await fetch(`${baseUrl}${endpoint}`, {
             method,
             headers: { ...defaultHeaders, ...headers },
             body: body ? JSON.stringify(body) : undefined,

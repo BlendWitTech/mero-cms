@@ -5,15 +5,15 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/sitemap.xml',
-        destination: 'http://localhost:3001/sitemap.xml',
+        destination: 'http://127.0.0.1:3001/sitemap.xml',
       },
       {
         source: '/sitemap-posts.xml',
-        destination: 'http://localhost:3001/sitemap-posts.xml',
+        destination: 'http://127.0.0.1:3001/sitemap-posts.xml',
       },
       {
         source: '/sitemap-index.xml',
-        destination: 'http://localhost:3001/sitemap-index.xml',
+        destination: 'http://127.0.0.1:3001/sitemap-index.xml',
       },
     ];
   },

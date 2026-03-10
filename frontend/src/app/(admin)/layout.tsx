@@ -7,6 +7,7 @@ import Header from '@/components/layout/Header';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import { PermissionsProvider } from '@/context/PermissionsContext';
 import { FormProvider } from '@/context/FormContext';
+import { ModulesProvider } from '@/context/ModulesContext';
 
 export default function AdminLayout({
     children,
@@ -30,10 +31,11 @@ export default function AdminLayout({
 
     const finalizeLogout = () => {
         localStorage.removeItem('token');
-        window.location.href = '/login';
+        window.location.href = '/';
     };
 
     return (
+        <ModulesProvider>
         <PermissionsProvider>
             <FormProvider>
                 <div className="min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-blue-100 selection:text-blue-900">
@@ -73,5 +75,6 @@ export default function AdminLayout({
                 </div>
             </FormProvider>
         </PermissionsProvider>
+        </ModulesProvider>
     );
 }

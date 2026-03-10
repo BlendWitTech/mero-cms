@@ -1,0 +1,13 @@
+model Design {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  thumbnail   String?
+  path        String
+  version     String   @default("1.0.0")
+  status      String   @default("ACTIVE")
+  settings    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

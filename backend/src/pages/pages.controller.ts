@@ -4,8 +4,10 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Permission } from '../auth/permissions.enum';
+import { RequireModule } from '../setup/require-module.decorator';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard)
+@RequireModule('pages')
 @Controller('pages')
 export class PagesController {
     constructor(private readonly pagesService: PagesService) { }
