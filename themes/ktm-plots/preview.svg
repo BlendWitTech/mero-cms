@@ -1,0 +1,69 @@
+<svg width="800" height="500" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#F9F6F0"/>
+
+  <!-- Header -->
+  <rect width="800" height="60" fill="#1B4332"/>
+  <text x="30" y="38" font-size="18" font-weight="bold" fill="#D4A017">KTM Plots</text>
+  <text x="450" y="38" font-size="11" fill="#FFFFFF">Home</text>
+  <text x="510" y="38" font-size="11" fill="#FFFFFF">About</text>
+  <text x="560" y="38" font-size="11" fill="#FFFFFF">Plots</text>
+  <text x="610" y="38" font-size="11" fill="#FFFFFF">Services</text>
+  <text x="665" y="38" font-size="11" fill="#FFFFFF">Contact</text>
+
+  <!-- Hero Section -->
+  <rect y="60" width="800" height="160" fill="#1B4332"/>
+  <!-- Mountain silhouette -->
+  <polygon points="0,220 100,140 200,180 320,100 440,160 560,110 680,150 800,120 800,220" fill="#2D6A4F" opacity="0.5"/>
+  <polygon points="0,220 60,170 150,200 260,130 380,180 500,140 620,170 750,145 800,165 800,220" fill="#2D6A4F" opacity="0.3"/>
+  <!-- Hero text -->
+  <text x="80" y="130" font-size="28" font-weight="bold" fill="#FFFFFF">Find Your Perfect Plot</text>
+  <text x="80" y="158" font-size="14" fill="#D4A017">in Kathmandu Valley</text>
+  <rect x="80" y="175" width="130" height="32" rx="4" fill="#D4A017"/>
+  <text x="112" y="196" font-size="12" font-weight="bold" fill="#1B4332">View Plots</text>
+  <rect x="225" y="175" width="130" height="32" rx="4" fill="transparent" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="255" y="196" font-size="12" fill="#FFFFFF">Contact Us</text>
+
+  <!-- Featured Plots -->
+  <text x="30" y="250" font-size="14" font-weight="bold" fill="#1B4332">Featured Plots</text>
+  <!-- Plot card 1 -->
+  <rect x="20" y="260" width="235" height="100" rx="6" fill="#FFFFFF" stroke="#E5E0D5" stroke-width="1"/>
+  <rect x="20" y="260" width="235" height="50" rx="6" fill="#2D6A4F"/>
+  <text x="32" y="282" font-size="10" font-weight="bold" fill="#FFFFFF">Shankhapur Green Valley</text>
+  <text x="32" y="296" font-size="9" fill="#D4A017">Residential · Available</text>
+  <text x="32" y="324" font-size="9" fill="#666">From NPR 15 Lakhs/Anna</text>
+  <text x="32" y="340" font-size="9" fill="#666">3 Anna – 16 Anna · Kavre</text>
+
+  <!-- Plot card 2 -->
+  <rect x="270" y="260" width="235" height="100" rx="6" fill="#FFFFFF" stroke="#E5E0D5" stroke-width="1"/>
+  <rect x="270" y="260" width="235" height="50" rx="6" fill="#2D6A4F"/>
+  <text x="282" y="282" font-size="10" font-weight="bold" fill="#FFFFFF">Godawari Sunrise Plots</text>
+  <text x="282" y="296" font-size="9" fill="#D4A017">Residential · Available</text>
+  <text x="282" y="324" font-size="9" fill="#666">From NPR 25 Lakhs/Anna</text>
+  <text x="282" y="340" font-size="9" fill="#666">2 Anna – 8 Anna · Lalitpur</text>
+
+  <!-- Plot card 3 -->
+  <rect x="520" y="260" width="260" height="100" rx="6" fill="#FFFFFF" stroke="#E5E0D5" stroke-width="1"/>
+  <rect x="520" y="260" width="260" height="50" rx="6" fill="#2D6A4F"/>
+  <text x="532" y="282" font-size="10" font-weight="bold" fill="#FFFFFF">Budhanilkantha Hill Estate</text>
+  <text x="532" y="296" font-size="9" fill="#D4A017">Residential · Limited</text>
+  <text x="532" y="324" font-size="9" fill="#666">From NPR 60 Lakhs/Anna</text>
+  <text x="532" y="340" font-size="9" fill="#666">5 Anna – 1 Ropani · Kathmandu</text>
+
+  <!-- Services strip -->
+  <rect y="375" width="800" height="60" fill="#1B4332"/>
+  <text x="30" y="400" font-size="11" font-weight="bold" fill="#D4A017">Our Services</text>
+  <text x="30" y="420" font-size="9" fill="#FFFFFF">Plot Sales</text>
+  <text x="150" y="420" font-size="9" fill="#FFFFFF">Legal Docs</text>
+  <text x="270" y="420" font-size="9" fill="#FFFFFF">Site Visits</text>
+  <text x="400" y="420" font-size="9" fill="#FFFFFF">Investment Consulting</text>
+  <text x="570" y="420" font-size="9" fill="#FFFFFF">Construction Referral</text>
+  <text x="710" y="420" font-size="9" fill="#FFFFFF">After-Sales</text>
+
+  <!-- Footer -->
+  <rect y="435" width="800" height="65" fill="#111111"/>
+  <text x="30" y="460" font-size="12" font-weight="bold" fill="#D4A017">KTM Plots</text>
+  <text x="30" y="478" font-size="9" fill="#999">Kathmandu Valley's Trusted Land Partner</text>
+  <text x="30" y="492" font-size="8" fill="#666">© 2024 KTM Plots. All rights reserved.</text>
+  <text x="580" y="460" font-size="9" fill="#999">Plots  ·  About  ·  Blog  ·  Contact</text>
+</svg>

@@ -1,0 +1,192 @@
+{
+  "name": "ktm-plots",
+  "displayName": "KTM Plots",
+  "description": "Real estate theme for KTM Plots — land property listings in Kathmandu Valley",
+  "version": "1.0.0",
+  "preview": "preview.svg",
+  "modules": ["blogs", "projects", "project-categories", "testimonials", "services", "leads", "menus"],
+  "seedData": {
+    "menus": [
+      {
+        "name": "Main Navigation",
+        "slug": "main-nav",
+        "items": [
+          { "label": "Home", "url": "/", "order": 1 },
+          { "label": "About", "url": "/about", "order": 2 },
+          { "label": "Plots", "url": "/plots", "order": 3 },
+          { "label": "Services", "url": "/services", "order": 4 },
+          { "label": "Blog", "url": "/blog", "order": 5 },
+          { "label": "Contact", "url": "/contact", "order": 6 }
+        ]
+      },
+      {
+        "name": "Footer Links",
+        "slug": "footer-links",
+        "items": [
+          { "label": "Privacy Policy", "url": "/privacy", "order": 1 },
+          { "label": "Terms of Service", "url": "/terms", "order": 2 },
+          { "label": "Contact Us", "url": "/contact", "order": 3 }
+        ]
+      }
+    ],
+    "services": [
+      {
+        "title": "Land Plot Sales",
+        "slug": "land-plot-sales",
+        "description": "We offer premium land plots at strategic locations across the Kathmandu Valley with clear legal documentation and hassle-free registration support.",
+        "icon": "map-pin",
+        "order": 1
+      },
+      {
+        "title": "Legal Documentation",
+        "slug": "legal-documentation",
+        "description": "Full support for land registration, title verification, and ownership transfer. Our legal team ensures a smooth and transparent process.",
+        "icon": "file-text",
+        "order": 2
+      },
+      {
+        "title": "Site Visit Arrangement",
+        "slug": "site-visit",
+        "description": "We arrange guided site visits with our property experts so you can experience the land, neighbourhood, and access roads before you decide.",
+        "icon": "eye",
+        "order": 3
+      },
+      {
+        "title": "Investment Consulting",
+        "slug": "investment-consulting",
+        "description": "Expert advice on land value trends, growth corridors, and investment potential in Kathmandu Valley's fast-growing areas.",
+        "icon": "trending-up",
+        "order": 4
+      },
+      {
+        "title": "Home Construction Referral",
+        "slug": "home-construction-referral",
+        "description": "Connect with trusted architects and construction firms to begin building your dream home right after purchase.",
+        "icon": "home",
+        "order": 5
+      },
+      {
+        "title": "After-Sales Support",
+        "slug": "after-sales-support",
+        "description": "Dedicated post-sale assistance for utility connections, local government processes, and neighbourhood onboarding.",
+        "icon": "headphones",
+        "order": 6
+      }
+    ],
+    "testimonials": [
+      {
+        "name": "Ramesh Shrestha",
+        "role": "Homeowner, Bhaktapur",
+        "content": "KTM Plots made the entire process incredibly smooth. The legal documentation was handled professionally and we moved into our new plot within weeks. Highly recommended!",
+        "rating": 5,
+        "order": 1
+      },
+      {
+        "name": "Sunita Tamang",
+        "role": "Investor, Lalitpur",
+        "content": "I purchased two plots through KTM Plots for investment. Their team gave me excellent guidance on the most promising growth corridors. Very happy with my decision.",
+        "rating": 5,
+        "order": 2
+      },
+      {
+        "name": "Bikash Adhikari",
+        "role": "First-time Buyer, Kathmandu",
+        "content": "As a first-time buyer I was nervous, but the KTM Plots team guided me through every step. Transparent pricing and no hidden charges — exactly what I needed.",
+        "rating": 5,
+        "order": 3
+      },
+      {
+        "name": "Puja Maharjan",
+        "role": "NRN Buyer, UK",
+        "content": "Bought a plot from the UK without visiting Nepal. KTM Plots handled everything remotely including video site visits and digital documentation. Outstanding service!",
+        "rating": 5,
+        "order": 4
+      }
+    ],
+    "projectCategories": [
+      { "name": "Residential", "slug": "residential" },
+      { "name": "Commercial", "slug": "commercial" },
+      { "name": "Agricultural", "slug": "agricultural" }
+    ],
+    "projects": [
+      {
+        "title": "Shankhapur Green Valley",
+        "slug": "shankhapur-green-valley",
+        "description": "Premium residential plots nestled in the serene hills of Shankhapur, just 18km from Kathmandu city centre. Enjoy mountain views, fresh air, and modern road access.",
+        "content": "# Shankhapur Green Valley\n\nShankhapur Green Valley offers an unmatched blend of natural beauty and urban connectivity. Located just 18km from Kathmandu city centre, these premium plots are perfect for building your dream home or as a long-term investment.\n\n## Plot Highlights\n- Sizes ranging from 3 Anna to 16 Anna\n- Clean title deed (Lalpurja) provided\n- Motorable road access to every plot\n- Electricity and water supply ready\n- Close to Shankhapur school and market\n\n## Location Advantages\n- 18 km from Kathmandu city centre\n- 5 km from Banepa highway\n- Excellent mountain views\n- Pollution-free environment\n\n## Pricing\nStarting from NPR 15 Lakhs per Anna",
+        "featured": true,
+        "category": "residential",
+        "status": "available",
+        "location": "Shankhapur, Kavre",
+        "priceFrom": "1500000",
+        "areaFrom": "3 Anna",
+        "areaTo": "16 Anna"
+      },
+      {
+        "title": "Godawari Sunrise Plots",
+        "slug": "godawari-sunrise-plots",
+        "description": "Affordable residential plots in the peaceful Godawari area of Lalitpur. Close to Godawari Botanical Garden with easy access to Ring Road.",
+        "content": "# Godawari Sunrise Plots\n\nGodawari Sunrise Plots offers affordable land in one of Lalitpur's most scenic locations. Surrounded by greenery, these plots are ideal for families seeking a peaceful environment while staying connected to the city.\n\n## Plot Highlights\n- Sizes from 2 Anna to 8 Anna\n- Registered land with clear ownership\n- 20-foot wide black-topped access road\n- Near Godawari Botanical Garden\n- Multiple local schools and hospitals nearby\n\n## Pricing\nStarting from NPR 25 Lakhs per Anna",
+        "featured": true,
+        "category": "residential",
+        "status": "available",
+        "location": "Godawari, Lalitpur",
+        "priceFrom": "2500000",
+        "areaFrom": "2 Anna",
+        "areaTo": "8 Anna"
+      },
+      {
+        "title": "Budhanilkantha Hill Estate",
+        "slug": "budhanilkantha-hill-estate",
+        "description": "Exclusive plots in Budhanilkantha's prime residential zone. Panoramic Himalayan views, cool climate, and premium infrastructure make this a rare investment opportunity.",
+        "content": "# Budhanilkantha Hill Estate\n\nBudhanilkantha Hill Estate is our premium offering — exclusive plots in one of Kathmandu's most sought-after residential zones. With panoramic Himalayan views and cool climate year-round, these plots command premium value.\n\n## Plot Highlights\n- Sizes from 5 Anna to 1 Ropani\n- Panoramic Himalayan views\n- 24-hour security\n- Underground utilities\n- Community park and walking trails\n\n## Pricing\nStarting from NPR 60 Lakhs per Anna",
+        "featured": true,
+        "category": "residential",
+        "status": "limited",
+        "location": "Budhanilkantha, Kathmandu",
+        "priceFrom": "6000000",
+        "areaFrom": "5 Anna",
+        "areaTo": "1 Ropani"
+      },
+      {
+        "title": "Bhaktapur Industrial Land",
+        "slug": "bhaktapur-industrial-land",
+        "description": "Commercial and light-industrial land parcels on the Bhaktapur industrial corridor. Ideal for warehouses, factories, and commercial complexes.",
+        "content": "# Bhaktapur Industrial Land\n\nStrategically located on the Bhaktapur industrial corridor, these large land parcels are perfect for commercial and industrial use.\n\n## Plot Highlights\n- Sizes from 2 Ropani to 20 Ropani\n- Direct highway access\n- 3-phase electricity available\n- Industrial zone approved by municipality\n\n## Pricing\nStarting from NPR 40 Lakhs per Anna",
+        "featured": false,
+        "category": "commercial",
+        "status": "available",
+        "location": "Bhaktapur Industrial Corridor",
+        "priceFrom": "4000000",
+        "areaFrom": "2 Ropani",
+        "areaTo": "20 Ropani"
+      }
+    ],
+    "posts": [
+      {
+        "title": "How to Buy Land in Nepal: A Complete Guide for 2024",
+        "slug": "how-to-buy-land-nepal-guide-2024",
+        "excerpt": "Everything you need to know before purchasing land in Nepal — from choosing the right location to completing legal registration.",
+        "content": "# How to Buy Land in Nepal: A Complete Guide for 2024\n\nBuying land in Nepal is one of the best investments you can make — but the process can feel overwhelming if you don't know where to start. This guide walks you through every step.\n\n## Step 1: Choose Your Location\n\nConsider proximity to roads, schools, hospitals, and city centres. In the Kathmandu Valley, growth corridors include Bhaktapur, Lalitpur periphery, and the northern hills.\n\n## Step 2: Verify the Title Deed (Lalpurja)\n\nAlways verify the Lalpurja at the local Land Revenue Office. Check for encumbrances, court orders, or disputed ownership.\n\n## Step 3: Conduct a Site Visit\n\nVisit the plot in person. Check road access, slope, drainage, and proximity to utilities.\n\n## Step 4: Negotiate and Agree on Price\n\nCompare market rates in the area. Don't rely only on the seller's valuation.\n\n## Step 5: Complete Registration\n\nRegistration must be done at the local Land Revenue Office with both buyer and seller present. Bring citizenship documents, photos, and the agreed deed.\n\n## Final Tips\n- Always use a trusted broker or company\n- Never pay full amount before registration\n- Keep copies of all documents",
+        "status": "published",
+        "featured": true
+      },
+      {
+        "title": "Top 5 Emerging Areas for Land Investment in Kathmandu Valley",
+        "slug": "top-5-emerging-areas-land-investment-kathmandu",
+        "excerpt": "Discover the five fastest-growing areas in Kathmandu Valley where land values are expected to double in the next five years.",
+        "content": "# Top 5 Emerging Areas for Land Investment in Kathmandu Valley\n\nIf you're looking to invest in land in the Kathmandu Valley, timing is everything. Here are the five areas our experts believe will see the highest growth.\n\n## 1. Shankhapur, Kavre\nWith improving road connectivity and a cool climate, Shankhapur is becoming a preferred destination for weekend homes and long-term residential plots.\n\n## 2. Godawari, Lalitpur\nGodawari continues to attract buyers thanks to its proximity to the city, the Botanical Garden, and relative affordability compared to central Lalitpur.\n\n## 3. Budhanilkantha Periphery\nAs central Kathmandu becomes more congested, Budhanilkantha's peripheral areas are seeing rapid appreciation.\n\n## 4. Nagarkot Corridor\nThe Nagarkot tourist corridor is attracting both residential and commercial buyers looking to capitalise on Nepal's booming tourism.\n\n## 5. Bhaktapur Industrial Zone\nThe Bhaktapur industrial corridor offers excellent returns for commercial investors as manufacturing and logistics grow.\n\n## Conclusion\nDiversification across multiple locations is the smartest strategy for land investors in Nepal.",
+        "status": "published",
+        "featured": true
+      },
+      {
+        "title": "Understanding Land Measurement Units in Nepal",
+        "slug": "understanding-land-measurement-units-nepal",
+        "excerpt": "Confused by Ropani, Anna, Paisa, and Dam? Here's a simple breakdown of Nepal's traditional land measurement system.",
+        "content": "# Understanding Land Measurement Units in Nepal\n\nNepal uses a traditional land measurement system that can confuse first-time buyers. Here's a simple guide.\n\n## The Hilly System (Used in Kathmandu Valley)\n\n| Unit | Equivalent |\n|------|------------|\n| 1 Ropani | 16 Anna |\n| 1 Anna | 4 Paisa |\n| 1 Paisa | 4 Dam |\n| 1 Ropani | ~508.72 sq. meters |\n\n## The Terai System\nIn the Terai (plains), land is measured in Bigha, Kattha, and Dhur — a different system entirely.\n\n## Quick Conversions\n- 1 Anna ≈ 31.8 sq. meters\n- 1 Ropani ≈ 508.72 sq. meters ≈ 0.12 acres\n\n## Why This Matters\nAlways confirm with the seller which unit is being used and double-check against the Lalpurja (title deed) which shows the official measurement.",
+        "status": "published",
+        "featured": false
+      }
+    ]
+  }
+}
