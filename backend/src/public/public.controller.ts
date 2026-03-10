@@ -25,6 +25,7 @@ export class PublicController {
                 copyrightText: settingsMap['copyright_text'] || '',
                 logoUrl: settingsMap['logo_url'] || '',
                 faviconUrl: settingsMap['favicon_url'] || '',
+                activeTheme: settingsMap['active_theme'] || null,
             },
             enabledModules,
         };
