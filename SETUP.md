@@ -1,120 +1,184 @@
-# Setup Guide
-
-Follow these steps to set up and run the Blendwit CMS project locally.
+# Setup Guide — Mero CMS
 
 ## Prerequisites
 
-Ensure you have the following installed on your machine:
-
-- **Node.js**: v20 or higher
-- **npm**: v10 or higher
-- **Docker & Docker Compose**: For running the PostgreSQL database
-
-## Installation Steps
-
-### 1. Clone the Repository
-```bash
-git clone <repository-url>
-cd cms
-```
-
-### 2. Run Automated Setup
-The system includes a smart setup script that handles dependency installation, environment files, and database initialization.
-
-```bash
-npm run setup
-```
-> Select between **Manual** (using your local PostgreSQL) or **Docker** (to start a containerized database).
+- **Node.js** v20+
+- **npm** v10+
+- **PostgreSQL** database (local, Docker, or hosted)
 
 ---
 
-## Alternative Manual Installation
-If you prefer to run steps individually:
-1. `npm install`
-2. `cp backend/.env.example backend/.env`
-3. `docker-compose up -d`
-4. `npm run db:init`
-5. `npm run db:seed`
+## Option A — Local Development
 
-### 3. Environment Configuration
-The backend requires a `.env` file for database connection and secrets. Templates have been provided as `.env.example` in both the root and child directories.
+### 1. Clone and install
 
-For a quick start, copy the backend example:
+```bash
+git clone https://github.com/BlendWitTech/blendwit-cms-saas.git
+cd blendwit-cms-saas
+npm install
+```
+
+### 2. Configure environment
+
 ```bash
 cp backend/.env.example backend/.env
 ```
 
-**`backend/.env`**:
+Edit `backend/.env`:
+
 ```env
-DATABASE_URL="postgresql://admin:password123@localhost:5432/blendwit_cms?schema=public"
-JWT_SECRET="supersercretkey123"
+DATABASE_URL="postgresql://user:password@localhost:5432/mero_cms?schema=public"
+JWT_SECRET="your-secret-key-here"
 PORT=3001
+CORS_ORIGINS="http://localhost:3000,http://localhost:3002"
 ```
 
-### 4. Start Infrastructure
-Run the database and pgAdmin using Docker Compose:
+### 3. Start a local PostgreSQL database (optional — skip if you have one)
+
 ```bash
-docker-compose up -d
-```
-> [!NOTE]
-> This will start PostgreSQL on port `5432` and pgAdmin on port `5050`. The backend is configured to run on port `3001` by default to avoid conflicts with the frontend.
-
-### 5. Initialize Database
-Run Prisma migrations and seed the database with initial data (Super Admin, Roles, and CMS settings):
-```bash
-cd backend
-npx prisma migrate dev --name init
-npx prisma db seed
-cd ..
+docker-compose up -d db
 ```
 
-## Running the Application
+This starts PostgreSQL on port `5432`.
 
-You can start both the frontend and backend development servers from the root directory:
+### 4. Start development servers
 
 ```bash
 npm run dev
 ```
 
-## Credential Distinction (Important)
+- **Admin UI** → http://localhost:3000
+- **Backend API** → http://localhost:3001
 
-During setup, you will encounter two different types of "admin" credentials. It is important to understand the difference:
+### 5. Run the setup wizard
 
-### 1. Database Infrastructure (`admin`)
-- **Purpose**: Used by the backend to connect to the PostgreSQL database.
-- **Where**: Defined in `backend/.env` as `DATABASE_URL`.
-- **Usage**: You generally do **not** type these into a login screen. They are for the system.
+Open **http://localhost:3000/setup** in your browser.
 
-### 2. CMS Application (`superadmin@blendwit.com`)
-- **Purpose**: Used for logging into the actual CMS dashboard.
-- **Where**: These are shown below and seeded during `npm run db:seed`.
-- **Usage**: Type these into the login form at `http://localhost:3000/login`.
+The wizard will:
+1. Ask for your site name and admin credentials
+2. Let you select modules (blogs, portfolio, themes, etc.)
+3. Build a minimal Prisma schema for your selections
+4. Push the schema to the database (creates only the tables you need)
+5. Create your admin account with a Super Admin role
+6. Restart the server with your modules active
+
+After the wizard completes, you're redirected to the login page at **http://localhost:3000**.
+
+### 6. Apply a theme (optional)
+
+1. Log in to the dashboard
+2. Go to **Themes**
+3. Click **Setup** on a theme to seed its content (menus, posts, testimonials, media)
+4. Click **Activate** to mark it as the active theme
+5. Set the **Deployed URL** to your theme's running address
+
+To start the included marketing theme:
+
+```bash
+npm run dev:theme
+# Runs on http://localhost:3002
+```
 
 ---
 
-### Resetting the Project
+## Option B — Docker (All Services)
 
-If you need to start from scratch (e.g., to test a fresh installation or clear all data), you can use the reset script:
+### 1. Clone and configure
+
+```bash
+git clone https://github.com/BlendWitTech/blendwit-cms-saas.git
+cd blendwit-cms-saas
+cp backend/.env.example backend/.env
+```
+
+Edit `backend/.env` — update `JWT_SECRET` at minimum.
+
+### 2. Start all containers
+
+```bash
+docker-compose up -d
+```
+
+Services started:
+| Service | URL |
+|---|---|
+| Admin UI | http://localhost:3000 |
+| Backend API | http://localhost:3001 |
+| pgAdmin | http://localhost:5050 |
+
+### 3. Run the setup wizard
+
+Open **http://localhost:3000/setup** — same steps as above.
+
+> **Note:** After the wizard completes and calls `process.exit(0)`, Docker's `restart: always` policy automatically brings the backend container back up.
+
+### Customising Docker defaults
+
+Create a `.env` file at the project root:
+
+```env
+ORG_NAME=mycompany
+DB_USER=admin
+DB_PASSWORD=strongpassword
+DB_NAME=mycompany_cms
+JWT_SECRET=very-long-secret-here
+PGADMIN_EMAIL=admin@mycompany.com
+PGADMIN_PASSWORD=pgadminpassword
+CORS_ORIGINS=https://mycompany.com,https://cms.mycompany.com
+NEXT_PUBLIC_API_URL=https://api.mycompany.com
+```
+
+---
+
+## Changing Modules After Setup
+
+Go to **Dashboard → Settings → Modules**. Toggling modules will:
+1. Rebuild the schema with new selections
+2. Run `prisma db push` (new tables added; unused tables left in place)
+3. Restart the server
+
+> **Warning:** Disabling a module does not drop its tables or delete data. Re-enabling it later restores full access.
+
+---
+
+## Resetting
 
 ```bash
 npm run reset
 ```
 
-**Warning**: This will delete all `node_modules`, build artifacts, `.env` files, and **completely wipe your database**.
+Wipes `node_modules`, build artifacts, `.env` files, and drops the database. Use this to start fresh.
 
 ---
 
-## Accessing the System
+## Ports Reference
 
-- **Frontend (Next.js)**: [http://localhost:3000/login](http://localhost:3000/login)
-- **Backend API (NestJS)**: [http://localhost:3001](http://localhost:3001)
-- **Super Admin Credentials**:
-    - **Email**: `superadmin@blendwit.com`
-    - **Password**: `admin123`
-    - *Note: You will be prompted to change your password on first login.*
+| Service | Port |
+|---|---|
+| Admin UI (Next.js) | 3000 |
+| Backend API (NestJS) | 3001 |
+| Marketing theme | 3002 |
+| PostgreSQL | 5432 |
+| pgAdmin | 5050 |
+
+---
 
 ## Troubleshooting
 
-- **Database Connection Error (P1001)**: Ensure Docker is running and the containers are started with `docker-compose up -d`.
-- **Backend Port Conflict**: If port `3001` is already in use, you can change the port in `backend/.env`.
-- **Fetch Settings Failed**: Ensure the backend is running on port `3001`, as the frontend expects it there.
+**Setup wizard can't connect to backend**
+- Ensure the backend is running: `npm run dev:backend`
+- Check `NEXT_PUBLIC_API_URL` in `frontend/.env.local` (or environment)
+
+**`prisma db push` fails during setup**
+- Check `DATABASE_URL` is correct in `backend/.env`
+- Ensure PostgreSQL is running and the database exists
+
+**Server doesn't restart after setup**
+- In dev: ensure you're using `nodemon` (the default `npm run start:dev`)
+- In Docker: `restart: always` handles this automatically
+- In PM2: `process.exit(0)` triggers PM2's restart policy
+
+**Theme not showing in Themes page**
+- Ensure the theme folder has a `theme.json` file
+- Built-in themes must be in the `themes/` directory at the project root
+- In Docker, the `themes/` directory is volume-mounted to `/themes` inside the container

@@ -5,10 +5,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Only check setup for dashboard routes
-    if (!pathname.startsWith('/dashboard')) {
-        return NextResponse.next();
-    }
+    // Intercept root (login page) and all dashboard routes
+    const isRoot = pathname === '/';
+    const isDashboard = pathname.startsWith('/dashboard');
+    if (!isRoot && !isDashboard) return NextResponse.next();
 
     try {
         const res = await fetch(`${API_URL}/setup/status`, {
@@ -29,5 +29,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/dashboard/:path*'],
+    matcher: ['/', '/dashboard/:path*'],
 };

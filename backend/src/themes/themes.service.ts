@@ -8,8 +8,13 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ThemesService {
     /** Themes uploaded via the UI (ZIP upload) */
     private readonly uploadPath = path.join(process.cwd(), 'uploads', 'themes');
-    /** Built-in themes shipped with the project (project-root/themes/) */
-    private readonly builtInThemesPath = path.join(process.cwd(), '..', 'themes');
+    /**
+     * Built-in themes shipped with the project.
+     * In dev: project-root/themes/  (one level above backend/)
+     * In Docker: set THEMES_DIR=/themes (volume-mounted from host)
+     */
+    private readonly builtInThemesPath =
+        process.env.THEMES_DIR || path.join(process.cwd(), '..', 'themes');
     /** Media uploads directory */
     private readonly mediaUploadPath = path.join(process.cwd(), 'uploads');
 
@@ -160,7 +165,8 @@ export class ThemesService {
 
         const previewFile = themePath && (
             fs.existsSync(path.join(themePath, 'preview.png')) ? 'preview.png' :
-            fs.existsSync(path.join(themePath, 'preview.jpg')) ? 'preview.jpg' : null
+            fs.existsSync(path.join(themePath, 'preview.jpg')) ? 'preview.jpg' :
+            fs.existsSync(path.join(themePath, 'preview.svg')) ? 'preview.svg' : null
         );
 
         // Uploaded themes' previews are served via express static;

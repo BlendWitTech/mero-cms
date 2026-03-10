@@ -87,7 +87,9 @@ export class SetupService {
         // Resolve paths: __dirname = dist/setup or src/setup → up to backend root
         const backendRoot = path.join(__dirname, '..', '..');
         const projectRoot = path.join(backendRoot, '..');
-        const buildScriptPath = path.join(projectRoot, 'scripts', 'build-schema.js');
+        // In Docker, set SCRIPTS_DIR=/scripts (volume-mounted); in dev it falls back to ../scripts
+        const scriptsDir = process.env.SCRIPTS_DIR || path.join(projectRoot, 'scripts');
+        const buildScriptPath = path.join(scriptsDir, 'build-schema.js');
 
         // 1. Assemble minimal schema for selected modules
         const moduleList = data.enabledModules.join(',');
@@ -159,7 +161,8 @@ export class SetupService {
 
         const backendRoot = path.join(__dirname, '..', '..');
         const projectRoot = path.join(backendRoot, '..');
-        const buildScriptPath = path.join(projectRoot, 'scripts', 'build-schema.js');
+        const scriptsDir2 = process.env.SCRIPTS_DIR || path.join(projectRoot, 'scripts');
+        const buildScriptPath = path.join(scriptsDir2, 'build-schema.js');
 
         const moduleList = modules.join(',');
         console.log(`[Setup] Updating schema for modules: ${moduleList}`);

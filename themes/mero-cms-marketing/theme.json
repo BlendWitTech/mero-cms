@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Official marketing website theme for the Mero CMS product. Showcases features, pricing, testimonials, and blog.",
   "author": "Mero CMS",
-  "preview": "preview.png",
+  "preview": "preview.svg",
   "requiredModules": ["blogs", "testimonials", "leads", "menus"],
   "deployedUrl": "",
   "seed": {

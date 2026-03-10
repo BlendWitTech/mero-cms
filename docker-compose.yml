@@ -1,12 +1,12 @@
 services:
   db:
     image: postgres:15-alpine
-    container_name: ${ORG_NAME:-blendwit}-cms-db
+    container_name: ${ORG_NAME:-mero}-cms-db
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER:-admin}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-password123}
-      POSTGRES_DB: ${DB_NAME:-blendwit_cms}
+      POSTGRES_DB: ${DB_NAME:-mero_cms}
     ports:
       - "5432:5432"
     volumes:
@@ -15,36 +15,47 @@ services:
   backend:
     build:
       context: ./backend
-    container_name: ${ORG_NAME:-blendwit}-cms-backend
+    container_name: ${ORG_NAME:-mero}-cms-backend
     restart: always
     ports:
       - "3001:3001"
     environment:
-      DATABASE_URL: postgresql://${DB_USER:-admin}:${DB_PASSWORD:-password123}@db:5432/${DB_NAME:-blendwit_cms}?schema=public
-      JWT_SECRET: ${JWT_SECRET:-supersercretkey123}
+      DATABASE_URL: postgresql://${DB_USER:-admin}:${DB_PASSWORD:-password123}@db:5432/${DB_NAME:-mero_cms}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       PORT: 3001
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3002}
+      # Set by setup wizard on first run — leave empty initially
+      ENABLED_MODULES: ${ENABLED_MODULES:-}
+      SETUP_COMPLETE: ${SETUP_COMPLETE:-false}
+      # Docker volume paths — themes/ and scripts/ are mounted as read-only
+      THEMES_DIR: /themes
+      SCRIPTS_DIR: /scripts
+    volumes:
+      - ./themes:/themes:ro
+      - ./scripts:/scripts:ro
+      - backend_uploads:/app/uploads
     depends_on:
       - db
 
   frontend:
     build:
       context: ./frontend
-    container_name: ${ORG_NAME:-blendwit}-cms-frontend
+    container_name: ${ORG_NAME:-mero}-cms-frontend
     restart: always
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
     depends_on:
       - backend
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: ${ORG_NAME:-blendwit}-cms-pgadmin
+    container_name: ${ORG_NAME:-mero}-cms-pgadmin
     restart: always
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@blendwit.com
-      PGADMIN_DEFAULT_PASSWORD: password123
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-password123}
     ports:
       - "5050:80"
     depends_on:
@@ -52,3 +63,4 @@ services:
 
 volumes:
   postgres_data:
+  backend_uploads:

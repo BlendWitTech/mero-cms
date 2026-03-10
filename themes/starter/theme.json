@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "A minimal starter theme for Mero CMS — clone, customize, and deploy.",
   "author": "Your Name",
-  "preview": "preview.png",
+  "preview": "preview.svg",
   "requiredModules": ["pages", "menus"],
   "deployedUrl": "",
   "seed": {
