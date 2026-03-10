@@ -13,5 +13,12 @@ yarn-error.log*
 .vscode
 *.log
 
+# Claude Code memory
+.claude/
+
+# Media uploads (user-generated content, not source code)
+backend/uploads/
+
+# Temp directories
 temp_theme/
 temp_website_repo/
