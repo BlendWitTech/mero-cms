@@ -21,9 +21,11 @@ export default async function BlogPage({ searchParams }: Props) {
   return (
     <>
       {/* Header */}
-      <div style={{ background: '#CC1414', padding: '4rem 0 3rem' }}>
+      <div style={{ background: '#1E1E1E', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
+        {/* Red left accent — brand marker */}
+        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '5px', background: '#CC1414' }} />
         <div className="container">
-          <div style={{ color: '#CC1414', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Knowledge Hub</div>
+          <div className="tag-label">Knowledge Hub</div>
           <h1 style={{ color: '#FFFFFF', fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', fontWeight: 900, marginBottom: '1rem' }}>
             Our Blog
           </h1>
@@ -61,14 +63,14 @@ export default async function BlogPage({ searchParams }: Props) {
                           </div>
                         )}
                         {post.featured && (
-                          <div style={{ position: 'absolute', top: '12px', left: '12px', background: '#CC1414', color: '#CC1414', fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
+                          <div style={{ position: 'absolute', top: '12px', left: '12px', background: '#CC1414', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
                             Featured
                           </div>
                         )}
                       </div>
                       <div style={{ padding: '1.25rem' }}>
                         {post.categories && post.categories.length > 0 && (
-                          <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#CC1414', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#D1FAE5', padding: '0.2rem 0.5rem', borderRadius: '4px', marginBottom: '0.75rem', display: 'inline-block' }}>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#CC1414', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#FEE2E2', padding: '0.2rem 0.5rem', borderRadius: '4px', marginBottom: '0.75rem', display: 'inline-block' }}>
                             {post.categories[0].name}
                           </span>
                         )}

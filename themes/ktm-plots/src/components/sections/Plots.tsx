@@ -80,7 +80,7 @@ export default function Plots({ plots }: Props) {
                   </div>
                   {/* Category */}
                   {plot.category && (
-                    <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(30,30,30,0.85)', color: '#FF8080', fontSize: '0.7rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(30,30,30,0.85)', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       {plot.category.name}
                     </div>
                   )}
@@ -88,7 +88,7 @@ export default function Plots({ plots }: Props) {
 
                 {/* Content */}
                 <div style={{ padding: '1.25rem' }}>
-                  <h3 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#CC1414', marginBottom: '0.4rem' }}>{plot.title}</h3>
+                  <h3 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#1E1E1E', marginBottom: '0.4rem' }}>{plot.title}</h3>
 
                   {/* Location */}
                   {plot.location && (

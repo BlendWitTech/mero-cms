@@ -88,7 +88,7 @@ export default function Services({ services }: Props) {
                   height: '52px',
                   borderRadius: '12px',
                   background: '#CC1414',
-                  color: '#CC1414',
+                  color: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -97,7 +97,7 @@ export default function Services({ services }: Props) {
               >
                 {ICON_MAP[service.icon || ''] ?? ICON_MAP['map-pin']}
               </div>
-              <h3 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#CC1414', marginBottom: '0.5rem' }}>{service.title}</h3>
+              <h3 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#1E1E1E', marginBottom: '0.5rem' }}>{service.title}</h3>
               <p style={{ fontSize: '0.875rem', color: '#6B7280', lineHeight: 1.7 }}>{service.description}</p>
             </div>
           ))}

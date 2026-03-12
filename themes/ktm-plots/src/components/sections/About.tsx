@@ -96,7 +96,7 @@ export default function About({ siteData }: Props) {
                   }}
                 >
                   <div style={{ color: '#CC1414', marginBottom: '0.75rem' }}>{f.icon}</div>
-                  <h4 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.4rem', color: '#CC1414' }}>{f.title}</h4>
+                  <h4 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.4rem', color: '#1E1E1E' }}>{f.title}</h4>
                   <p style={{ fontSize: '0.825rem', color: '#6B7280', lineHeight: 1.6 }}>{f.desc}</p>
                 </div>
               ))}

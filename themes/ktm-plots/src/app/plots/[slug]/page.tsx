@@ -29,7 +29,7 @@ export default async function PlotDetailPage({ params }: Props) {
   return (
     <>
       {/* Breadcrumb */}
-      <div style={{ background: '#CC1414', padding: '1.5rem 0' }}>
+      <div style={{ background: '#1E1E1E', padding: '1.5rem 0', borderBottom: '3px solid #CC1414' }}>
         <div className="container" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.825rem', color: '#A0A0A0' }}>
           <Link href="/" style={{ color: '#A0A0A0', textDecoration: 'none' }}>Home</Link>
           <span>/</span>
@@ -96,7 +96,7 @@ export default async function PlotDetailPage({ params }: Props) {
                   )}
                 </div>
 
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#CC1414', marginBottom: '0.75rem', lineHeight: 1.3 }}>{plot.title}</h1>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1E1E1E', marginBottom: '0.75rem', lineHeight: 1.3 }}>{plot.title}</h1>
 
                 {plot.location && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#6B7280', fontSize: '0.875rem', marginBottom: '1.25rem' }}>
@@ -108,7 +108,7 @@ export default async function PlotDetailPage({ params }: Props) {
                 {/* Key details */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
                   {plot.priceFrom && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: '#FEF9EC', borderRadius: '8px', border: '1px solid #E82020' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: '#FEF2F2', borderRadius: '8px', border: '1px solid #FCA5A5' }}>
                       <span style={{ fontSize: '0.85rem', color: '#6B7280' }}>Starting Price</span>
                       <span style={{ fontWeight: 800, color: '#CC1414', fontSize: '1.1rem' }}>
                         NPR {Number(plot.priceFrom).toLocaleString('en-NP')}
@@ -116,9 +116,9 @@ export default async function PlotDetailPage({ params }: Props) {
                     </div>
                   )}
                   {plot.areaFrom && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#F0FDF4', borderRadius: '8px', border: '1px solid #BBF7D0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#F4F4F4', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
                       <span style={{ fontSize: '0.85rem', color: '#6B7280' }}>Plot Size</span>
-                      <span style={{ fontWeight: 700, color: '#065F46', fontSize: '0.95rem' }}>
+                      <span style={{ fontWeight: 700, color: '#1E1E1E', fontSize: '0.95rem' }}>
                         {plot.areaFrom}{plot.areaTo && plot.areaTo !== plot.areaFrom ? ` – ${plot.areaTo}` : ''}
                       </span>
                     </div>
@@ -139,12 +139,12 @@ export default async function PlotDetailPage({ params }: Props) {
               </div>
 
               {/* Why buy with us */}
-              <div style={{ background: '#CC1414', borderRadius: '12px', padding: '1.5rem', color: '#FFFFFF' }}>
-                <h4 style={{ fontWeight: 700, marginBottom: '1rem', color: '#CC1414' }}>Why Buy With KTM Plots?</h4>
+              <div style={{ background: '#1E1E1E', borderRadius: '12px', padding: '1.5rem', color: '#FFFFFF' }}>
+                <h4 style={{ fontWeight: 700, marginBottom: '1rem', color: '#FFFFFF' }}>Why Buy With KTM Plots?</h4>
                 <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                   {['Verified legal title (Lalpurja)', 'No hidden charges', 'Full registration support', 'Site visit arranged free', 'Dedicated advisor assigned'].map((item) => (
-                    <li key={item} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.85rem', color: '#A0A0A0' }}>
-                      <svg width="16" height="16" fill="none" stroke="#E82020" strokeWidth="2.5" style={{ flexShrink: 0, marginTop: '1px' }} viewBox="0 0 24 24">
+                    <li key={item} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)' }}>
+                      <svg width="16" height="16" fill="none" stroke="#CC1414" strokeWidth="2.5" style={{ flexShrink: 0, marginTop: '1px' }} viewBox="0 0 24 24">
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>
                       {item}

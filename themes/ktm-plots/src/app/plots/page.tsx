@@ -38,13 +38,15 @@ export default async function PlotsPage({ searchParams }: Props) {
   return (
     <>
       {/* Header */}
-      <div style={{ background: '#CC1414', padding: '4rem 0 3rem' }}>
+      <div style={{ background: '#1E1E1E', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
+        {/* Red left accent — brand marker */}
+        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '5px', background: '#CC1414' }} />
         <div className="container">
-          <div style={{ color: '#CC1414', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Land Listings</div>
+          <div className="tag-label">Land Listings</div>
           <h1 style={{ color: '#FFFFFF', fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', fontWeight: 900, marginBottom: '1rem' }}>
             Available Plots
           </h1>
-          <p style={{ color: '#A0A0A0', maxWidth: '480px' }}>
+          <p style={{ color: '#A0A0A0', maxWidth: '480px', lineHeight: 1.7 }}>
             Browse our verified land plots across Kathmandu Valley. All with clear legal titles and professional support.
           </p>
         </div>
@@ -108,13 +110,13 @@ export default async function PlotsPage({ searchParams }: Props) {
                         )}
                         <div style={{ position: 'absolute', top: '12px', right: '12px' }}><StatusBadge status={plot.status} /></div>
                         {plot.category && (
-                          <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(200,20,20,0.85)', color: '#CC1414', fontSize: '0.7rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: '4px', textTransform: 'uppercase' }}>
+                          <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(30,30,30,0.8)', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: '4px', textTransform: 'uppercase' }}>
                             {plot.category.name}
                           </div>
                         )}
                       </div>
                       <div style={{ padding: '1.25rem' }}>
-                        <h3 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#CC1414', marginBottom: '0.4rem' }}>{plot.title}</h3>
+                        <h3 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#1E1E1E', marginBottom: '0.4rem' }}>{plot.title}</h3>
                         {plot.location && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#6B7280', fontSize: '0.8rem', marginBottom: '0.75rem' }}>
                             <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>

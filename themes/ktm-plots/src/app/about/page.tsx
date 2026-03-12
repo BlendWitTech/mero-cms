@@ -22,9 +22,11 @@ export default async function AboutPage() {
   return (
     <>
       {/* Page header */}
-      <div style={{ background: '#CC1414', padding: '4rem 0 3rem' }}>
+      <div style={{ background: '#1E1E1E', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
+        {/* Red left accent — brand marker */}
+        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '5px', background: '#CC1414' }} />
         <div className="container">
-          <div style={{ color: '#CC1414', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.5rem', textTransform: 'uppercase' }}>About Us</div>
+          <div className="tag-label">About Us</div>
           <h1 style={{ color: '#FFFFFF', fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', fontWeight: 900, marginBottom: '1rem' }}>
             Kathmandu Valley&apos;s<br />Trusted Land Partner
           </h1>
@@ -80,8 +82,8 @@ export default async function AboutPage() {
               { value: '1000+', label: 'Happy Clients' },
             ].map((s) => (
               <div key={s.label}>
-                <div style={{ fontSize: '2.25rem', fontWeight: 900, color: '#CC1414', marginBottom: '0.25rem' }}>{s.value}</div>
-                <div style={{ fontSize: '0.85rem', color: '#A0A0A0' }}>{s.label}</div>
+                <div style={{ fontSize: '2.25rem', fontWeight: 900, color: '#FFFFFF', marginBottom: '0.25rem' }}>{s.value}</div>
+                <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.65)' }}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -98,10 +100,10 @@ export default async function AboutPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.5rem' }}>
             {team.map((member) => (
               <div key={member.name} style={{ background: '#FFFFFF', borderRadius: '12px', padding: '2rem', textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-                <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#CC1414', color: '#CC1414', fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#2E2E2E', color: '#FFFFFF', fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
                   {member.initials}
                 </div>
-                <h4 style={{ fontWeight: 700, color: '#CC1414', marginBottom: '0.25rem' }}>{member.name}</h4>
+                <h4 style={{ fontWeight: 700, color: '#1E1E1E', marginBottom: '0.25rem' }}>{member.name}</h4>
                 <div style={{ fontSize: '0.8rem', color: '#CC1414', fontWeight: 600, marginBottom: '0.75rem' }}>{member.role}</div>
                 <p style={{ fontSize: '0.825rem', color: '#6B7280', lineHeight: 1.6 }}>{member.bio}</p>
               </div>

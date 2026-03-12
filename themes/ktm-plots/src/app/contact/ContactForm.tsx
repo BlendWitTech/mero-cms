@@ -51,8 +51,8 @@ export default function ContactForm() {
   if (status === 'success') {
     return (
       <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '3rem 2rem', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', textAlign: 'center' }}>
-        <div style={{ width: '64px', height: '64px', background: '#D1FAE5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-          <svg width="28" height="28" fill="none" stroke="#065F46" strokeWidth="2.5" viewBox="0 0 24 24">
+        <div style={{ width: '64px', height: '64px', background: '#1E1E1E', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+          <svg width="28" height="28" fill="none" stroke="#CC1414" strokeWidth="2.5" viewBox="0 0 24 24">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>

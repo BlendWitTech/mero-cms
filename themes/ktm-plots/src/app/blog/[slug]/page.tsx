@@ -33,7 +33,8 @@ export default async function BlogPostPage({ params }: Props) {
   return (
     <>
       {/* Hero */}
-      <div style={{ background: '#CC1414', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: '#1E1E1E', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '5px', background: '#CC1414' }} />
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
           {/* Breadcrumb */}
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.8rem', color: '#A0A0A0', marginBottom: '1.5rem' }}>
@@ -45,7 +46,7 @@ export default async function BlogPostPage({ params }: Props) {
           </div>
 
           {post.categories && post.categories.length > 0 && (
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#CC1414', background: '#CC1414', padding: '0.2rem 0.7rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'inline-block' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#FFFFFF', background: '#CC1414', padding: '0.2rem 0.7rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'inline-block' }}>
               {post.categories[0].name}
             </span>
           )}
@@ -93,7 +94,7 @@ export default async function BlogPostPage({ params }: Props) {
               {post.categories && post.categories.length > 0 && (
                 <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid #E5E7EB', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   {post.categories.map((cat) => (
-                    <span key={cat.slug} style={{ background: '#D1FAE5', color: '#065F46', fontSize: '0.75rem', fontWeight: 600, padding: '0.3rem 0.75rem', borderRadius: '9999px' }}>
+                    <span key={cat.slug} style={{ background: '#FEE2E2', color: '#065F46', fontSize: '0.75rem', fontWeight: 600, padding: '0.3rem 0.75rem', borderRadius: '9999px' }}>
                       {cat.name}
                     </span>
                   ))}
