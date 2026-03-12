@@ -73,4 +73,20 @@ export class ThemesController {
     async setDeployedUrl(@Param('name') name: string, @Body('url') url: string) {
         return this.themesService.setDeployedUrl(name, url);
     }
+
+    @Get('active/page-schema')
+    async getPageSchema() {
+        return { pageSchema: await this.themesService.getPageSchema() };
+    }
+
+    @Get('active/module-aliases')
+    async getModuleAliases() {
+        return { moduleAliases: await this.themesService.getModuleAliases() };
+    }
+
+    @Get('active/config')
+    async getActiveConfig() {
+        return this.themesService.getActiveThemeConfig();
+    }
+
 }

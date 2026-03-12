@@ -303,7 +303,7 @@ export default function SettingsPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-xl font-bold text-slate-900">Contact Information</h3>
-                                        <p className="text-sm text-slate-400">Shown in the footer, contact page, and CTA sections.</p>
+                                        <p className="text-sm text-slate-400">Shown in the footer, contact page, and CTA sections. To edit page section content (hero text, images, buttons) go to <a href="/dashboard/site-pages" className="text-blue-600 underline">Site Pages</a>.</p>
                                     </div>
                                 </div>
                                 {!isSectionEditing('contact', ['contact_email', 'contact_phone', 'address']) && (
@@ -402,82 +402,6 @@ export default function SettingsPage() {
                             )}
                         </div>
 
-                        {/* Page Section Content */}
-                        <div className="bg-white rounded-[3rem] p-10 lg:p-12 shadow-2xl shadow-slate-200/40 border border-slate-200/60 space-y-8">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-emerald-600 rounded-2xl shadow-xl shadow-emerald-500/20 text-white">
-                                        <Cog6ToothIcon className="h-6 w-6" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-slate-900">Page Section Content</h3>
-                                        <p className="text-sm text-slate-400">Customise hero text, about section, and CTA buttons — overrides theme defaults.</p>
-                                    </div>
-                                </div>
-                                {!isSectionEditing('pagecontent', ['hero_title', 'about_title']) && (
-                                    <button onClick={() => toggleEdit('pagecontent')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
-                                        Edit
-                                    </button>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Hero Section</p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Hero Headline</label>
-                                        <input type="text" disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.hero_title || ''} onChange={(e) => setSettings({ ...settings, hero_title: e.target.value })} placeholder="Find Your Perfect Land Plot" className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Hero Background Image URL</label>
-                                        <input type="text" disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.hero_bg_image || ''} onChange={(e) => setSettings({ ...settings, hero_bg_image: e.target.value })} placeholder="/uploads/hero-bg.jpg" className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60" />
-                                    </div>
-                                    <div className="md:col-span-2 space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Hero Subtitle</label>
-                                        <textarea rows={2} disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.hero_subtitle || ''} onChange={(e) => setSettings({ ...settings, hero_subtitle: e.target.value })} placeholder="Premium residential and commercial plots with clear legal titles..." className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none transition-all disabled:opacity-60 resize-none" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">About Section (Home Page)</p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">About Title</label>
-                                        <input type="text" disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.about_title || ''} onChange={(e) => setSettings({ ...settings, about_title: e.target.value })} placeholder="Kathmandu Valley's Most Trusted Land Partner" className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none transition-all disabled:opacity-60" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">About Image URL</label>
-                                        <input type="text" disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.about_image || ''} onChange={(e) => setSettings({ ...settings, about_image: e.target.value })} placeholder="/uploads/about.jpg" className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none transition-all disabled:opacity-60" />
-                                    </div>
-                                    <div className="md:col-span-2 space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">About Content</label>
-                                        <textarea rows={3} disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.about_content || ''} onChange={(e) => setSettings({ ...settings, about_content: e.target.value })} placeholder="Founded with a vision to make land ownership accessible..." className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none transition-all disabled:opacity-60 resize-none" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Call-to-Action Button</p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">CTA Button Label</label>
-                                        <input type="text" disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.cta_text || ''} onChange={(e) => setSettings({ ...settings, cta_text: e.target.value })} placeholder="Browse Plots" className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none transition-all disabled:opacity-60" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">CTA Button URL</label>
-                                        <input type="text" disabled={!isSectionEditing('pagecontent', ['hero_title', 'about_title'])} value={settings.cta_url || ''} onChange={(e) => setSettings({ ...settings, cta_url: e.target.value })} placeholder="/plots" className="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none transition-all disabled:opacity-60" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {isSectionEditing('pagecontent', ['hero_title', 'about_title']) && editModes['pagecontent'] && (
-                                <div className="flex gap-4 pt-4">
-                                    <button onClick={() => handleSave('pagecontent')} className="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 transition-all">Save Section Content</button>
-                                    <button onClick={() => handleCancel('pagecontent')} className="bg-slate-100 text-slate-500 px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
-                                </div>
-                            )}
-                        </div>
                     </div>
                 )}
 

@@ -246,6 +246,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     const { permissions, isLoading: permissionsLoading } = usePermissions();
     const { enabledModules, isLoading: modulesLoading } = useModules();
     const [navItems, setNavItems] = useState(initialNavigation);
+    const [moduleAliases, setModuleAliases] = useState<Record<string, string>>({});
     const { isDirty, setIsDirty, saveHandler } = useForm();
     const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
     const [showDiscardAlert, setShowDiscardAlert] = useState(false);
@@ -275,6 +276,29 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     }, [permissions, permissionsLoading]);
 
     const checkThemeStatus = async () => {
+        // Load module aliases for the active theme (e.g. { projects: 'Plots' })
+        try {
+            const aliasRes = await apiRequest('/themes/active/module-aliases', { skipNotification: true });
+            const aliases: Record<string, string> = aliasRes?.moduleAliases || {};
+            setModuleAliases(aliases);
+            // Apply aliases to Content nav children
+            if (Object.keys(aliases).length > 0) {
+                setNavItems(prev => prev.map((item: any) => {
+                    if (item.name === 'Content' && item.children) {
+                        return {
+                            ...item,
+                            children: item.children.map((child: any) => {
+                                // Map requiresModule to alias
+                                const alias = aliases[child.requiresModule];
+                                return alias ? { ...child, name: alias } : child;
+                            })
+                        };
+                    }
+                    return item;
+                }) as any);
+            }
+        } catch {}
+
         try {
             // Check if any pages exist (implies theme is active/imported)
             const pages = await apiRequest('/pages', { skipNotification: true });

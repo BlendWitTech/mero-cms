@@ -337,10 +337,20 @@ export default function SitePagesPage() {
 
     if (pageSchema.length === 0) {
         return (
-            <div className="p-8 text-center">
+            <div className="p-8 text-center max-w-lg mx-auto">
                 <Squares2X2Icon className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-                <h2 className="font-bold text-slate-600 text-lg">No Page Schema</h2>
-                <p className="text-slate-400 text-sm mt-2">The active theme has not defined a <code>pageSchema</code> in its <code>theme.json</code>.</p>
+                <h2 className="font-bold text-slate-800 text-lg">This theme doesn't support page editing</h2>
+                <p className="text-slate-500 text-sm mt-2 leading-relaxed">
+                    The active theme hasn't defined a <code className="bg-slate-100 px-1 rounded">pageSchema</code> in its <code className="bg-slate-100 px-1 rounded">theme.json</code>.
+                    Only themes built for this CMS expose their pages here.
+                </p>
+                <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-200 text-left">
+                    <p className="text-xs font-bold text-amber-800 mb-1">For theme developers:</p>
+                    <p className="text-xs text-amber-700 leading-relaxed">
+                        Add a <code className="bg-amber-100 px-1 rounded">pageSchema</code> array to your <code className="bg-amber-100 px-1 rounded">theme.json</code> to define which pages and sections are editable.
+                        See the KTM Plots theme as a reference implementation.
+                    </p>
+                </div>
             </div>
         );
     }
