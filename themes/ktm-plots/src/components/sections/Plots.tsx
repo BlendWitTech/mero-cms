@@ -1,4 +1,6 @@
+'use client';
 import Link from 'next/link';
+
 import Image from 'next/image';
 import type { Project } from '@/lib/cms';
 import { getImageUrl } from '@/lib/cms';
@@ -19,7 +21,7 @@ export default function Plots({ plots }: Props) {
 
   if (list.length === 0) {
     return (
-      <section id="plots" style={{ padding: '5rem 0', background: '#F9F6F0' }}>
+      <section id="plots" style={{ padding: '5rem 0', background: '#F4F4F4' }}>
         <div className="container" style={{ textAlign: 'center' }}>
           <h2 className="section-title">Featured Plots</h2>
           <p style={{ color: '#6B7280' }}>No plots available at the moment. Please check back soon.</p>
@@ -29,11 +31,11 @@ export default function Plots({ plots }: Props) {
   }
 
   return (
-    <section id="plots" style={{ padding: '5rem 0', background: '#F9F6F0' }}>
+    <section id="plots" style={{ padding: '5rem 0', background: '#F4F4F4' }}>
       <div className="container">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '3rem' }}>
           <div>
-            <div style={{ color: '#D4A017', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.8rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+            <div style={{ color: '#CC1414', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.8rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
               Available Now
             </div>
             <h2 className="section-title" style={{ marginBottom: '0.25rem' }}>Featured Plots</h2>
@@ -54,7 +56,7 @@ export default function Plots({ plots }: Props) {
                 style={{ textDecoration: 'none', display: 'block', background: '#FFFFFF', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', transition: 'transform 0.2s, box-shadow 0.2s' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(27,67,50,0.15)';
+                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(200,20,20,0.15)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = '';
@@ -62,12 +64,12 @@ export default function Plots({ plots }: Props) {
                 }}
               >
                 {/* Image */}
-                <div style={{ position: 'relative', height: '200px', background: '#2D6A4F' }}>
+                <div style={{ position: 'relative', height: '200px', background: '#A01010' }}>
                   {imgUrl ? (
                     <Image src={imgUrl} alt={plot.title} fill style={{ objectFit: 'cover' }} />
                   ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="48" height="48" fill="none" stroke="#52B788" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <svg width="48" height="48" fill="none" stroke="#E82020" strokeWidth="1.5" viewBox="0 0 24 24">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                       </svg>
                     </div>
@@ -78,7 +80,7 @@ export default function Plots({ plots }: Props) {
                   </div>
                   {/* Category */}
                   {plot.category && (
-                    <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(27,67,50,0.85)', color: '#D4A017', fontSize: '0.7rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(30,30,30,0.85)', color: '#FF8080', fontSize: '0.7rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       {plot.category.name}
                     </div>
                   )}
@@ -86,7 +88,7 @@ export default function Plots({ plots }: Props) {
 
                 {/* Content */}
                 <div style={{ padding: '1.25rem' }}>
-                  <h3 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#1B4332', marginBottom: '0.4rem' }}>{plot.title}</h3>
+                  <h3 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#CC1414', marginBottom: '0.4rem' }}>{plot.title}</h3>
 
                   {/* Location */}
                   {plot.location && (
@@ -111,7 +113,7 @@ export default function Plots({ plots }: Props) {
                       </div>
                     )}
                     {plot.priceFrom && (
-                      <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#D4A017' }}>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#CC1414' }}>
                         From NPR {Number(plot.priceFrom).toLocaleString('en-NP')}
                       </div>
                     )}

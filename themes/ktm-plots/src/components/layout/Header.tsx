@@ -15,42 +15,57 @@ export default function Header({ siteData, menu }: Props) {
   const [open, setOpen] = useState(false);
   const { settings } = siteData;
   const logoUrl = getImageUrl(settings.logoUrl);
+
   const items = menu?.items?.sort((a, b) => a.order - b.order) ?? [
-    { id: '1', label: 'Home', url: '/', order: 1 },
-    { id: '2', label: 'About', url: '/about', order: 2 },
-    { id: '3', label: 'Plots', url: '/plots', order: 3 },
+    { id: '1', label: 'Home',     url: '/',         order: 1 },
+    { id: '2', label: 'About',    url: '/about',    order: 2 },
+    { id: '3', label: 'Plots',    url: '/plots',    order: 3 },
     { id: '4', label: 'Services', url: '/services', order: 4 },
-    { id: '5', label: 'Blog', url: '/blog', order: 5 },
-    { id: '6', label: 'Contact', url: '/contact', order: 6 },
+    { id: '5', label: 'Blog',     url: '/blog',     order: 5 },
+    { id: '6', label: 'Contact',  url: '/contact',  order: 6 },
   ];
 
   return (
-    <header style={{ background: '#1B4332', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
-      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '68px' }}>
-        {/* Logo */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+    <header style={{ background: '#FFFFFF', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 2px 12px rgba(0,0,0,0.10)', borderBottom: '3px solid #CC1414' }}>
+      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '72px' }}>
+
+        {/* Logo — full image if set in CMS, otherwise brand-matching KTM PLOTS blocks */}
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
           {logoUrl ? (
-            <Image src={logoUrl} alt={settings.siteTitle} width={48} height={48} style={{ objectFit: 'contain', borderRadius: '4px' }} />
-          ) : null}
-          <span style={{ color: '#D4A017', fontWeight: 800, fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
-            {settings.siteTitle || 'KTM Plots'}
-          </span>
+            <Image
+              src={logoUrl}
+              alt={settings.siteTitle || 'KTM Plots'}
+              width={150}
+              height={56}
+              style={{ objectFit: 'contain', maxHeight: '56px', width: 'auto' }}
+              priority
+            />
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'stretch', lineHeight: 1 }}>
+              <span style={{ background: '#CC1414', color: '#fff', fontWeight: 900, fontSize: '1.45rem', letterSpacing: '-0.5px', padding: '6px 12px' }}>
+                KTM
+              </span>
+              <span style={{ background: '#1E1E1E', color: '#fff', fontWeight: 900, fontSize: '1.45rem', letterSpacing: '4px', padding: '6px 12px' }}>
+                PLOTS
+              </span>
+            </div>
+          )}
         </Link>
 
         {/* Desktop nav */}
-        <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }} className="desktop-nav">
+        <nav style={{ display: 'flex', gap: '1.75rem', alignItems: 'center' }} className="desktop-nav">
           {items.map((item) => (
             <Link
               key={item.id}
               href={item.url}
-              style={{ color: '#E5E7EB', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 500, transition: 'color 0.2s' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#D4A017')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#E5E7EB')}
+              style={{ color: '#2E2E2E', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600, transition: 'color 0.2s' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#CC1414')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#2E2E2E')}
             >
               {item.label}
             </Link>
           ))}
-          <Link href="/contact" className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.875rem' }}>
+          <Link href="/contact" className="btn-primary" style={{ padding: '0.5rem 1.4rem', fontSize: '0.875rem' }}>
             Get a Quote
           </Link>
         </nav>
@@ -62,32 +77,26 @@ export default function Header({ siteData, menu }: Props) {
           className="hamburger"
           aria-label="Toggle menu"
         >
-          <svg width="24" height="24" fill="none" stroke="#D4A017" strokeWidth="2">
-            {open ? (
-              <>
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </>
-            ) : (
-              <>
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </>
-            )}
+          <svg width="26" height="26" fill="none" stroke="#CC1414" strokeWidth="2.5">
+            {open
+              ? <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
+              : <><line x1="3" y1="7" x2="21" y2="7" /><line x1="3" y1="13" x2="21" y2="13" /><line x1="3" y1="19" x2="21" y2="19" /></>
+            }
           </svg>
         </button>
       </div>
 
       {/* Mobile menu */}
       {open && (
-        <div style={{ background: '#1B4332', borderTop: '1px solid #2D6A4F', padding: '1rem 1.5rem' }} className="mobile-menu">
+        <div style={{ background: '#1E1E1E', borderTop: '2px solid #CC1414', padding: '1rem 1.5rem 1.5rem' }} className="mobile-menu">
           {items.map((item) => (
             <Link
               key={item.id}
               href={item.url}
               onClick={() => setOpen(false)}
-              style={{ display: 'block', color: '#E5E7EB', textDecoration: 'none', padding: '0.6rem 0', fontSize: '1rem', borderBottom: '1px solid #2D6A4F' }}
+              style={{ display: 'block', color: '#E5E7EB', textDecoration: 'none', padding: '0.7rem 0', fontSize: '1rem', borderBottom: '1px solid #333', fontWeight: 500 }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#CC1414')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#E5E7EB')}
             >
               {item.label}
             </Link>

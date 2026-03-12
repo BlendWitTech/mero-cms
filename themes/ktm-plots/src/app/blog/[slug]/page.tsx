@@ -33,19 +33,19 @@ export default async function BlogPostPage({ params }: Props) {
   return (
     <>
       {/* Hero */}
-      <div style={{ background: '#1B4332', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: '#CC1414', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
           {/* Breadcrumb */}
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.8rem', color: '#B7D9C8', marginBottom: '1.5rem' }}>
-            <Link href="/" style={{ color: '#B7D9C8', textDecoration: 'none' }}>Home</Link>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.8rem', color: '#A0A0A0', marginBottom: '1.5rem' }}>
+            <Link href="/" style={{ color: '#A0A0A0', textDecoration: 'none' }}>Home</Link>
             <span>/</span>
-            <Link href="/blog" style={{ color: '#B7D9C8', textDecoration: 'none' }}>Blog</Link>
+            <Link href="/blog" style={{ color: '#A0A0A0', textDecoration: 'none' }}>Blog</Link>
             <span>/</span>
             <span style={{ color: '#FFFFFF' }}>{post.title}</span>
           </div>
 
           {post.categories && post.categories.length > 0 && (
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1B4332', background: '#D4A017', padding: '0.2rem 0.7rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'inline-block' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#CC1414', background: '#CC1414', padding: '0.2rem 0.7rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', display: 'inline-block' }}>
               {post.categories[0].name}
             </span>
           )}
@@ -54,14 +54,14 @@ export default async function BlogPostPage({ params }: Props) {
             {post.title}
           </h1>
 
-          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', fontSize: '0.85rem', color: '#B7D9C8' }}>
+          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', fontSize: '0.85rem', color: '#A0A0A0' }}>
             {post.author && <span>By {post.author.name}</span>}
             <span>{formatDate(post.publishedAt || post.createdAt)}</span>
           </div>
         </div>
       </div>
 
-      <section style={{ padding: '3rem 0 5rem', background: '#F9F6F0' }}>
+      <section style={{ padding: '3rem 0 5rem', background: '#F4F4F4' }}>
         <div className="container">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr min(680px, 100%) 1fr', gap: 0 }}>
             <div style={{ gridColumn: '2' }}>
@@ -101,9 +101,9 @@ export default async function BlogPostPage({ params }: Props) {
               )}
 
               {/* CTA */}
-              <div style={{ marginTop: '3rem', background: '#1B4332', borderRadius: '12px', padding: '2rem', textAlign: 'center' }}>
-                <h3 style={{ color: '#D4A017', fontWeight: 700, marginBottom: '0.5rem' }}>Looking for Land in Kathmandu Valley?</h3>
-                <p style={{ color: '#B7D9C8', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+              <div style={{ marginTop: '3rem', background: '#CC1414', borderRadius: '12px', padding: '2rem', textAlign: 'center' }}>
+                <h3 style={{ color: '#CC1414', fontWeight: 700, marginBottom: '0.5rem' }}>Looking for Land in Kathmandu Valley?</h3>
+                <p style={{ color: '#A0A0A0', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
                   Browse our verified plots or speak with one of our property consultants today.
                 </p>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
@@ -125,18 +125,16 @@ export default async function BlogPostPage({ params }: Props) {
               {relatedPosts.map((p) => {
                 const pImgUrl = getImageUrl(p.featuredImageUrl);
                 return (
-                  <Link key={p.id} href={`/blog/${p.slug}`} style={{ textDecoration: 'none', display: 'block', background: '#F9F6F0', borderRadius: '10px', overflow: 'hidden', transition: 'transform 0.2s' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = ''; }}>
-                    <div style={{ height: '150px', background: '#1B4332', position: 'relative' }}>
+                  <Link key={p.id} href={`/blog/${p.slug}`} style={{ textDecoration: 'none', display: 'block', background: '#F4F4F4', borderRadius: '10px', overflow: 'hidden', transition: 'transform 0.2s' }}>
+                    <div style={{ height: '150px', background: '#CC1414', position: 'relative' }}>
                       {pImgUrl ? (
                         <Image src={pImgUrl} alt={p.title} fill style={{ objectFit: 'cover' }} />
                       ) : (
-                        <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #1B4332, #2D6A4F)' }} />
+                        <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #CC1414, #A01010)' }} />
                       )}
                     </div>
                     <div style={{ padding: '1rem' }}>
-                      <h4 style={{ fontWeight: 700, color: '#1B4332', fontSize: '0.95rem', marginBottom: '0.35rem', lineHeight: 1.4 }}>{p.title}</h4>
+                      <h4 style={{ fontWeight: 700, color: '#CC1414', fontSize: '0.95rem', marginBottom: '0.35rem', lineHeight: 1.4 }}>{p.title}</h4>
                       <span style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>{formatDate(p.publishedAt || p.createdAt)}</span>
                     </div>
                   </Link>

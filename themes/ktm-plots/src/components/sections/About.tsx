@@ -55,12 +55,12 @@ export default function About({ siteData }: Props) {
   ];
 
   return (
-    <section id="about" style={{ padding: '5rem 0', background: '#F9F6F0' }}>
+    <section id="about" style={{ padding: '5rem 0', background: '#F4F4F4' }}>
       <div className="container">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem', alignItems: 'center' }}>
           {/* Text content */}
           <div>
-            <div style={{ color: '#D4A017', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.8rem', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+            <div style={{ color: '#CC1414', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.8rem', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
               About KTM Plots
             </div>
             <h2 className="section-title" style={{ marginBottom: '1rem' }}>
@@ -92,11 +92,11 @@ export default function About({ siteData }: Props) {
                     borderRadius: '10px',
                     padding: '1.5rem',
                     boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                    borderTop: '3px solid #1B4332',
+                    borderTop: '3px solid #CC1414',
                   }}
                 >
-                  <div style={{ color: '#1B4332', marginBottom: '0.75rem' }}>{f.icon}</div>
-                  <h4 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.4rem', color: '#1B4332' }}>{f.title}</h4>
+                  <div style={{ color: '#CC1414', marginBottom: '0.75rem' }}>{f.icon}</div>
+                  <h4 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.4rem', color: '#CC1414' }}>{f.title}</h4>
                   <p style={{ fontSize: '0.825rem', color: '#6B7280', lineHeight: 1.6 }}>{f.desc}</p>
                 </div>
               ))}

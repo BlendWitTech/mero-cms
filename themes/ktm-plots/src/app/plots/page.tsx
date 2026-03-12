@@ -38,19 +38,19 @@ export default async function PlotsPage({ searchParams }: Props) {
   return (
     <>
       {/* Header */}
-      <div style={{ background: '#1B4332', padding: '4rem 0 3rem' }}>
+      <div style={{ background: '#CC1414', padding: '4rem 0 3rem' }}>
         <div className="container">
-          <div style={{ color: '#D4A017', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Land Listings</div>
+          <div style={{ color: '#CC1414', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Land Listings</div>
           <h1 style={{ color: '#FFFFFF', fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', fontWeight: 900, marginBottom: '1rem' }}>
             Available Plots
           </h1>
-          <p style={{ color: '#B7D9C8', maxWidth: '480px' }}>
+          <p style={{ color: '#A0A0A0', maxWidth: '480px' }}>
             Browse our verified land plots across Kathmandu Valley. All with clear legal titles and professional support.
           </p>
         </div>
       </div>
 
-      <section style={{ padding: '3rem 0 5rem', background: '#F9F6F0' }}>
+      <section style={{ padding: '3rem 0 5rem', background: '#F4F4F4' }}>
         <div className="container">
           {/* Category filter */}
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '2.5rem' }}>
@@ -64,10 +64,10 @@ export default async function PlotsPage({ searchParams }: Props) {
                   fontSize: '0.875rem',
                   fontWeight: 600,
                   textDecoration: 'none',
-                  background: (category || '') === cat.slug ? '#1B4332' : '#FFFFFF',
+                  background: (category || '') === cat.slug ? '#CC1414' : '#FFFFFF',
                   color: (category || '') === cat.slug ? '#FFFFFF' : '#4B5563',
                   border: '1px solid',
-                  borderColor: (category || '') === cat.slug ? '#1B4332' : '#E5E7EB',
+                  borderColor: (category || '') === cat.slug ? '#CC1414' : '#E5E7EB',
                   transition: 'all 0.2s',
                 }}
               >
@@ -79,7 +79,7 @@ export default async function PlotsPage({ searchParams }: Props) {
           {plots.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '5rem 0', color: '#6B7280' }}>
               <p style={{ fontSize: '1.1rem' }}>No plots found in this category.</p>
-              <Link href="/plots" style={{ color: '#1B4332', fontWeight: 600, marginTop: '1rem', display: 'inline-block' }}>View all plots →</Link>
+              <Link href="/plots" style={{ color: '#CC1414', fontWeight: 600, marginTop: '1rem', display: 'inline-block' }}>View all plots →</Link>
             </div>
           ) : (
             <>
@@ -95,28 +95,26 @@ export default async function PlotsPage({ searchParams }: Props) {
                       key={plot.id}
                       href={`/plots/${plot.slug}`}
                       style={{ textDecoration: 'none', display: 'block', background: '#FFFFFF', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', transition: 'transform 0.2s, box-shadow 0.2s' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(27,67,50,0.15)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
                     >
-                      <div style={{ position: 'relative', height: '200px', background: '#2D6A4F' }}>
+                      <div style={{ position: 'relative', height: '200px', background: '#A01010' }}>
                         {imgUrl ? (
                           <Image src={imgUrl} alt={plot.title} fill style={{ objectFit: 'cover' }} />
                         ) : (
                           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <svg width="48" height="48" fill="none" stroke="#52B788" strokeWidth="1.5" viewBox="0 0 24 24">
+                            <svg width="48" height="48" fill="none" stroke="#E82020" strokeWidth="1.5" viewBox="0 0 24 24">
                               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                             </svg>
                           </div>
                         )}
                         <div style={{ position: 'absolute', top: '12px', right: '12px' }}><StatusBadge status={plot.status} /></div>
                         {plot.category && (
-                          <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(27,67,50,0.85)', color: '#D4A017', fontSize: '0.7rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: '4px', textTransform: 'uppercase' }}>
+                          <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(200,20,20,0.85)', color: '#CC1414', fontSize: '0.7rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: '4px', textTransform: 'uppercase' }}>
                             {plot.category.name}
                           </div>
                         )}
                       </div>
                       <div style={{ padding: '1.25rem' }}>
-                        <h3 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#1B4332', marginBottom: '0.4rem' }}>{plot.title}</h3>
+                        <h3 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#CC1414', marginBottom: '0.4rem' }}>{plot.title}</h3>
                         {plot.location && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#6B7280', fontSize: '0.8rem', marginBottom: '0.75rem' }}>
                             <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -134,7 +132,7 @@ export default async function PlotsPage({ searchParams }: Props) {
                             </div>
                           )}
                           {plot.priceFrom && (
-                            <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#D4A017' }}>
+                            <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#CC1414' }}>
                               From NPR {Number(plot.priceFrom).toLocaleString('en-NP')}
                             </div>
                           )}
@@ -156,7 +154,7 @@ export default async function PlotsPage({ searchParams }: Props) {
                   )}
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                     <Link key={p} href={`/plots?page=${p}${category ? `&category=${category}` : ''}`}
-                      style={{ padding: '0.5rem 0.875rem', background: p === page ? '#1B4332' : '#FFFFFF', border: '1px solid', borderColor: p === page ? '#1B4332' : '#E5E7EB', borderRadius: '6px', textDecoration: 'none', color: p === page ? '#FFFFFF' : '#4B5563', fontSize: '0.875rem', fontWeight: p === page ? 700 : 400 }}>
+                      style={{ padding: '0.5rem 0.875rem', background: p === page ? '#CC1414' : '#FFFFFF', border: '1px solid', borderColor: p === page ? '#CC1414' : '#E5E7EB', borderRadius: '6px', textDecoration: 'none', color: p === page ? '#FFFFFF' : '#4B5563', fontSize: '0.875rem', fontWeight: p === page ? 700 : 400 }}>
                       {p}
                     </Link>
                   ))}

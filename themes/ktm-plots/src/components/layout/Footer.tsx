@@ -1,4 +1,6 @@
+'use client';
 import Link from 'next/link';
+
 import type { SiteData } from '@/lib/cms';
 
 interface Props {
@@ -17,7 +19,7 @@ export default function Footer({ siteData }: Props) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '2.5rem', marginBottom: '2.5rem' }}>
           {/* Brand */}
           <div>
-            <div style={{ color: '#D4A017', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.75rem' }}>
+            <div style={{ color: '#CC1414', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.75rem' }}>
               {settings.siteTitle || 'KTM Plots'}
             </div>
             <p style={{ fontSize: '0.875rem', lineHeight: '1.7', color: '#9CA3AF' }}>
@@ -59,7 +61,7 @@ export default function Footer({ siteData }: Props) {
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} style={{ color: '#9CA3AF', textDecoration: 'none', fontSize: '0.875rem', transition: 'color 0.2s' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = '#D4A017')}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#CC1414')}
                     onMouseLeave={(e) => (e.currentTarget.style.color = '#9CA3AF')}
                   >
                     {l.label}
@@ -75,7 +77,7 @@ export default function Footer({ siteData }: Props) {
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.875rem' }}>
               {settings.address && (
                 <li style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
-                  <svg width="16" height="16" fill="none" stroke="#D4A017" strokeWidth="2" style={{ flexShrink: 0, marginTop: '2px' }} viewBox="0 0 24 24">
+                  <svg width="16" height="16" fill="none" stroke="#CC1414" strokeWidth="2" style={{ flexShrink: 0, marginTop: '2px' }} viewBox="0 0 24 24">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
                   </svg>
                   <span>{settings.address}</span>
@@ -83,7 +85,7 @@ export default function Footer({ siteData }: Props) {
               )}
               {settings.contactPhone && (
                 <li style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <svg width="16" height="16" fill="none" stroke="#D4A017" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg width="16" height="16" fill="none" stroke="#CC1414" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 14a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 3.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 10.91a16 16 0 0 0 5 5l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                   </svg>
                   <a href={`tel:${settings.contactPhone}`} style={{ color: '#9CA3AF', textDecoration: 'none' }}>{settings.contactPhone}</a>
@@ -91,7 +93,7 @@ export default function Footer({ siteData }: Props) {
               )}
               {settings.contactEmail && (
                 <li style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <svg width="16" height="16" fill="none" stroke="#D4A017" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg width="16" height="16" fill="none" stroke="#CC1414" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
                   </svg>
                   <a href={`mailto:${settings.contactEmail}`} style={{ color: '#9CA3AF', textDecoration: 'none' }}>{settings.contactEmail}</a>

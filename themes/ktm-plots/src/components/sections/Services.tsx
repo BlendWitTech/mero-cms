@@ -1,3 +1,5 @@
+'use client';
+
 import type { Service } from '@/lib/cms';
 
 const ICON_MAP: Record<string, React.ReactNode> = {
@@ -51,7 +53,7 @@ export default function Services({ services }: Props) {
     <section id="services" style={{ padding: '5rem 0', background: '#FFFFFF' }}>
       <div className="container">
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <div style={{ color: '#D4A017', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.8rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+          <div style={{ color: '#CC1414', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.8rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
             What We Offer
           </div>
           <h2 className="section-title">Our Services</h2>
@@ -65,15 +67,15 @@ export default function Services({ services }: Props) {
             <div
               key={service.id || i}
               style={{
-                background: '#F9F6F0',
+                background: '#F4F4F4',
                 borderRadius: '12px',
                 padding: '2rem',
-                borderBottom: '4px solid #1B4332',
+                borderBottom: '4px solid #CC1414',
                 transition: 'transform 0.2s, box-shadow 0.2s',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(27,67,50,0.12)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(200,20,20,0.12)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = '';
@@ -85,8 +87,8 @@ export default function Services({ services }: Props) {
                   width: '52px',
                   height: '52px',
                   borderRadius: '12px',
-                  background: '#1B4332',
-                  color: '#D4A017',
+                  background: '#CC1414',
+                  color: '#CC1414',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -95,7 +97,7 @@ export default function Services({ services }: Props) {
               >
                 {ICON_MAP[service.icon || ''] ?? ICON_MAP['map-pin']}
               </div>
-              <h3 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#1B4332', marginBottom: '0.5rem' }}>{service.title}</h3>
+              <h3 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#CC1414', marginBottom: '0.5rem' }}>{service.title}</h3>
               <p style={{ fontSize: '0.875rem', color: '#6B7280', lineHeight: 1.7 }}>{service.description}</p>
             </div>
           ))}

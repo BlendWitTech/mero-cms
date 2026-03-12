@@ -25,7 +25,7 @@ export default function Hero({ siteData }: Props) {
         minHeight: '88vh',
         display: 'flex',
         alignItems: 'center',
-        background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 60%, #1B4332 100%)',
+        background: 'linear-gradient(135deg, #CC1414 0%, #A01010 60%, #CC1414 100%)',
       }}
     >
       {/* Background image (if set in CMS settings) */}
@@ -45,8 +45,8 @@ export default function Hero({ siteData }: Props) {
         style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', opacity: bgImageUrl ? 0.05 : 0.15 }}
         preserveAspectRatio="none"
       >
-        <path fill="#52B788" d="M0,320 L0,200 L180,100 L360,180 L540,60 L720,140 L900,40 L1080,120 L1260,70 L1440,130 L1440,320 Z" />
-        <path fill="#40916C" d="M0,320 L0,240 L120,160 L280,220 L480,120 L660,200 L840,110 L1020,180 L1200,140 L1440,180 L1440,320 Z" />
+        <path fill="#E82020" d="M0,320 L0,200 L180,100 L360,180 L540,60 L720,140 L900,40 L1080,120 L1260,70 L1440,130 L1440,320 Z" />
+        <path fill="#B81010" d="M0,320 L0,240 L120,160 L280,220 L480,120 L660,200 L840,110 L1020,180 L1200,140 L1440,180 L1440,320 Z" />
       </svg>
 
       {/* Dot pattern */}
@@ -54,7 +54,7 @@ export default function Hero({ siteData }: Props) {
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(212,160,23,0.15) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(204,20,20,0.15) 1px, transparent 1px)',
           backgroundSize: '40px 40px',
         }}
       />
@@ -67,15 +67,15 @@ export default function Hero({ siteData }: Props) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem',
-              background: 'rgba(212,160,23,0.15)',
-              border: '1px solid rgba(212,160,23,0.4)',
+              background: 'rgba(204,20,20,0.15)',
+              border: '1px solid rgba(204,20,20,0.4)',
               borderRadius: '9999px',
               padding: '0.35rem 1rem',
               marginBottom: '1.5rem',
             }}
           >
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#D4A017', display: 'inline-block' }} />
-            <span style={{ color: '#D4A017', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#CC1414', display: 'inline-block' }} />
+            <span style={{ color: '#CC1414', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.05em' }}>
               {settings.tagline || "KATHMANDU VALLEY'S TRUSTED LAND PARTNER"}
             </span>
           </div>
@@ -91,12 +91,12 @@ export default function Hero({ siteData }: Props) {
           >
             {title.includes('\n')
               ? title.split('\n').map((line, i) => (
-                  <span key={i} style={i > 0 ? { color: '#D4A017', display: 'block' } : undefined}>{line}</span>
+                  <span key={i} style={i > 0 ? { color: '#CC1414', display: 'block' } : undefined}>{line}</span>
                 ))
               : (
                 <>
                   {title.split(' ').slice(0, -3).join(' ')}{' '}
-                  <span style={{ color: '#D4A017' }}>{title.split(' ').slice(-3).join(' ')}</span>
+                  <span style={{ color: '#CC1414' }}>{title.split(' ').slice(-3).join(' ')}</span>
                 </>
               )
             }
@@ -105,7 +105,7 @@ export default function Hero({ siteData }: Props) {
           <p
             style={{
               fontSize: '1.1rem',
-              color: '#B7D9C8',
+              color: '#A0A0A0',
               marginBottom: '2.5rem',
               maxWidth: '560px',
               lineHeight: 1.7,
@@ -132,8 +132,8 @@ export default function Hero({ siteData }: Props) {
               { value: '100%', label: 'Legal Titles' },
             ].map((stat) => (
               <div key={stat.label}>
-                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#D4A017' }}>{stat.value}</div>
-                <div style={{ fontSize: '0.8rem', color: '#B7D9C8', marginTop: '0.15rem' }}>{stat.label}</div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#CC1414' }}>{stat.value}</div>
+                <div style={{ fontSize: '0.8rem', color: '#A0A0A0', marginTop: '0.15rem' }}>{stat.label}</div>
               </div>
             ))}
           </div>
@@ -154,8 +154,8 @@ export default function Hero({ siteData }: Props) {
           opacity: 0.6,
         }}
       >
-        <span style={{ color: '#B7D9C8', fontSize: '0.75rem', letterSpacing: '0.1em' }}>SCROLL</span>
-        <svg width="20" height="20" fill="none" stroke="#B7D9C8" strokeWidth="2" viewBox="0 0 24 24">
+        <span style={{ color: '#A0A0A0', fontSize: '0.75rem', letterSpacing: '0.1em' }}>SCROLL</span>
+        <svg width="20" height="20" fill="none" stroke="#A0A0A0" strokeWidth="2" viewBox="0 0 24 24">
           <path d="M12 5v14M5 12l7 7 7-7" />
         </svg>
       </div>

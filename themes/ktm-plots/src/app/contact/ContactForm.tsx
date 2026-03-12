@@ -56,7 +56,7 @@ export default function ContactForm() {
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <h3 style={{ fontWeight: 800, color: '#1B4332', fontSize: '1.25rem', marginBottom: '0.5rem' }}>Message Sent!</h3>
+        <h3 style={{ fontWeight: 800, color: '#CC1414', fontSize: '1.25rem', marginBottom: '0.5rem' }}>Message Sent!</h3>
         <p style={{ color: '#6B7280', marginBottom: '1.5rem' }}>
           Thank you for reaching out. Our team will contact you within 24 hours.
         </p>
@@ -69,7 +69,7 @@ export default function ContactForm() {
 
   return (
     <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '2rem', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
-      <h3 style={{ fontWeight: 800, color: '#1B4332', fontSize: '1.25rem', marginBottom: '0.25rem' }}>Send Us a Message</h3>
+      <h3 style={{ fontWeight: 800, color: '#CC1414', fontSize: '1.25rem', marginBottom: '0.25rem' }}>Send Us a Message</h3>
       <p style={{ color: '#6B7280', fontSize: '0.875rem', marginBottom: '1.75rem' }}>
         We typically reply within a few hours during business days.
       </p>
@@ -87,7 +87,7 @@ export default function ContactForm() {
               onChange={handleChange}
               placeholder="Your full name"
               style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = '#1B4332')}
+              onFocus={(e) => (e.target.style.borderColor = '#CC1414')}
               onBlur={(e) => (e.target.style.borderColor = '#E5E7EB')}
             />
           </div>
@@ -101,7 +101,7 @@ export default function ContactForm() {
               onChange={handleChange}
               placeholder="+977 98XXXXXXXX"
               style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = '#1B4332')}
+              onFocus={(e) => (e.target.style.borderColor = '#CC1414')}
               onBlur={(e) => (e.target.style.borderColor = '#E5E7EB')}
             />
           </div>
@@ -118,7 +118,7 @@ export default function ContactForm() {
             onChange={handleChange}
             placeholder="you@example.com"
             style={inputStyle}
-            onFocus={(e) => (e.target.style.borderColor = '#1B4332')}
+            onFocus={(e) => (e.target.style.borderColor = '#CC1414')}
             onBlur={(e) => (e.target.style.borderColor = '#E5E7EB')}
           />
         </div>
@@ -134,7 +134,7 @@ export default function ContactForm() {
             onChange={handleChange}
             placeholder="Tell us what you're looking for — location preferences, budget, plot size, etc."
             style={{ ...inputStyle, resize: 'vertical', minHeight: '120px' }}
-            onFocus={(e) => (e.target.style.borderColor = '#1B4332')}
+            onFocus={(e) => (e.target.style.borderColor = '#CC1414')}
             onBlur={(e) => (e.target.style.borderColor = '#E5E7EB')}
           />
         </div>

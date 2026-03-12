@@ -1,25 +1,19 @@
-/* KTM Plots — Global Styles */
+/* KTM Plots — Brand: Red (#CC1414) + Charcoal (#1E1E1E) */
 :root {
-  --green: #1B4332;
-  --green-mid: #2D6A4F;
-  --green-light: #52B788;
-  --gold: #D4A017;
-  --gold-light: #F0C040;
-  --cream: #F9F6F0;
+  --red: #CC1414;
+  --red-dark: #A01010;
+  --red-light: #E82020;
+  --charcoal: #1E1E1E;
+  --charcoal-mid: #2E2E2E;
+  --charcoal-light: #4A4A4A;
+  --light-gray: #F4F4F4;
+  --white: #FFFFFF;
   --text-dark: #1A1A1A;
   --text-muted: #6B7280;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: var(--text-dark);
@@ -27,63 +21,34 @@ body {
   line-height: 1.6;
 }
 
-/* ─── Prose (for CMS content) ────────────────────────────────────── */
-.prose {
-  max-width: 72ch;
-  line-height: 1.8;
-}
+/* ─── Prose ─────────────────────────────────────────────────────── */
+.prose { max-width: 72ch; line-height: 1.8; }
 
 .prose h1, .prose h2, .prose h3, .prose h4 {
-  color: var(--green);
+  color: var(--charcoal);
   margin-top: 1.5em;
   margin-bottom: 0.5em;
   font-weight: 700;
 }
-
 .prose h1 { font-size: 2rem; }
 .prose h2 { font-size: 1.5rem; }
 .prose h3 { font-size: 1.25rem; }
-
 .prose p { margin-bottom: 1em; }
-
-.prose ul, .prose ol {
-  padding-left: 1.5em;
-  margin-bottom: 1em;
-}
-
+.prose ul, .prose ol { padding-left: 1.5em; margin-bottom: 1em; }
 .prose li { margin-bottom: 0.25em; }
-
-.prose a {
-  color: var(--green-light);
-  text-decoration: underline;
-}
-
-.prose table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1.5em;
-}
-
-.prose th, .prose td {
-  border: 1px solid #E5E7EB;
-  padding: 0.5rem 1rem;
-  text-align: left;
-}
-
-.prose th {
-  background: var(--green);
-  color: #fff;
-}
-
+.prose a { color: var(--red); text-decoration: underline; }
+.prose table { width: 100%; border-collapse: collapse; margin-bottom: 1.5em; }
+.prose th, .prose td { border: 1px solid #E5E7EB; padding: 0.5rem 1rem; text-align: left; }
+.prose th { background: var(--charcoal); color: #fff; }
 .prose blockquote {
-  border-left: 4px solid var(--gold);
+  border-left: 4px solid var(--red);
   padding-left: 1rem;
   color: var(--text-muted);
   font-style: italic;
   margin: 1.5em 0;
 }
 
-/* ─── Utilities ───────────────────────────────────────────────────── */
+/* ─── Layout ─────────────────────────────────────────────────────── */
 .container {
   width: 100%;
   max-width: 1200px;
@@ -91,10 +56,11 @@ body {
   padding: 0 1.5rem;
 }
 
+/* ─── Buttons ─────────────────────────────────────────────────────── */
 .btn-primary {
   display: inline-block;
-  background: var(--gold);
-  color: var(--green);
+  background: var(--red);
+  color: #fff;
   font-weight: 700;
   padding: 0.75rem 2rem;
   border-radius: 4px;
@@ -104,9 +70,8 @@ body {
   border: none;
   font-size: 0.95rem;
 }
-
 .btn-primary:hover {
-  background: var(--gold-light);
+  background: var(--red-dark);
   transform: translateY(-1px);
 }
 
@@ -117,19 +82,37 @@ body {
   font-weight: 600;
   padding: 0.75rem 2rem;
   border-radius: 4px;
-  border: 2px solid #fff;
+  border: 2px solid rgba(255,255,255,0.7);
   text-decoration: none;
   transition: all 0.2s;
   font-size: 0.95rem;
 }
-
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255,255,255,0.15);
+  border-color: #fff;
 }
 
+.btn-outline-dark {
+  display: inline-block;
+  background: transparent;
+  color: var(--charcoal);
+  font-weight: 600;
+  padding: 0.75rem 2rem;
+  border-radius: 4px;
+  border: 2px solid var(--charcoal);
+  text-decoration: none;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+}
+.btn-outline-dark:hover {
+  background: var(--charcoal);
+  color: #fff;
+}
+
+/* btn-green stays for backward compat but now maps to charcoal */
 .btn-green {
   display: inline-block;
-  background: var(--green);
+  background: var(--charcoal);
   color: #fff;
   font-weight: 600;
   padding: 0.75rem 2rem;
@@ -140,15 +123,13 @@ body {
   font-size: 0.95rem;
   cursor: pointer;
 }
+.btn-green:hover { background: var(--charcoal-mid); }
 
-.btn-green:hover {
-  background: var(--green-mid);
-}
-
+/* ─── Typography helpers ──────────────────────────────────────────── */
 .section-title {
   font-size: 2rem;
   font-weight: 800;
-  color: var(--green);
+  color: var(--charcoal);
   margin-bottom: 0.5rem;
 }
 
@@ -158,29 +139,38 @@ body {
   margin-bottom: 2.5rem;
 }
 
+.tag-label {
+  display: inline-block;
+  color: var(--red);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+
+/* ─── Status badges ───────────────────────────────────────────────── */
 .badge-available {
   background: #D1FAE5;
   color: #065F46;
   font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.2rem 0.6rem;
+  font-weight: 700;
+  padding: 0.2rem 0.65rem;
   border-radius: 9999px;
 }
-
 .badge-limited {
   background: #FEF3C7;
   color: #92400E;
   font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.2rem 0.6rem;
+  font-weight: 700;
+  padding: 0.2rem 0.65rem;
   border-radius: 9999px;
 }
-
 .badge-sold {
   background: #FEE2E2;
   color: #991B1B;
   font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.2rem 0.6rem;
+  font-weight: 700;
+  padding: 0.2rem 0.65rem;
   border-radius: 9999px;
 }

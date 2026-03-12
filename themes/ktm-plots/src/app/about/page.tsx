@@ -22,13 +22,13 @@ export default async function AboutPage() {
   return (
     <>
       {/* Page header */}
-      <div style={{ background: '#1B4332', padding: '4rem 0 3rem' }}>
+      <div style={{ background: '#CC1414', padding: '4rem 0 3rem' }}>
         <div className="container">
-          <div style={{ color: '#D4A017', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.5rem', textTransform: 'uppercase' }}>About Us</div>
+          <div style={{ color: '#CC1414', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.5rem', textTransform: 'uppercase' }}>About Us</div>
           <h1 style={{ color: '#FFFFFF', fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', fontWeight: 900, marginBottom: '1rem' }}>
             Kathmandu Valley&apos;s<br />Trusted Land Partner
           </h1>
-          <p style={{ color: '#B7D9C8', maxWidth: '560px', lineHeight: 1.7 }}>
+          <p style={{ color: '#A0A0A0', maxWidth: '560px', lineHeight: 1.7 }}>
             Over a decade of helping families and investors secure their perfect plot in Nepal with transparency, legality, and care.
           </p>
         </div>
@@ -54,11 +54,11 @@ export default async function AboutPage() {
             {/* Mission / Values */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {[
-                { title: 'Our Mission', text: 'To make land ownership simple, transparent, and accessible for every Nepali family and investor.', color: '#1B4332' },
-                { title: 'Our Vision', text: 'A Nepal where every land transaction is backed by verified titles, fair prices, and professional guidance.', color: '#D4A017' },
-                { title: 'Our Values', text: 'Transparency · Integrity · Legal Compliance · Customer First · Community Growth', color: '#2D6A4F' },
+                { title: 'Our Mission', text: 'To make land ownership simple, transparent, and accessible for every Nepali family and investor.', color: '#CC1414' },
+                { title: 'Our Vision', text: 'A Nepal where every land transaction is backed by verified titles, fair prices, and professional guidance.', color: '#CC1414' },
+                { title: 'Our Values', text: 'Transparency · Integrity · Legal Compliance · Customer First · Community Growth', color: '#A01010' },
               ].map((v) => (
-                <div key={v.title} style={{ background: '#F9F6F0', borderRadius: '10px', padding: '1.5rem', borderLeft: `4px solid ${v.color}` }}>
+                <div key={v.title} style={{ background: '#F4F4F4', borderRadius: '10px', padding: '1.5rem', borderLeft: `4px solid ${v.color}` }}>
                   <h4 style={{ fontWeight: 700, color: v.color, marginBottom: '0.5rem' }}>{v.title}</h4>
                   <p style={{ fontSize: '0.875rem', color: '#4B5563', lineHeight: 1.7 }}>{v.text}</p>
                 </div>
@@ -69,7 +69,7 @@ export default async function AboutPage() {
       </section>
 
       {/* Stats */}
-      <section style={{ background: '#1B4332', padding: '4rem 0' }}>
+      <section style={{ background: '#CC1414', padding: '4rem 0' }}>
         <div className="container">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '2rem', textAlign: 'center' }}>
             {[
@@ -80,8 +80,8 @@ export default async function AboutPage() {
               { value: '1000+', label: 'Happy Clients' },
             ].map((s) => (
               <div key={s.label}>
-                <div style={{ fontSize: '2.25rem', fontWeight: 900, color: '#D4A017', marginBottom: '0.25rem' }}>{s.value}</div>
-                <div style={{ fontSize: '0.85rem', color: '#B7D9C8' }}>{s.label}</div>
+                <div style={{ fontSize: '2.25rem', fontWeight: 900, color: '#CC1414', marginBottom: '0.25rem' }}>{s.value}</div>
+                <div style={{ fontSize: '0.85rem', color: '#A0A0A0' }}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -89,7 +89,7 @@ export default async function AboutPage() {
       </section>
 
       {/* Team */}
-      <section style={{ padding: '5rem 0', background: '#F9F6F0' }}>
+      <section style={{ padding: '5rem 0', background: '#F4F4F4' }}>
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <h2 className="section-title">Meet Our Team</h2>
@@ -98,11 +98,11 @@ export default async function AboutPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.5rem' }}>
             {team.map((member) => (
               <div key={member.name} style={{ background: '#FFFFFF', borderRadius: '12px', padding: '2rem', textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-                <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#1B4332', color: '#D4A017', fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#CC1414', color: '#CC1414', fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
                   {member.initials}
                 </div>
-                <h4 style={{ fontWeight: 700, color: '#1B4332', marginBottom: '0.25rem' }}>{member.name}</h4>
-                <div style={{ fontSize: '0.8rem', color: '#D4A017', fontWeight: 600, marginBottom: '0.75rem' }}>{member.role}</div>
+                <h4 style={{ fontWeight: 700, color: '#CC1414', marginBottom: '0.25rem' }}>{member.name}</h4>
+                <div style={{ fontSize: '0.8rem', color: '#CC1414', fontWeight: 600, marginBottom: '0.75rem' }}>{member.role}</div>
                 <p style={{ fontSize: '0.825rem', color: '#6B7280', lineHeight: 1.6 }}>{member.bio}</p>
               </div>
             ))}

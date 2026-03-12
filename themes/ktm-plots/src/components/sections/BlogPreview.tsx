@@ -1,4 +1,6 @@
+'use client';
 import Link from 'next/link';
+
 import Image from 'next/image';
 import type { Post } from '@/lib/cms';
 import { getImageUrl, formatDate } from '@/lib/cms';
@@ -15,7 +17,7 @@ export default function BlogPreview({ posts }: Props) {
       <div className="container">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '3rem' }}>
           <div>
-            <div style={{ color: '#D4A017', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.8rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+            <div style={{ color: '#CC1414', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.8rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
               Latest Articles
             </div>
             <h2 className="section-title" style={{ marginBottom: '0.25rem' }}>From Our Blog</h2>
@@ -48,8 +50,8 @@ export default function BlogPreview({ posts }: Props) {
                   {imgUrl ? (
                     <Image src={imgUrl} alt={post.title} fill style={{ objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #1B4332, #2D6A4F)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="40" height="40" fill="none" stroke="#52B788" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #CC1414, #A01010)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="40" height="40" fill="none" stroke="#E82020" strokeWidth="1.5" viewBox="0 0 24 24">
                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
                       </svg>
                     </div>
@@ -59,7 +61,7 @@ export default function BlogPreview({ posts }: Props) {
                 {/* Content */}
                 <div style={{ padding: '1.25rem' }}>
                   {post.categories && post.categories.length > 0 && (
-                    <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#1B4332', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#D1FAE5', padding: '0.2rem 0.5rem', borderRadius: '4px', marginBottom: '0.75rem', display: 'inline-block' }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#CC1414', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#FEE2E2', padding: '0.2rem 0.5rem', borderRadius: '4px', marginBottom: '0.75rem', display: 'inline-block' }}>
                       {post.categories[0].name}
                     </span>
                   )}
@@ -71,7 +73,7 @@ export default function BlogPreview({ posts }: Props) {
                   )}
                   <div style={{ fontSize: '0.75rem', color: '#9CA3AF', borderTop: '1px solid #F3F4F6', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>{formatDate(post.publishedAt || post.createdAt)}</span>
-                    <span style={{ color: '#1B4332', fontWeight: 600 }}>Read more →</span>
+                    <span style={{ color: '#CC1414', fontWeight: 600 }}>Read more →</span>
                   </div>
                 </div>
               </Link>
