@@ -272,6 +272,16 @@ export class ThemesService {
             await this.installDependencies(themePath);
         }
 
+        // Always apply the theme's defaultSettings so the admin has correct
+        // branding (site title, tagline, contact placeholders) immediately.
+        const activateConfigPath = path.join(themePath, 'theme.json');
+        if (fs.existsSync(activateConfigPath)) {
+            try {
+                const activateConfig = JSON.parse(fs.readFileSync(activateConfigPath, 'utf8'));
+                await this.applyDefaultSettings(activateConfig.defaultSettings || {});
+            } catch {}
+        }
+
         await this.prisma.setting.upsert({
             where: { key: 'active_theme' },
             create: { key: 'active_theme', value: themeName },
@@ -359,6 +369,22 @@ export class ThemesService {
     async getModuleAliases(): Promise<Record<string, string>> {
         const config = await this.getActiveThemeConfig();
         return config?.moduleAliases || {};
+    }
+
+    /** Apply theme default settings — only sets keys that have no value yet. */
+    private async applyDefaultSettings(defaults: Record<string, string>): Promise<void> {
+        for (const [key, value] of Object.entries(defaults)) {
+            if (!value) continue; // skip empty placeholder values
+            // Only upsert — never overwrite if user already has a value set
+            const existing = await this.prisma.setting.findUnique({ where: { key } });
+            if (!existing || !existing.value) {
+                await this.prisma.setting.upsert({
+                    where: { key },
+                    create: { key, value },
+                    update: { value },
+                });
+            }
+        }
     }
 
     // ── Seed helpers ─────────────────────────────────────────────────────────

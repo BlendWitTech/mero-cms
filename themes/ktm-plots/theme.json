@@ -601,5 +601,21 @@
         }
       ]
     }
-  ]
+  ],
+  "defaultSettings": {
+    "site_title": "KTM Plots",
+    "site_tagline": "Kathmandu Valley's Trusted Land Partner",
+    "copyright_text": "© KTM Plots. All rights reserved.",
+    "footer_text": "Kathmandu Valley's Trusted Land Partner",
+    "contact_email": "info@ktmplots.com.np",
+    "contact_phone": "+977 01-XXXXXXX",
+    "address": "Kathmandu, Nepal",
+    "primary_color": "#CC1414",
+    "social_facebook": "",
+    "social_instagram": "",
+    "social_youtube": "",
+    "social_whatsapp": "",
+    "hero_bg_image": "",
+    "cta_url": "/plots"
+  }
 }
