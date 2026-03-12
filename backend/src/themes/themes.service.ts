@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { SetupService } from '../setup/setup.service';
 
 const execAsync = promisify(exec);
+
 @Injectable()
 export class ThemesService {
     /** Themes uploaded via the UI (ZIP upload) */
@@ -198,7 +199,7 @@ export class ThemesService {
             version: config.version || '1.0.0',
             description: config.description || '',
             author: config.author || '',
-            requiredModules: config.requiredModules || [],
+            requiredModules: config.modules || config.requiredModules || [],
             previewUrl,
             deployedUrl: config.deployedUrl || '',
             builtIn: !!(themePath && themePath.startsWith(this.builtInThemesPath)),
@@ -215,7 +216,7 @@ export class ThemesService {
         }
 
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-        const requiredModules: string[] = config.requiredModules || [];
+        const requiredModules: string[] = config.modules || config.requiredModules || [];
 
         const enabledModules = await this.setupService.getEnabledModules();
         const missingModules = requiredModules.filter(rm => !enabledModules.includes(rm));
@@ -258,12 +259,188 @@ export class ThemesService {
         return { deployedUrl: url };
     }
 
+    private async setupPosts(posts: any[]): Promise<number> {
+        let count = 0;
+        const author = await (this.prisma as any).user.findFirst();
+        if (!author) return 0;
+        const activeTheme = await this.getActiveTheme();
+
+        for (const post of posts) {
+            const existing = await (this.prisma as any).post.findUnique({ where: { slug: post.slug } });
+            if (existing) continue;
+
+            await (this.prisma as any).post.create({
+                data: {
+                    ...post,
+                    authorId: author.id,
+                    status: (post.status || 'PUBLISHED').toUpperCase(),
+                },
+            });
+            count++;
+        }
+        return count;
+    }
+
+    private async setupPages(pages: any[]): Promise<number> {
+        let count = 0;
+        const activeTheme = await this.getActiveTheme();
+        for (const page of pages) {
+            const existing = await (this.prisma as any).page.findUnique({ where: { slug: page.slug } });
+            if (existing) continue;
+
+            await (this.prisma as any).page.create({
+                data: {
+                    ...page,
+                    theme: activeTheme,
+                    status: (page.status || 'PUBLISHED').toUpperCase(),
+                },
+            });
+            count++;
+        }
+        return count;
+    }
+
+    private async setupMenus(menus: any[]): Promise<number> {
+        let count = 0;
+        const activeTheme = await this.getActiveTheme();
+        for (const menuData of menus) {
+            const { items, ...menu } = menuData;
+            const existing = await (this.prisma as any).menu.findUnique({ where: { slug: menu.slug } });
+            if (existing) continue;
+
+            const createdMenu = await (this.prisma as any).menu.create({
+                data: {
+                    ...menu,
+                    theme: activeTheme,
+                },
+            });
+
+            if (items && items.length > 0) {
+                for (const item of items) {
+                    await (this.prisma as any).menuItem.create({
+                        data: {
+                            ...item,
+                            menuId: createdMenu.id,
+                        },
+                    });
+                }
+            }
+            count++;
+        }
+        return count;
+    }
+
+    private async setupProjectCategories(categories: any[]): Promise<number> {
+        let count = 0;
+        for (const cat of categories) {
+            const existing = await (this.prisma as any).projectCategory.findUnique({ where: { slug: cat.slug } });
+            if (existing) continue;
+
+            await (this.prisma as any).projectCategory.create({ data: cat });
+            count++;
+        }
+        return count;
+    }
+
+    private async setupProjects(projects: any[]): Promise<number> {
+        let count = 0;
+        const activeTheme = await this.getActiveTheme();
+        for (const projectData of projects) {
+            const { category, ...project } = projectData;
+            const existing = await (this.prisma as any).project.findUnique({ where: { slug: project.slug } });
+            if (existing) continue;
+
+            let categoryId = null;
+            if (category) {
+                const catRecord = await (this.prisma as any).projectCategory.findUnique({ where: { slug: category } });
+                if (catRecord) categoryId = catRecord.id;
+            }
+
+            await (this.prisma as any).project.create({
+                data: {
+                    ...project,
+                    theme: activeTheme,
+                    categoryId,
+                    status: project.status || 'COMPLETED',
+                },
+            });
+            count++;
+        }
+        return count;
+    }
+
+    private async setupTeam(team: any[]): Promise<number> {
+        let count = 0;
+        const activeTheme = await this.getActiveTheme();
+        for (const member of team) {
+            await (this.prisma as any).teamMember.create({
+                data: {
+                    ...member,
+                    socialLinks: member.socialLinks || {},
+                    theme: activeTheme,
+                },
+            });
+            count++;
+        }
+        return count;
+    }
+
+    private async setupTestimonials(testimonials: any[]): Promise<number> {
+        let count = 0;
+        const activeTheme = await this.getActiveTheme();
+        for (const test of testimonials) {
+            const { name, ...rest } = test;
+            await (this.prisma as any).testimonial.create({
+                data: {
+                    ...rest,
+                    clientName: name,
+                    theme: activeTheme,
+                },
+            });
+            count++;
+        }
+        return count;
+    }
+
+    private async setupServices(services: any[]): Promise<number> {
+        let count = 0;
+        const activeTheme = await this.getActiveTheme();
+        for (const service of services) {
+            await (this.prisma as any).service.create({
+                data: {
+                    ...service,
+                    processSteps: service.processSteps || [],
+                    theme: activeTheme,
+                },
+            });
+            count++;
+        }
+        return count;
+    }
+
+    private async setupMilestones(milestones: any[]): Promise<number> {
+        let count = 0;
+        const activeTheme = await this.getActiveTheme();
+        for (const milestone of milestones) {
+            await (this.prisma as any).milestone.create({
+                data: {
+                    ...milestone,
+                    theme: activeTheme,
+                },
+            });
+            count++;
+        }
+        return count;
+    }
+
     async setActiveTheme(themeName: string, clearData: boolean = false, importDemoContent: boolean = false) {
         const themePath = this.findThemePath(themeName);
         if (!themePath) throw new BadRequestException(`Theme "${themeName}" not found`);
 
+        const previousTheme = await this.getActiveTheme();
+
         if (clearData) {
-            await this.purgeDatabase();
+            await this.purgeDatabase(previousTheme);
         }
 
         if (clearData && importDemoContent) {
@@ -302,35 +479,44 @@ export class ThemesService {
         }
     }
 
-    private async purgeDatabase() {
+    private async purgeDatabase(themeName?: string | null) {
         try {
+            const filter = themeName ? { theme: themeName } : {};
+
             if (this.isModuleEnabled('blogs')) {
-                await (this.prisma as any).post.deleteMany({});
+                // Posts are global, they don't have a theme tag currently. Avoid purging all posts if possible?
+                // Or if we must, just purge. Since the prompt didn't ask to add theme to Post, we'll leave it as is.
+                if (!themeName) await (this.prisma as any).post.deleteMany({});
             }
             if (this.isModuleEnabled('pages')) {
-                await (this.prisma as any).page.deleteMany({});
+                await (this.prisma as any).page.deleteMany({ where: filter });
             }
             if (this.isModuleEnabled('menus')) {
-                await (this.prisma as any).menuItem.deleteMany({});
-                await (this.prisma as any).menu.deleteMany({});
+                const menusToDelete = await (this.prisma as any).menu.findMany({ where: filter });
+                const menuIds = menusToDelete.map((m: any) => m.id);
+                if (menuIds.length > 0) {
+                    await (this.prisma as any).menuItem.deleteMany({ where: { menuId: { in: menuIds } } });
+                    await (this.prisma as any).menu.deleteMany({ where: filter });
+                }
             }
             if (this.isModuleEnabled('projects')) {
-                await (this.prisma as any).project.deleteMany({});
-                if (this.isModuleEnabled('project-categories')) {
+                await (this.prisma as any).project.deleteMany({ where: filter });
+                // Categories don't have theme tag currently.
+                if (this.isModuleEnabled('project-categories') && !themeName) {
                     await (this.prisma as any).projectCategory.deleteMany({});
                 }
             }
             if (this.isModuleEnabled('team')) {
-                await (this.prisma as any).teamMember.deleteMany({});
+                await (this.prisma as any).teamMember.deleteMany({ where: filter });
             }
             if (this.isModuleEnabled('testimonials')) {
-                await (this.prisma as any).testimonial.deleteMany({});
+                await (this.prisma as any).testimonial.deleteMany({ where: filter });
             }
             if (this.isModuleEnabled('services')) {
-                await (this.prisma as any).service.deleteMany({});
+                await (this.prisma as any).service.deleteMany({ where: filter });
             }
             if (this.isModuleEnabled('timeline')) {
-                await (this.prisma as any).milestone.deleteMany({});
+                await (this.prisma as any).milestone.deleteMany({ where: filter });
             }
         } catch (e) {
             console.error('Failed to purge database:', e);
@@ -342,7 +528,6 @@ export class ThemesService {
         const setting = await this.prisma.setting.findUnique({ where: { key: 'active_theme' } });
         return setting ? setting.value : null;
     }
-
 
     /** Return the active theme's full config (theme.json) minus seedData. */
     async getActiveThemeConfig(): Promise<Record<string, any> | null> {
@@ -385,218 +570,6 @@ export class ThemesService {
                 });
             }
         }
-    }
-
-    // ── Seed helpers ─────────────────────────────────────────────────────────
-
-    private async setupPosts(posts: any[]): Promise<number> {
-        const admin = await this.prisma.user.findFirst({ orderBy: { createdAt: 'asc' } });
-        if (!admin) return 0;
-
-        for (const p of posts) {
-            const slug = p.slug || p.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-            const status = (p.status || 'published').toUpperCase();
-            const publishedAt = status === 'PUBLISHED'
-                ? (p.publishedAt ? new Date(p.publishedAt) : new Date())
-                : null;
-
-            await (this.prisma as any).post.upsert({
-                where: { slug },
-                update: {
-                    title: p.title,
-                    content: p.content || '',
-                    excerpt: p.excerpt || null,
-                    coverImage: p.coverImage || null,
-                    status,
-                    featured: p.featured || false,
-                    publishedAt,
-                },
-                create: {
-                    title: p.title,
-                    slug,
-                    content: p.content || '',
-                    excerpt: p.excerpt || null,
-                    coverImage: p.coverImage || null,
-                    status,
-                    authorId: admin.id,
-                    featured: p.featured || false,
-                    publishedAt,
-                },
-            });
-        }
-        return posts.length;
-    }
-
-    private async setupPages(pages: any[]): Promise<number> {
-        for (const p of pages) {
-            const slug = p.slug || p.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-            await (this.prisma as any).page.upsert({
-                where: { slug },
-                update: { title: p.title, content: p.content || '', status: 'PUBLISHED' },
-                create: { title: p.title, slug, content: p.content || '', status: 'PUBLISHED' },
-            });
-        }
-        return pages.length;
-    }
-
-    private async setupMenus(menus: any[]): Promise<number> {
-        for (const menuConfig of menus) {
-            const { items = [], ...menuData } = menuConfig;
-            const slug = menuData.slug || menuData.name.toLowerCase().replace(/\s+/g, '-');
-
-            let menu = await (this.prisma as any).menu.findUnique({ where: { slug } });
-            if (menu) {
-                await (this.prisma as any).menuItem.deleteMany({ where: { menuId: menu.id } });
-                await (this.prisma as any).menu.update({ where: { id: menu.id }, data: { name: menuData.name } });
-            } else {
-                menu = await (this.prisma as any).menu.create({ data: { name: menuData.name, slug } });
-            }
-
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                await (this.prisma as any).menuItem.create({
-                    data: {
-                        label: item.label,
-                        url: item.url,
-                        target: item.target || '_self',
-                        order: item.order ?? i,
-                        menuId: menu.id,
-                    },
-                });
-            }
-        }
-        return menus.length;
-    }
-
-    private async setupProjectCategories(categories: any[]): Promise<number> {
-        for (const cat of categories) {
-            const slug = cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-            await (this.prisma as any).projectCategory.upsert({
-                where: { slug },
-                update: { name: cat.name, description: cat.description || '' },
-                create: { name: cat.name, slug, description: cat.description || '' },
-            });
-        }
-        return categories.length;
-    }
-
-    private async setupProjects(projects: any[]): Promise<number> {
-        for (const proj of projects) {
-            const slug = proj.slug || proj.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-
-            // Resolve category slug → categoryId
-            let categoryId: string | undefined;
-            if (proj.category && typeof proj.category === 'string') {
-                const cat = await (this.prisma as any).projectCategory.findFirst({ where: { slug: proj.category } });
-                categoryId = cat?.id;
-            } else if (proj.categoryId) {
-                categoryId = proj.categoryId;
-            }
-
-            // Only include fields that exist in the Project Prisma model
-            const data: any = {
-                title: proj.title,
-                description: proj.description || '',
-                content: proj.content || null,
-                coverImage: proj.coverImage || proj.featuredImage || null,
-                featured: proj.featured ?? false,
-                location: proj.location || null,
-                status: proj.status || 'COMPLETED',
-                // Real-estate specific fields (added in schema)
-                priceFrom: proj.priceFrom || null,
-                areaFrom: proj.areaFrom || null,
-                areaTo: proj.areaTo || null,
-            };
-            if (categoryId) data.categoryId = categoryId;
-
-            await (this.prisma as any).project.upsert({
-                where: { slug },
-                update: data,
-                create: { ...data, slug },
-            });
-        }
-        return projects.length;
-    }
-
-    private async setupTeam(team: any[]): Promise<number> {
-        for (const member of team) {
-            const data = {
-                name: member.name,
-                role: member.role,
-                bio: member.bio || null,
-                image: member.image || null,
-                socialLinks: member.socialLinks || null,
-                order: member.order || 0,
-            };
-            const existing = await (this.prisma as any).teamMember.findFirst({ where: { name: member.name } });
-            if (existing) {
-                await (this.prisma as any).teamMember.update({ where: { id: existing.id }, data });
-            } else {
-                await (this.prisma as any).teamMember.create({ data });
-            }
-        }
-        return team.length;
-    }
-
-    private async setupTestimonials(testimonials: any[]): Promise<number> {
-        for (const t of testimonials) {
-            // Normalise field names: theme.json may use `name`/`role`/`avatarUrl`,
-            // Prisma schema uses `clientName`/`clientRole`/`clientPhoto`
-            const data: any = {
-                clientName: t.clientName || t.name,
-                clientRole: t.clientRole || t.role || null,
-                clientCompany: t.clientCompany || null,
-                content: t.content,
-                rating: t.rating ?? 5,
-                clientPhoto: t.clientPhoto || t.avatarUrl || null,
-            };
-            const existing = await (this.prisma as any).testimonial.findFirst({ where: { clientName: data.clientName } });
-            if (existing) {
-                await (this.prisma as any).testimonial.update({ where: { id: existing.id }, data });
-            } else {
-                await (this.prisma as any).testimonial.create({ data });
-            }
-        }
-        return testimonials.length;
-    }
-
-    private async setupServices(services: any[]): Promise<number> {
-        for (const s of services) {
-            const data = {
-                title: s.title,
-                description: s.description || null,
-                icon: s.icon || null,
-                processSteps: s.processSteps || null,
-                order: s.order || 0,
-            };
-            const existing = await (this.prisma as any).service.findFirst({ where: { title: s.title } });
-            if (existing) {
-                await (this.prisma as any).service.update({ where: { id: existing.id }, data });
-            } else {
-                await (this.prisma as any).service.create({ data });
-            }
-        }
-        return services.length;
-    }
-
-    private async setupMilestones(milestones: any[]): Promise<number> {
-        for (const m of milestones) {
-            const data = {
-                year: m.year,
-                title: m.title,
-                description: m.description || null,
-                icon: m.icon || null,
-                image: m.image || null,
-                order: m.order || 0,
-            };
-            const existing = await (this.prisma as any).milestone.findFirst({ where: { title: m.title } });
-            if (existing) {
-                await (this.prisma as any).milestone.update({ where: { id: existing.id }, data });
-            } else {
-                await (this.prisma as any).milestone.create({ data });
-            }
-        }
-        return milestones.length;
     }
 
     /**
