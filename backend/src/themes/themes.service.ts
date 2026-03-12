@@ -345,23 +345,41 @@ export class ThemesService {
     private async setupProjects(projects: any[]): Promise<number> {
         let count = 0;
         const activeTheme = await this.getActiveTheme();
-        for (const projectData of projects) {
-            const { category, ...project } = projectData;
-            const existing = await (this.prisma as any).project.findUnique({ where: { slug: project.slug } });
+        for (const p of projects) {
+            const slug = p.slug || p.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+            const existing = await (this.prisma as any).project.findUnique({ where: { slug } });
             if (existing) continue;
 
-            let categoryId = null;
-            if (category) {
-                const catRecord = await (this.prisma as any).projectCategory.findUnique({ where: { slug: category } });
-                if (catRecord) categoryId = catRecord.id;
+            // Resolve category slug → categoryId
+            let categoryId: string | null = null;
+            if (p.category && typeof p.category === 'string') {
+                const cat = await (this.prisma as any).projectCategory.findFirst({ where: { slug: p.category } });
+                categoryId = cat?.id ?? null;
+            } else if (p.categoryId) {
+                categoryId = p.categoryId;
             }
 
             await (this.prisma as any).project.create({
                 data: {
-                    ...project,
-                    theme: activeTheme,
+                    title:          p.title,
+                    slug,
+                    description:    p.description    || '',
+                    content:        p.content        || null,
+                    coverImage:     p.coverImage     || p.featuredImage || null,
+                    bannerImage:    p.bannerImage    || null,
+                    heroVideo:      p.heroVideo      || null,
+                    gallery:        p.gallery        || [],
+                    model3dUrl:     p.model3dUrl     || null,
+                    status:         p.status         || 'COMPLETED',
+                    client:         p.client         || null,
+                    completionDate: p.completionDate ? new Date(p.completionDate) : null,
+                    location:       p.location       || null,
+                    featured:       p.featured       ?? false,
+                    priceFrom:      p.priceFrom      || null,
+                    areaFrom:       p.areaFrom       || null,
+                    areaTo:         p.areaTo         || null,
+                    theme:          activeTheme,
                     categoryId,
-                    status: project.status || 'COMPLETED',
                 },
             });
             count++;
@@ -372,12 +390,18 @@ export class ThemesService {
     private async setupTeam(team: any[]): Promise<number> {
         let count = 0;
         const activeTheme = await this.getActiveTheme();
-        for (const member of team) {
+        for (const m of team) {
+            const existing = await (this.prisma as any).teamMember.findFirst({ where: { name: m.name } });
+            if (existing) continue;
             await (this.prisma as any).teamMember.create({
                 data: {
-                    ...member,
-                    socialLinks: member.socialLinks || {},
-                    theme: activeTheme,
+                    name:        m.name,
+                    role:        m.role,
+                    bio:         m.bio         || null,
+                    image:       m.image       || null,
+                    order:       m.order       ?? 0,
+                    socialLinks: m.socialLinks || {},
+                    theme:       activeTheme,
                 },
             });
             count++;
@@ -388,13 +412,21 @@ export class ThemesService {
     private async setupTestimonials(testimonials: any[]): Promise<number> {
         let count = 0;
         const activeTheme = await this.getActiveTheme();
-        for (const test of testimonials) {
-            const { name, ...rest } = test;
+        for (const t of testimonials) {
+            const existing = await (this.prisma as any).testimonial.findFirst({
+                where: { clientName: t.clientName || t.name },
+            });
+            if (existing) continue;
+            // Map theme.json fields → Prisma column names; strip unknown keys
             await (this.prisma as any).testimonial.create({
                 data: {
-                    ...rest,
-                    clientName: name,
-                    theme: activeTheme,
+                    clientName:    t.clientName    || t.name,
+                    clientRole:    t.clientRole    || t.role    || null,
+                    clientCompany: t.clientCompany || null,
+                    content:       t.content,
+                    rating:        t.rating        ?? 5,
+                    clientPhoto:   t.clientPhoto   || t.avatarUrl || null,
+                    theme:         activeTheme,
                 },
             });
             count++;
@@ -405,12 +437,17 @@ export class ThemesService {
     private async setupServices(services: any[]): Promise<number> {
         let count = 0;
         const activeTheme = await this.getActiveTheme();
-        for (const service of services) {
+        for (const s of services) {
+            const existing = await (this.prisma as any).service.findFirst({ where: { title: s.title } });
+            if (existing) continue;
             await (this.prisma as any).service.create({
                 data: {
-                    ...service,
-                    processSteps: service.processSteps || [],
-                    theme: activeTheme,
+                    title:        s.title,
+                    description:  s.description  || null,
+                    icon:         s.icon         || null,
+                    order:        s.order        ?? 0,
+                    processSteps: s.processSteps || [],
+                    theme:        activeTheme,
                 },
             });
             count++;
@@ -421,11 +458,18 @@ export class ThemesService {
     private async setupMilestones(milestones: any[]): Promise<number> {
         let count = 0;
         const activeTheme = await this.getActiveTheme();
-        for (const milestone of milestones) {
+        for (const m of milestones) {
+            const existing = await (this.prisma as any).milestone.findFirst({ where: { title: m.title } });
+            if (existing) continue;
             await (this.prisma as any).milestone.create({
                 data: {
-                    ...milestone,
-                    theme: activeTheme,
+                    year:        m.year,
+                    title:       m.title,
+                    description: m.description || null,
+                    icon:        m.icon        || null,
+                    image:       m.image       || null,
+                    order:       m.order       ?? 0,
+                    theme:       activeTheme,
                 },
             });
             count++;
