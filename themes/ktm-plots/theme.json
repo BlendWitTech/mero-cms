@@ -4,28 +4,72 @@
   "description": "Real estate theme for KTM Plots — land property listings in Kathmandu Valley",
   "version": "1.0.0",
   "preview": "preview.svg",
-  "modules": ["blogs", "projects", "project-categories", "testimonials", "services", "leads", "menus"],
+  "modules": [
+    "blogs",
+    "projects",
+    "project-categories",
+    "testimonials",
+    "services",
+    "leads",
+    "menus"
+  ],
   "seedData": {
     "menus": [
       {
         "name": "Main Navigation",
         "slug": "main-nav",
         "items": [
-          { "label": "Home", "url": "/", "order": 1 },
-          { "label": "About", "url": "/about", "order": 2 },
-          { "label": "Plots", "url": "/plots", "order": 3 },
-          { "label": "Services", "url": "/services", "order": 4 },
-          { "label": "Blog", "url": "/blog", "order": 5 },
-          { "label": "Contact", "url": "/contact", "order": 6 }
+          {
+            "label": "Home",
+            "url": "/",
+            "order": 1
+          },
+          {
+            "label": "About",
+            "url": "/about",
+            "order": 2
+          },
+          {
+            "label": "Plots",
+            "url": "/plots",
+            "order": 3
+          },
+          {
+            "label": "Services",
+            "url": "/services",
+            "order": 4
+          },
+          {
+            "label": "Blog",
+            "url": "/blog",
+            "order": 5
+          },
+          {
+            "label": "Contact",
+            "url": "/contact",
+            "order": 6
+          }
         ]
       },
       {
         "name": "Footer Links",
         "slug": "footer-links",
         "items": [
-          { "label": "Privacy Policy", "url": "/privacy", "order": 1 },
-          { "label": "Terms of Service", "url": "/terms", "order": 2 },
-          { "label": "Contact Us", "url": "/contact", "order": 3 }
+          {
+            "label": "Privacy Policy",
+            "url": "/privacy",
+            "order": 1
+          },
+          {
+            "label": "Terms of Service",
+            "url": "/terms",
+            "order": 2
+          },
+          {
+            "label": "Contact Us",
+            "url": "/contact",
+            "order": 3
+          }
         ]
       }
     ],
@@ -104,9 +148,18 @@
       }
     ],
     "projectCategories": [
-      { "name": "Residential", "slug": "residential" },
-      { "name": "Commercial", "slug": "commercial" },
-      { "name": "Agricultural", "slug": "agricultural" }
+      {
+        "name": "Residential",
+        "slug": "residential"
+      },
+      {
+        "name": "Commercial",
+        "slug": "commercial"
+      },
+      {
+        "name": "Agricultural",
+        "slug": "agricultural"
+      }
     ],
     "projects": [
       {
@@ -188,5 +241,365 @@
         "featured": false
       }
     ]
-  }
+  },
+  "moduleAliases": {
+    "projects": "Plots",
+    "project-categories": "Plot Categories"
+  },
+  "pageSchema": [
+    {
+      "slug": "home",
+      "label": "Home Page",
+      "sections": [
+        {
+          "id": "hero",
+          "label": "Hero Banner",
+          "description": "Full-width banner at the top",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Headline",
+              "type": "text",
+              "placeholder": "Find Your Perfect Land Plot"
+            },
+            {
+              "key": "subtitle",
+              "label": "Subtitle",
+              "type": "textarea"
+            },
+            {
+              "key": "bgImage",
+              "label": "Background Image URL",
+              "type": "image"
+            },
+            {
+              "key": "bgVideo",
+              "label": "Background Video URL",
+              "type": "text"
+            },
+            {
+              "key": "buttons",
+              "label": "CTA Buttons",
+              "type": "buttons",
+              "max": 2
+            }
+          ]
+        },
+        {
+          "id": "about",
+          "label": "About Preview",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Section Title",
+              "type": "text"
+            },
+            {
+              "key": "content",
+              "label": "Content",
+              "type": "textarea"
+            },
+            {
+              "key": "image",
+              "label": "Image URL",
+              "type": "image"
+            },
+            {
+              "key": "button",
+              "label": "Button",
+              "type": "button"
+            }
+          ]
+        },
+        {
+          "id": "services",
+          "label": "Services Grid",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Section Title",
+              "type": "text",
+              "placeholder": "Our Services"
+            },
+            {
+              "key": "subtitle",
+              "label": "Subtitle",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "id": "plots",
+          "label": "Featured Plots",
+          "description": "Pulls from your Plots (Projects) module",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Section Title",
+              "type": "text",
+              "placeholder": "Featured Plots"
+            },
+            {
+              "key": "subtitle",
+              "label": "Subtitle",
+              "type": "text"
+            },
+            {
+              "key": "limit",
+              "label": "Max Plots to Show",
+              "type": "number",
+              "placeholder": "6"
+            }
+          ]
+        },
+        {
+          "id": "testimonials",
+          "label": "Testimonials",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Section Title",
+              "type": "text"
+            },
+            {
+              "key": "subtitle",
+              "label": "Subtitle",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "id": "cta",
+          "label": "Call-to-Action Strip",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Headline",
+              "type": "text"
+            },
+            {
+              "key": "subtitle",
+              "label": "Subtitle",
+              "type": "text"
+            },
+            {
+              "key": "buttons",
+              "label": "Buttons",
+              "type": "buttons",
+              "max": 2
+            }
+          ]
+        },
+        {
+          "id": "blog",
+          "label": "Blog Preview",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Section Title",
+              "type": "text",
+              "placeholder": "From Our Blog"
+            },
+            {
+              "key": "limit",
+              "label": "Posts to Show",
+              "type": "number",
+              "placeholder": "3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "about",
+      "label": "About Page",
+      "sections": [
+        {
+          "id": "hero",
+          "label": "Page Hero",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Page Title",
+              "type": "text",
+              "placeholder": "About KTM Plots"
+            },
+            {
+              "key": "subtitle",
+              "label": "Subtitle",
+              "type": "textarea"
+            },
+            {
+              "key": "bgImage",
+              "label": "Background Image URL",
+              "type": "image"
+            }
+          ]
+        },
+        {
+          "id": "story",
+          "label": "Our Story",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Section Title",
+              "type": "text"
+            },
+            {
+              "key": "content",
+              "label": "Story Content",
+              "type": "richtext"
+            },
+            {
+              "key": "image",
+              "label": "Image URL",
+              "type": "image"
+            }
+          ]
+        },
+        {
+          "id": "values",
+          "label": "Why Choose Us",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Section Title",
+              "type": "text"
+            },
+            {
+              "key": "subtitle",
+              "label": "Subtitle",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "id": "cta",
+          "label": "Call to Action",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Headline",
+              "type": "text"
+            },
+            {
+              "key": "button",
+              "label": "Button",
+              "type": "button"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "contact",
+      "label": "Contact Page",
+      "sections": [
+        {
+          "id": "hero",
+          "label": "Page Hero",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Page Title",
+              "type": "text",
+              "placeholder": "Get in Touch"
+            },
+            {
+              "key": "subtitle",
+              "label": "Subtitle",
+              "type": "textarea"
+            }
+          ]
+        },
+        {
+          "id": "form",
+          "label": "Contact Form",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Form Title",
+              "type": "text"
+            },
+            {
+              "key": "submitLabel",
+              "label": "Submit Button Text",
+              "type": "text",
+              "placeholder": "Send Message"
+            }
+          ]
+        },
+        {
+          "id": "info",
+          "label": "Contact Info",
+          "description": "Details beside the form",
+          "fields": [
+            {
+              "key": "hours",
+              "label": "Office Hours",
+              "type": "text",
+              "placeholder": "Sun-Fri, 9am-6pm"
+            }
+          ]
+        },
+        {
+          "id": "map",
+          "label": "Map Embed",
+          "fields": [
+            {
+              "key": "embedUrl",
+              "label": "Google Maps Embed URL",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "plots",
+      "label": "Plots Listing Page",
+      "sections": [
+        {
+          "id": "hero",
+          "label": "Page Hero",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Page Title",
+              "type": "text",
+              "placeholder": "Browse Our Plots"
+            },
+            {
+              "key": "subtitle",
+              "label": "Subtitle",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "blog",
+      "label": "Blog Listing Page",
+      "sections": [
+        {
+          "id": "hero",
+          "label": "Page Hero",
+          "fields": [
+            {
+              "key": "title",
+              "label": "Page Title",
+              "type": "text",
+              "placeholder": "Our Blog"
+            },
+            {
+              "key": "subtitle",
+              "label": "Subtitle",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }

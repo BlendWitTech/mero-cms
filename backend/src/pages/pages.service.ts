@@ -126,4 +126,28 @@ export class PagesService {
             where: { id },
         });
     }
+
+    /** Upsert a page by slug — used by the Site Pages section editor. */
+    async upsertBySlug(slug, dto) {
+        const existing = await this.prisma.page.findFirst({ where: { slug } });
+        if (existing) {
+            return this.prisma.page.update({
+                where: { id: existing.id },
+                data: {
+                    ...(dto.title ? { title: dto.title } : {}),
+                    ...(dto.data !== undefined ? { data: dto.data } : {}),
+                    ...(dto.status ? { status: dto.status } : {}),
+                },
+            });
+        }
+        return this.prisma.page.create({
+            data: {
+                slug,
+                title: dto.title || slug,
+                data: dto.data || {},
+                status: dto.status || 'PUBLISHED',
+            },
+        });
+    }
+
 }

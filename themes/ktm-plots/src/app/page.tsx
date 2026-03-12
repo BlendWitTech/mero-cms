@@ -1,4 +1,4 @@
-import { getSiteData, getFeaturedPlots } from '@/lib/cms';
+import { getSiteData, getFeaturedPlots, getSection, isSectionEnabled, type PageRecord } from '@/lib/cms';
 import Hero from '@/components/sections/Hero';
 import About from '@/components/sections/About';
 import Services from '@/components/sections/Services';
@@ -13,28 +13,52 @@ export default async function HomePage() {
     getFeaturedPlots(),
   ]);
 
+  const pages = (siteData as any).pages as PageRecord[] ?? [];
+
+  // Helper: read a field from the "home" page's section config
+  const sec = (sectionId: string) => getSection(pages, 'home', sectionId);
+  const show = (sectionId: string) => isSectionEnabled(pages, 'home', sectionId);
+
+  // Merge section-level overrides into siteData.settings so existing
+  // components continue to work without needing a new prop
+  const heroSec = sec('hero');
+  const aboutSec = sec('about');
+  const ctaSec = sec('cta');
+
+  const mergedSettings = {
+    ...siteData.settings,
+    // Hero overrides from Site Pages editor
+    ...(heroSec.data.title       && { heroTitle:   heroSec.data.title }),
+    ...(heroSec.data.subtitle    && { heroSubtitle: heroSec.data.subtitle }),
+    ...(heroSec.data.bgImage     && { heroBgImage:  heroSec.data.bgImage }),
+    ...(heroSec.data.bgVideo     && { heroBgVideo:  heroSec.data.bgVideo }),
+    ...(heroSec.data.buttons?.[0]?.text && { ctaText: heroSec.data.buttons[0].text }),
+    ...(heroSec.data.buttons?.[0]?.url  && { ctaUrl:  heroSec.data.buttons[0].url }),
+    // About overrides
+    ...(aboutSec.data.title   && { aboutTitle:   aboutSec.data.title }),
+    ...(aboutSec.data.content && { aboutContent: aboutSec.data.content }),
+    ...(aboutSec.data.image   && { aboutImage:   aboutSec.data.image }),
+    // CTA overrides
+    ...(ctaSec.data.buttons?.[0]?.text && { ctaText: ctaSec.data.buttons[0].text }),
+    ...(ctaSec.data.buttons?.[0]?.url  && { ctaUrl:  ctaSec.data.buttons[0].url }),
+  };
+
+  const enrichedSiteData = { ...siteData, settings: mergedSettings };
+
+  // Plots section config
+  const plotsSec = sec('plots');
+  const plotLimit = Number(plotsSec.data.limit) || 6;
+  const limitedPlots = featuredPlots.slice(0, plotLimit);
+
   return (
     <>
-      {/* 1. Hero — CMS-controlled title, subtitle, background image */}
-      <Hero siteData={siteData} />
-
-      {/* 2. About — CMS-controlled title, content, optional about image */}
-      <About siteData={siteData} />
-
-      {/* 3. Services — from CMS Services module */}
-      <Services services={siteData.services} />
-
-      {/* 4. Plots (Projects) — featured plots from CMS Projects module */}
-      <Plots plots={featuredPlots} />
-
-      {/* 5. Testimonials — from CMS Testimonials module */}
-      <Testimonials testimonials={siteData.testimonials} />
-
-      {/* 6. CTA strip — with contact info and CTA button */}
-      <CtaStrip siteData={siteData} />
-
-      {/* 7. Blog preview — latest 3 published posts */}
-      <BlogPreview posts={siteData.recentPosts} />
+      {show('hero') && <Hero siteData={enrichedSiteData} />}
+      {show('about') && <About siteData={enrichedSiteData} />}
+      {show('services') && <Services services={siteData.services} />}
+      {show('plots') && <Plots plots={limitedPlots} />}
+      {show('testimonials') && <Testimonials testimonials={siteData.testimonials} />}
+      {show('cta') && <CtaStrip siteData={enrichedSiteData} />}
+      {show('blog') && <BlogPreview posts={siteData.recentPosts.slice(0, Number(sec('blog').data.limit) || 3)} />}
     </>
   );
 }

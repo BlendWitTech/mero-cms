@@ -333,6 +333,34 @@ export class ThemesService {
         return setting ? setting.value : null;
     }
 
+
+    /** Return the active theme's full config (theme.json) minus seedData. */
+    async getActiveThemeConfig(): Promise<Record<string, any> | null> {
+        const name = await this.getActiveTheme();
+        if (!name) return null;
+        const themePath = this.findThemePath(name);
+        if (!themePath) return null;
+        const configPath = path.join(themePath, 'theme.json');
+        if (!fs.existsSync(configPath)) return null;
+        try {
+            const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            const { seedData, ...rest } = config;
+            return rest;
+        } catch { return null; }
+    }
+
+    /** Return the active theme's page schema (for the section editor). */
+    async getPageSchema(): Promise<any[]> {
+        const config = await this.getActiveThemeConfig();
+        return config?.pageSchema || [];
+    }
+
+    /** Return module aliases (e.g. { projects: 'Plots' }). */
+    async getModuleAliases(): Promise<Record<string, string>> {
+        const config = await this.getActiveThemeConfig();
+        return config?.moduleAliases || {};
+    }
+
     // ── Seed helpers ─────────────────────────────────────────────────────────
 
     private async setupPosts(posts: any[]): Promise<number> {
@@ -466,11 +494,19 @@ export class ThemesService {
 
     private async setupTeam(team: any[]): Promise<number> {
         for (const member of team) {
+            const data = {
+                name: member.name,
+                role: member.role,
+                bio: member.bio || null,
+                image: member.image || null,
+                socialLinks: member.socialLinks || null,
+                order: member.order || 0,
+            };
             const existing = await (this.prisma as any).teamMember.findFirst({ where: { name: member.name } });
             if (existing) {
-                await (this.prisma as any).teamMember.update({ where: { id: existing.id }, data: member });
+                await (this.prisma as any).teamMember.update({ where: { id: existing.id }, data });
             } else {
-                await (this.prisma as any).teamMember.create({ data: member });
+                await (this.prisma as any).teamMember.create({ data });
             }
         }
         return team.length;
@@ -500,11 +536,18 @@ export class ThemesService {
 
     private async setupServices(services: any[]): Promise<number> {
         for (const s of services) {
+            const data = {
+                title: s.title,
+                description: s.description || null,
+                icon: s.icon || null,
+                processSteps: s.processSteps || null,
+                order: s.order || 0,
+            };
             const existing = await (this.prisma as any).service.findFirst({ where: { title: s.title } });
             if (existing) {
-                await (this.prisma as any).service.update({ where: { id: existing.id }, data: s });
+                await (this.prisma as any).service.update({ where: { id: existing.id }, data });
             } else {
-                await (this.prisma as any).service.create({ data: s });
+                await (this.prisma as any).service.create({ data });
             }
         }
         return services.length;
@@ -512,11 +555,19 @@ export class ThemesService {
 
     private async setupMilestones(milestones: any[]): Promise<number> {
         for (const m of milestones) {
+            const data = {
+                year: m.year,
+                title: m.title,
+                description: m.description || null,
+                icon: m.icon || null,
+                image: m.image || null,
+                order: m.order || 0,
+            };
             const existing = await (this.prisma as any).milestone.findFirst({ where: { title: m.title } });
             if (existing) {
-                await (this.prisma as any).milestone.update({ where: { id: existing.id }, data: m });
+                await (this.prisma as any).milestone.update({ where: { id: existing.id }, data });
             } else {
-                await (this.prisma as any).milestone.create({ data: m });
+                await (this.prisma as any).milestone.create({ data });
             }
         }
         return milestones.length;

@@ -31,16 +31,29 @@ export class ThemesController {
         return { activeTheme: await this.themesService.getActiveTheme() };
     }
 
+    @Post(':name/install-modules')
+    @RequirePermissions(Permission.THEMES_MANAGE)
+    async installModules(@Param('name') name: string) {
+        return this.themesService.prepareThemeModules(name);
+    }
+
     @Post(':name/setup')
     @RequirePermissions(Permission.THEMES_MANAGE)
-    async setupTheme(@Param('name') name: string) {
-        return this.themesService.setupTheme(name);
+    async setupTheme(
+        @Param('name') name: string,
+        @Body('importDemoContent') importDemoContent?: boolean
+    ) {
+        return this.themesService.setupTheme(name, importDemoContent);
     }
 
     @Post(':name/activate')
     @RequirePermissions(Permission.THEMES_MANAGE)
-    async activateTheme(@Param('name') name: string) {
-        return this.themesService.setActiveTheme(name);
+    async activateTheme(
+        @Param('name') name: string,
+        @Body('clearData') clearData?: boolean,
+        @Body('importDemoContent') importDemoContent?: boolean
+    ) {
+        return this.themesService.setActiveTheme(name, clearData, importDemoContent);
     }
 
     @Get('details')

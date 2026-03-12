@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Param, Query, HttpCode, HttpStatus } from 
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
 import { SetupService } from '../setup/setup.service';
+import { ThemesService } from '../themes/themes.service';
 
 @Controller('public')
 export class PublicController {
@@ -13,7 +14,7 @@ export class PublicController {
 
     @Get('site-data')
     async getSiteData() {
-        const [settingsMap, enabledModules] = await Promise.all([
+        const [settingsMap, enabledModules, pageSchema, moduleAliases] = await Promise.all([
             this.settingsService.findAll(),
             this.setupService.getEnabledModules(),
         ]);
@@ -35,6 +36,8 @@ export class PublicController {
         }
 
         const data: Record<string, any> = {
+            pageSchema,
+            moduleAliases,
             settings: {
                 siteTitle: settingsMap['site_title'] || '',
                 tagline: settingsMap['site_tagline'] || settingsMap['tagline'] || '',

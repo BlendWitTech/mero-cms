@@ -2,16 +2,13 @@
 /**
  * dev-theme.js
  *
- * Reads the active theme from the CMS backend (GET /public/site-data)
- * and starts it on port 3002.
- *
- * - Waits up to 15s for the backend to become available
- * - Falls back to the first available theme if backend is unreachable
- * - Installs node_modules automatically if missing
+ * Reads the active theme from the CMS backend and starts it on port 3002.
+ * Watches for active theme changes every 4s and hot-swaps to the new theme
+ * automatically — no manual restart needed.
  *
  * Usage:
  *   node scripts/dev-theme.js
- *   npm run dev:theme   (calls this script)
+ *   npm run dev:theme
  */
 
 const { spawn, execSync } = require('child_process');
@@ -21,29 +18,37 @@ const fs = require('fs');
 const API_URL = process.env.CMS_API_URL || 'http://localhost:3001';
 const THEMES_DIR = path.join(__dirname, '..', 'themes');
 const DEFAULT_THEME = 'mero-cms-marketing';
-const MAX_WAIT_MS = 15000;
-const POLL_INTERVAL_MS = 1000;
+const STARTUP_WAIT_MS = 15000;
+const WATCH_INTERVAL_MS = 4000;
 
 function sleep(ms) {
     return new Promise(r => setTimeout(r, ms));
 }
 
-async function getActiveThemeFromBackend() {
+async function fetchActiveTheme() {
+    try {
+        const res = await fetch(`${API_URL}/public/site-data`, {
+            signal: AbortSignal.timeout(2000),
+        });
+        if (res.ok) {
+            const data = await res.json();
+            return data?.settings?.activeTheme || null;
+        }
+    } catch {
+        // Unreachable
+    }
+    return null;
+}
+
+async function waitForBackend() {
     const start = Date.now();
-    while (Date.now() - start < MAX_WAIT_MS) {
-        try {
-            const res = await fetch(`${API_URL}/public/site-data`, {
-                signal: AbortSignal.timeout(2000),
-            });
-            if (res.ok) {
-                const data = await res.json();
-                return data?.settings?.activeTheme || null;
-            }
-        } catch {
-            // Backend not ready yet — keep polling
+    while (Date.now() - start < STARTUP_WAIT_MS) {
+        const theme = await fetchActiveTheme();
+        if (theme !== null || Date.now() - start > STARTUP_WAIT_MS - WATCH_INTERVAL_MS) {
+            return theme;
         }
         process.stdout.write('.');
-        await sleep(POLL_INTERVAL_MS);
+        await sleep(1000);
     }
     return null;
 }
@@ -55,60 +60,108 @@ function getAvailableThemes() {
         .map(d => d.name);
 }
 
-async function main() {
-    console.log(`\n🎨  Detecting active theme from ${API_URL}...`);
+function resolveTheme(name) {
+    if (name && fs.existsSync(path.join(THEMES_DIR, name))) return name;
+    const available = getAvailableThemes();
+    return available[0] || DEFAULT_THEME;
+}
 
-    const activeTheme = await getActiveThemeFromBackend();
-
-    let themeName;
-    if (activeTheme) {
-        console.log(`\n✓  Active theme: ${activeTheme}`);
-        themeName = activeTheme;
-    } else {
-        const available = getAvailableThemes();
-        themeName = available.length > 0 ? available[0] : DEFAULT_THEME;
-        console.log(`\n   No active theme set (or backend unreachable). Using: ${themeName}`);
-    }
-
+function prepareTheme(themeName) {
     const themePath = path.join(THEMES_DIR, themeName);
 
-    if (!fs.existsSync(themePath)) {
-        const available = getAvailableThemes();
-        if (available.length === 0) {
-            console.error(`✗  No themes found in ${THEMES_DIR}`);
-            process.exit(1);
-        }
-        themeName = available[0];
-        console.log(`   Theme directory not found. Falling back to: ${themeName}`);
+    if (!fs.existsSync(path.join(themePath, 'node_modules'))) {
+        console.log(`\n   Installing dependencies for "${themeName}"...`);
+        execSync('npm install', { cwd: themePath, stdio: 'inherit' });
     }
 
-    const themeFullPath = path.join(THEMES_DIR, themeName);
-
-    // Auto-install if node_modules is missing
-    if (!fs.existsSync(path.join(themeFullPath, 'node_modules'))) {
-        console.log(`   Installing dependencies for "${themeName}"...`);
-        execSync('npm install', { cwd: themeFullPath, stdio: 'inherit' });
-    }
-
-    // Create .env.local if missing
-    const envLocalPath = path.join(themeFullPath, '.env.local');
-    const envExamplePath = path.join(themeFullPath, '.env.local.example');
-    if (!fs.existsSync(envLocalPath) && fs.existsSync(envExamplePath)) {
-        fs.copyFileSync(envExamplePath, envLocalPath);
+    const envLocal = path.join(themePath, '.env.local');
+    const envExample = path.join(themePath, '.env.local.example');
+    if (!fs.existsSync(envLocal) && fs.existsSync(envExample)) {
+        fs.copyFileSync(envExample, envLocal);
         console.log(`   Created .env.local from .env.local.example`);
     }
+}
 
-    console.log(`🚀  Starting theme "${themeName}" on port 3002...\n`);
+function startTheme(themeName) {
+    const themePath = path.join(THEMES_DIR, themeName);
+    console.log(`\n🚀  Starting theme "${themeName}" on port 3002...\n`);
 
     const child = spawn('npm', ['run', 'dev'], {
-        cwd: themeFullPath,
+        cwd: themePath,
         stdio: 'inherit',
         shell: true,
     });
 
-    child.on('exit', code => process.exit(code ?? 0));
-    process.on('SIGINT', () => child.kill('SIGINT'));
-    process.on('SIGTERM', () => child.kill('SIGTERM'));
+    return child;
+}
+
+async function main() {
+    console.log(`\n🎨  Detecting active theme from ${API_URL}...`);
+
+    // Wait for backend on startup
+    let activeTheme = await waitForBackend();
+
+    let currentTheme = resolveTheme(activeTheme);
+    if (activeTheme) {
+        console.log(`\n✓  Active theme: ${currentTheme}`);
+    } else {
+        console.log(`\n   No active theme set (or backend unreachable). Using: ${currentTheme}`);
+    }
+
+    prepareTheme(currentTheme);
+    let child = startTheme(currentTheme);
+
+    // Watch for theme changes while the dev server is running
+    const watcher = setInterval(async () => {
+        const latest = await fetchActiveTheme();
+        if (!latest) return; // Backend temporarily unreachable — ignore
+        const resolved = resolveTheme(latest);
+        if (resolved === currentTheme) return; // No change
+
+        console.log(`\n🔄  Active theme changed: "${currentTheme}" → "${resolved}"`);
+        console.log(`    Stopping current theme server...`);
+
+        // Kill old child and start the new theme
+        child.removeAllListeners('exit');
+        if (process.platform === 'win32') {
+            const { spawnSync } = require('child_process');
+            spawnSync('taskkill', ['/pid', child.pid, '/f', '/t']);
+        } else {
+            child.kill('SIGTERM');
+        }
+
+        await sleep(1500); // Give the process time to shut down
+
+        currentTheme = resolved;
+        prepareTheme(currentTheme);
+        child = startTheme(currentTheme);
+
+        child.on('exit', code => {
+            // Only exit if watcher isn't about to swap again
+            if (code !== null) {
+                clearInterval(watcher);
+                process.exit(code);
+            }
+        });
+    }, WATCH_INTERVAL_MS);
+
+    // Initial exit handler
+    child.on('exit', code => {
+        clearInterval(watcher);
+        process.exit(code ?? 0);
+    });
+
+    const killChild = (sig) => {
+        if (process.platform === 'win32') {
+            const { spawnSync } = require('child_process');
+            spawnSync('taskkill', ['/pid', child.pid, '/f', '/t']);
+        } else {
+            child.kill(sig);
+        }
+    };
+
+    process.on('SIGINT', () => { clearInterval(watcher); killChild('SIGINT'); });
+    process.on('SIGTERM', () => { clearInterval(watcher); killChild('SIGTERM'); });
 }
 
 main().catch(err => {

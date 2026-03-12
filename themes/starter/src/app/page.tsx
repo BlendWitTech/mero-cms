@@ -45,7 +45,7 @@ export default async function HomePage() {
       </section>
 
       {/* Services */}
-      {services.length > 0 && (
+      {services && services.length > 0 && (
         <section style={{ padding: '4rem 0' }}>
           <div className="container">
             <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '2rem', textAlign: 'center' }}>
@@ -70,7 +70,7 @@ export default async function HomePage() {
       )}
 
       {/* Recent Posts */}
-      {recentPosts.length > 0 && (
+      {recentPosts && recentPosts.length > 0 && (
         <section style={{ padding: '4rem 0', background: '#f8fafc' }}>
           <div className="container">
             <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '2rem', textAlign: 'center' }}>
@@ -105,7 +105,7 @@ export default async function HomePage() {
       )}
 
       {/* Testimonials */}
-      {testimonials.length > 0 && (
+      {testimonials && testimonials.length > 0 && (
         <section style={{ padding: '4rem 0' }}>
           <div className="container">
             <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '2rem', textAlign: 'center' }}>
@@ -132,7 +132,7 @@ export default async function HomePage() {
       )}
 
       {/* Team */}
-      {team.length > 0 && (
+      {team && team.length > 0 && (
         <section style={{ padding: '4rem 0', background: '#f8fafc' }}>
           <div className="container">
             <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '2rem', textAlign: 'center' }}>

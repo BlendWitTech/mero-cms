@@ -262,3 +262,45 @@ export function formatDate(dateStr: string | null | undefined): string {
     day: 'numeric',
   });
 }
+
+// ─── Page Section types & helpers ────────────────────────────────────────────
+
+export interface PageSectionItem {
+  id: string;
+  enabled: boolean;
+  data: Record<string, any>;
+}
+
+export interface PageRecord {
+  id: string;
+  slug: string;
+  title: string;
+  data: { sections?: PageSectionItem[] } | null;
+}
+
+/**
+ * Get a section's config from siteData.pages for a given page + section id.
+ * Returns { enabled, data } — enabled defaults to true if section isn't stored yet.
+ */
+export function getSection(
+  pages: PageRecord[],
+  pageSlug: string,
+  sectionId: string
+): { enabled: boolean; data: Record<string, any> } {
+  const page = pages.find((p) => p.slug === pageSlug);
+  const sections: PageSectionItem[] = (page?.data as any)?.sections ?? [];
+  const section = sections.find((s) => s.id === sectionId);
+  return {
+    enabled: section ? section.enabled !== false : true,
+    data: section?.data ?? {},
+  };
+}
+
+/** Shorthand to check if a section is visible. Defaults to true. */
+export function isSectionEnabled(
+  pages: PageRecord[],
+  pageSlug: string,
+  sectionId: string
+): boolean {
+  return getSection(pages, pageSlug, sectionId).enabled;
+}

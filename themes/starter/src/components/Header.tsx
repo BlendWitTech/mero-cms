@@ -1,3 +1,5 @@
+'use client';
+
 import { SiteData, cmsImageUrl } from '@/lib/cms';
 
 interface HeaderProps {

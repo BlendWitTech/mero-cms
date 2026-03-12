@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Put, Param, Delete, UseGuards } from '@nestjs/common';
 import { PagesService } from './pages.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
@@ -41,4 +41,11 @@ export class PagesController {
     remove(@Param('id') id: string) {
         return this.pagesService.remove(id);
     }
+
+    @Put('by-slug/:slug')
+    @RequirePermissions(Permission.CONTENT_EDIT)
+    upsertBySlug(@Param('slug') slug, @Body() dto) {
+        return this.pagesService.upsertBySlug(slug, dto);
+    }
+
 }

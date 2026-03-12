@@ -22,11 +22,11 @@ export default async function BlogPage({
     <div className="container" style={{ padding: '3rem 1.5rem' }}>
       <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '2rem' }}>Blog</h1>
 
-      {posts.length === 0 ? (
+      {!posts || posts.length === 0 ? (
         <p style={{ color: '#6b7280' }}>No posts published yet.</p>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
-          {posts.map(post => (
+          {posts?.map(post => (
             <a
               key={post.id}
               href={`/blog/${post.slug}`}
@@ -47,7 +47,7 @@ export default async function BlogPage({
                 />
               )}
               <div style={{ padding: '1.25rem' }}>
-                {post.categories.length > 0 && (
+                {post.categories && post.categories.length > 0 && (
                   <div style={{ marginBottom: '0.5rem' }}>
                     {post.categories.map(c => (
                       <span

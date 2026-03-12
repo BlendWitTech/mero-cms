@@ -29,30 +29,10 @@ const initialNavigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon }, // No permission required
     {
         name: 'Site Pages',
+        href: '/dashboard/site-pages',
         icon: DocumentTextIcon,
         id: 'site-pages',
         requiredPermission: ['content_view', 'content_edit'],
-        children: [
-            {
-                name: 'Static Pages',
-                requiredPermission: ['content_view', 'content_edit'],
-                children: [
-                    { name: 'Home', href: '/dashboard/pages/home', requiredPermission: ['content_view', 'content_edit'] },
-                    { name: 'About', href: '/dashboard/pages/about', requiredPermission: ['content_view', 'content_edit'] },
-                    { name: 'Contact', href: '/dashboard/pages/contact', requiredPermission: ['content_view', 'content_edit'] }
-                ]
-            },
-            {
-                name: 'Dynamic Pages',
-                requiredPermission: ['content_view', 'content_edit'],
-                children: [
-                    { name: 'Blog List', href: '/dashboard/pages/blog-list', requiredPermission: ['content_view', 'content_edit'] },
-                    { name: 'Blog Details', href: '/dashboard/pages/blog-details', requiredPermission: ['content_view', 'content_edit'] },
-                    { name: 'Project List', href: '/dashboard/pages/project-list', requiredPermission: ['content_view', 'content_edit'] },
-                    { name: 'Project Details', href: '/dashboard/pages/project-details', requiredPermission: ['content_view', 'content_edit'] }
-                ]
-            }
-        ]
     },
     {
         name: 'Content',
