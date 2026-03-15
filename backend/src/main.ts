@@ -19,10 +19,22 @@ async function bootstrap() {
 
   const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3002')
     .split(',')
-    .map(o => o.trim());
+    .map(o => o.trim())
+    .filter(Boolean);
+
+  // Set CORS_VERCEL_PROJECT in Railway to allow all Vercel preview deployments.
+  // e.g. "blendwit-cms-saas-frontend" will allow any URL containing that string on .vercel.app
+  const vercelProject = (process.env.CORS_VERCEL_PROJECT || '').trim();
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // server-to-server / curl
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      if (vercelProject && origin.endsWith('.vercel.app') && origin.includes(vercelProject)) {
+        return callback(null, true);
+      }
+      callback(new Error(`CORS: origin not allowed — ${origin}`));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
