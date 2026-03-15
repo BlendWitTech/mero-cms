@@ -5,7 +5,6 @@ import {
     DocumentPlusIcon,
     UserPlusIcon,
     PhotoIcon,
-    BriefcaseIcon,
     ShieldCheckIcon,
     NewspaperIcon
 } from '@heroicons/react/24/outline';
@@ -22,15 +21,6 @@ export default function CreateContentModal({ isOpen, onClose }: CreateContentMod
     const { permissions } = usePermissions();
 
     const options = [
-        {
-            title: 'New Project',
-            description: 'Create a new portfolio project case study.',
-            icon: BriefcaseIcon,
-            href: '/dashboard/projects?action=new',
-            permission: 'content_create',
-            color: 'bg-blue-50 text-blue-600',
-            hoverColor: 'group-hover:bg-blue-600 group-hover:text-white'
-        },
         {
             title: 'New Blog Post',
             description: 'Write and publish a new blog article.',
