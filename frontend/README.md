@@ -46,7 +46,6 @@ npm run lint      # ESLint
 | `/dashboard/services`              | Services                         |
 | `/dashboard/team`                  | Team members                     |
 | `/dashboard/testimonials`          | Testimonials                     |
-| `/dashboard/plots`                 | Real estate plots                |
 | `/dashboard/leads`                 | Contact form leads               |
 | `/dashboard/media`                 | Media library                    |
 | `/dashboard/themes`                | Theme management                 |
