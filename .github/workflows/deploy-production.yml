@@ -1,0 +1,79 @@
+name: Deploy — Production
+
+# Triggered when main branch is updated.
+# Uses the "production" GitHub Environment for manual approval gate.
+# Railway and Vercel auto-deploy via their GitHub integrations once the
+# approval is granted and this workflow completes successfully.
+
+on:
+    push:
+        branches: [main]
+
+jobs:
+    validate:
+        name: Validate Production Build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+                  cache-dependency-path: backend/package-lock.json
+
+            - name: Install backend dependencies
+              run: npm ci
+              working-directory: backend
+
+            - name: Generate Prisma client
+              run: npx prisma generate
+              working-directory: backend
+              env:
+                  DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
+
+            - name: Build backend
+              run: npm run build
+              working-directory: backend
+              env:
+                  DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
+
+            - name: Verify dist/main.js exists
+              run: test -f backend/dist/main.js
+
+            - name: Install frontend dependencies
+              run: npm ci
+              working-directory: frontend
+
+            - name: Build frontend
+              run: npm run build
+              working-directory: frontend
+              env:
+                  NEXT_PUBLIC_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+
+    # ── Manual Approval Gate ──────────────────────────────────────────────────
+    # This job requires a reviewer to approve via:
+    # GitHub → repo → Actions → this workflow run → Review deployments
+    #
+    # Set up the required reviewer in:
+    # GitHub → repo → Settings → Environments → production → Required reviewers
+    approve:
+        name: Await Production Approval
+        runs-on: ubuntu-latest
+        needs: validate
+        environment: production
+        steps:
+            - name: Approved for production
+              run: echo "Production deployment approved."
+
+    notify:
+        name: Production Deploy Notice
+        runs-on: ubuntu-latest
+        needs: approve
+        if: success()
+        steps:
+            - name: Print production URLs
+              run: |
+                  echo "Approved! Railway and Vercel are deploying to production..."
+                  echo "Backend:  ${{ secrets.PRODUCTION_API_URL }}"
+                  echo "Frontend: https://blendwit.com (or configured production domain)"

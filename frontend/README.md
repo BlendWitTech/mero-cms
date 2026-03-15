@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mero CMS — Admin UI
 
-## Getting Started
+Next.js 15 admin dashboard for Mero CMS. Runs on port **3000**.
 
-First, run the development server:
+## Tech
+
+- **Next.js 15** — App Router
+- **React 19**
+- **Tailwind CSS**
+- **Heroicons** — icon set
+- **JWT** — stored in localStorage, sent as Bearer token
+
+## Local Setup
 
 ```bash
+cd frontend
+cp .env.development.example .env.local
+# .env.local already has: NEXT_PUBLIC_API_URL=http://localhost:3001
+
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Admin UI: http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev       # Development server (port 3000)
+npm run build     # Production build
+npm run start     # Start production build
+npm run lint      # ESLint
+```
 
-## Learn More
+## Key Pages
 
-To learn more about Next.js, take a look at the following resources:
+| Route                              | Description                      |
+|------------------------------------|----------------------------------|
+| `/setup`                           | First-run setup wizard           |
+| `/login`                           | Login page                       |
+| `/dashboard`                       | Overview / home                  |
+| `/dashboard/blogs`                 | Blog post list                   |
+| `/dashboard/blogs/[id]`            | Blog post editor                 |
+| `/dashboard/pages`                 | Static pages                     |
+| `/dashboard/menus`                 | Navigation menus                 |
+| `/dashboard/services`              | Services                         |
+| `/dashboard/team`                  | Team members                     |
+| `/dashboard/testimonials`          | Testimonials                     |
+| `/dashboard/plots`                 | Real estate plots                |
+| `/dashboard/leads`                 | Contact form leads               |
+| `/dashboard/media`                 | Media library                    |
+| `/dashboard/themes`                | Theme management                 |
+| `/dashboard/analytics`             | GA4 analytics dashboard          |
+| `/dashboard/seo`                   | SEO meta, sitemap, redirects     |
+| `/dashboard/users`                 | User management                  |
+| `/dashboard/roles`                 | Roles & permissions              |
+| `/dashboard/settings`              | Site settings & modules          |
+| `/dashboard/notifications`         | Admin notifications              |
+| `/dashboard/audit-log`             | Activity audit trail             |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Environment Variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Variable              | Description                          |
+|-----------------------|--------------------------------------|
+| `NEXT_PUBLIC_API_URL` | Backend API base URL (required)      |
 
-## Deploy on Vercel
+For staging (Vercel preview): set to Railway staging URL.
+For production: set to Railway production URL.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## API Integration
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+All API calls go through `src/lib/api.ts`:
+
+```typescript
+import { apiRequest } from '@/lib/api';
+
+// Handles auth headers, base URL, error parsing automatically
+const data = await apiRequest('/blogs');
+const post = await apiRequest('/blogs', { method: 'POST', body: { title: '...' } });
+```
+
+## State & Notifications
+
+```typescript
+import { useAuth } from '@/context/AuthContext';
+import { useNotification } from '@/context/NotificationContext';
+
+const { user, logout } = useAuth();
+const { showToast } = useNotification();
+
+showToast('Saved successfully', 'success');
+showToast('Something went wrong', 'error');
+```
+
+For detailed architecture and patterns, see [DEVELOPER_GUIDE.md](../DEVELOPER_GUIDE.md).

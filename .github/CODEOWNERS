@@ -1,0 +1,18 @@
+# CODEOWNERS — Blendwit Tech
+# These users are automatically requested for review on PRs that touch these paths.
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything
+* @blendwit-tech
+
+# Backend core
+/backend/ @blendwit-tech
+
+# Frontend
+/frontend/ @blendwit-tech
+
+# CI/CD — require owner review on pipeline changes
+/.github/ @blendwit-tech
+
+# License — never allow changes without owner review
+/LICENSE @blendwit-tech

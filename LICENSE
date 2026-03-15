@@ -1,0 +1,43 @@
+MERO CMS — COMMERCIAL LICENSE
+Copyright (c) 2024–2025 Blendwit Tech. All rights reserved.
+
+================================================================================
+THIS SOFTWARE IS PROPRIETARY AND CONFIDENTIAL.
+================================================================================
+
+1. DEFINITIONS
+   "Software" means the Mero CMS source code, documentation, themes, scripts,
+   and all associated files in this repository.
+   "Owner" means Blendwit Tech.
+   "Approved Contributor" means a person explicitly granted contributor access
+   in writing by the Owner.
+   "License Holder" means a person or entity that has purchased a valid
+   commercial license from the Owner.
+
+2. PERMITTED USES
+   a. Approved Contributors may view, modify, and contribute to the Software
+      at no cost, subject to the Contributor Agreement.
+   b. License Holders may use, deploy, and operate the Software according to
+      the terms of their purchased license.
+
+3. PROHIBITED WITHOUT WRITTEN PERMISSION OR A PAID LICENSE
+   - Copying, cloning, downloading, or forking this repository
+   - Using the Software in any commercial or non-commercial project
+   - Deploying the Software on any server or hosting platform
+   - Distributing, sublicensing, or reselling the Software
+   - Creating derivative works based on the Software
+   - Removing or altering this license notice
+
+4. TO OBTAIN ACCESS
+   - Purchase a license:   https://blendwit.com/mero-cms/pricing
+   - Apply as contributor: https://blendwit.com/mero-cms/contribute
+   - Contact the owner:    hello@blendwit.com
+
+5. DISCLAIMER
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. THE OWNER
+   SHALL NOT BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM
+   USE OF THE SOFTWARE.
+
+================================================================================
+Unauthorized use of this software is a violation of copyright law.
+================================================================================

@@ -1,186 +1,230 @@
-# Setup Guide — Mero CMS
+# Mero CMS — Setup & Deployment Guide
 
-## Prerequisites
+## Branch Strategy
 
-- **Node.js** v20+
-- **npm** v10+
-- **PostgreSQL** database (local, Docker, or hosted)
+| Branch    | Environment | Backend                    | Frontend                  |
+|-----------|-------------|----------------------------|---------------------------|
+| `develop` | Staging     | Railway (staging service)  | Vercel (preview)          |
+| `main`    | Production  | Railway (prod service)     | Vercel (production)       |
+| any other | Local / PR  | CI build check only        | CI build check only       |
 
 ---
 
-## Option A — Local Development
+## 1. Local Development
 
-### 1. Clone and install
+### Prerequisites
+- Node.js 20+
+- PostgreSQL (local install or Docker)
 
+### Setup
 ```bash
-git clone https://github.com/BlendWitTech/blendwit-cms-saas.git
-cd blendwit-cms-saas
+# Clone (requires approved contributor access or a paid license)
+git clone https://github.com/blendwit-tech/mero-cms.git
+cd mero-cms
+
+# Backend
+cd backend
+cp .env.development.example .env
+# Edit .env — set DATABASE_URL and JWT_SECRET
 npm install
-```
+npx prisma migrate dev
+npm run start:dev
 
-### 2. Configure environment
-
-```bash
-cp backend/.env.example backend/.env
-```
-
-Edit `backend/.env`:
-
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/mero_cms?schema=public"
-JWT_SECRET="your-secret-key-here"
-PORT=3001
-CORS_ORIGINS="http://localhost:3000,http://localhost:3002"
-```
-
-### 3. Start a local PostgreSQL database (infrastructure only)
-
-```bash
-docker-compose up -d db pgadmin
-```
-
-This starts PostgreSQL on port `5432` and pgAdmin on port `5050`. Note that the frontend and backend are intended to be run locally in this mode for the best development experience.
-
-### 4. Start development servers
-
-```bash
+# Frontend (new terminal)
+cd frontend
+cp .env.development.example .env.local
+# NEXT_PUBLIC_API_URL=http://localhost:3001 (already set in example)
+npm install
 npm run dev
 ```
 
-- **Admin UI** → http://localhost:3000
-- **Backend API** → http://localhost:3001
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3001
 
-### 5. Run the setup wizard
+### Run the Setup Wizard
+Open http://localhost:3000/setup — the wizard will:
+1. Create your admin account
+2. Select modules (blogs, services, testimonials, etc.)
+3. Push the database schema
+4. Optionally seed demo content
 
-Open **http://localhost:3000/setup** in your browser.
+> `SETUP_COMPLETE` and `ENABLED_MODULES` are stored in the database — you do not need to set them as environment variables.
 
-The wizard will:
-1. Ask for your site name and admin credentials
-2. Let you select modules (blogs, portfolio, themes, etc.)
-3. Build a minimal Prisma schema for your selections
-4. Push the schema to the database (creates only the tables you need)
-5. Create your admin account with a Super Admin role
-6. Restart the server with your modules active
+---
 
-After the wizard completes, you're redirected to the login page at **http://localhost:3000**.
+## 2. Staging Setup (Railway + Vercel)
 
-### 6. Apply a theme (optional)
+### Step 1 — Railway (Backend)
 
-1. Log in to the dashboard
-2. Go to **Themes**
-3. Click **Setup** on a theme to seed its content (menus, posts, testimonials, media)
-4. Click **Activate** to mark it as the active theme
-5. Set the **Deployed URL** to your theme's running address
+1. [railway.app](https://railway.app) → New Project → Deploy from GitHub
+2. Select this repository; **Root Directory**: leave blank (repo root)
+3. Railway will use `railway.json` at the root (DOCKERFILE builder)
+4. Add a **PostgreSQL** plugin — Railway auto-injects `DATABASE_URL`
+5. Set environment variables (see `backend/.env.staging.example`):
+   ```
+   JWT_SECRET          = <64-char random string>
+   CORS_ORIGINS        = https://your-project.vercel.app
+   CORS_VERCEL_PROJECT = your-vercel-project-name
+   NODE_ENV            = production
+   ```
+6. Connect the service to the **`develop`** branch
+7. **Watch Paths** (prevents rebuilds on unrelated changes):
+   Railway → service → Settings → Watch Paths → add: `backend/**` and `themes/**`
 
-To start the included marketing theme:
+### Step 2 — Vercel (Frontend)
+
+1. [vercel.com](https://vercel.com) → New Project → Import from GitHub
+2. Root Directory: `frontend`
+3. Environment Variables → **Preview** environment:
+   ```
+   NEXT_PUBLIC_API_URL = https://your-backend.up.railway.app
+   ```
+4. Vercel auto-deploys a preview URL on every push to `develop`
+
+### Step 3 — GitHub Secrets (for CI workflows)
+
+GitHub → repo → Settings → Secrets → Actions → New secret:
+
+| Secret               | Value                        |
+|----------------------|------------------------------|
+| `STAGING_API_URL`    | Railway staging service URL  |
+| `PRODUCTION_API_URL` | Railway production URL       |
+
+---
+
+## 3. CI/CD Pipeline
+
+### Workflows
+
+| File                       | Trigger             | What it does                                   |
+|----------------------------|---------------------|------------------------------------------------|
+| `ci.yml`                   | All pushes + PRs    | Validates backend + frontend builds            |
+| `deploy-staging.yml`       | Push to `develop`   | Validates build; Railway+Vercel auto-deploy    |
+| `deploy-production.yml`    | Push to `main`      | Build validation → **manual approval** → deploy|
+
+### Production Approval Gate
+
+Set up the manual gate so every `main` deploy requires your sign-off:
+
+1. GitHub → repo → **Settings → Environments → New environment** → name: `production`
+2. Under **Required reviewers**, add yourself
+3. Under **Deployment branches**, select **Selected branches** → add `main`
+
+When someone pushes to `main`:
+1. Build validation runs automatically
+2. You get an email/notification to approve
+3. After approval, Railway + Vercel deploy from `main`
+
+### Branch Protection Rules
+
+GitHub → repo → Settings → Branches → Add rule:
+
+**`main`** (strict):
+- ✅ Require PR before merging
+- ✅ Require status checks: `Backend Build`, `Frontend Build`
+- ✅ Require branches up to date before merging
+- ✅ Restrict push to: yourself only
+
+**`develop`** (relaxed):
+- ✅ Require status checks: `Backend Build`, `Frontend Build`
+
+---
+
+## 4. Production Setup (when ready)
+
+1. Create a **second Railway service** (same repo) → connect to `main` branch
+2. Set production env vars (see `backend/.env.production.example`)
+3. Vercel → Project → Settings → Domains → add custom domain
+4. Vercel **Production** environment:
+   ```
+   NEXT_PUBLIC_API_URL = https://api.blendwit.com (or Railway prod URL)
+   ```
+5. Set `PRODUCTION_API_URL` GitHub secret
+
+---
+
+## 5. Make the Repo Private
+
+**Cannot be done from code** — do it in GitHub:
+
+GitHub → repo → **Settings → Danger Zone → Change visibility → Make private**
+
+After making it private:
+- Existing collaborators retain access
+- New contributors: GitHub → repo → Settings → Collaborators → Add people
+- Paid users receive a license and collaborator invite
+
+---
+
+## 6. Development Workflow
+
+```
+main         ← production (protected, requires PR + approval)
+  └── develop  ← staging (integration branch)
+        └── feature/my-feature  ← your day-to-day work
+```
 
 ```bash
-npm run dev:theme
-# Runs on http://localhost:3002
+# Start a new feature
+git checkout develop && git pull origin develop
+git checkout -b feature/my-feature
+
+# ... develop, commit ...
+git push origin feature/my-feature
+
+# Open PR: feature/my-feature → develop
+# CI validates, review, merge → auto-deploys to staging
+
+# When staging is stable:
+# Open PR: develop → main
+# CI validates, merge → approval gate triggers → production deploy
 ```
 
 ---
 
-## Option B — Docker (All Services Containerized)
+## 7. Theme Management
 
-This option runs the entire stack (Admin UI, Backend API, and Database) inside Docker. This is useful for testing the production-like environment.
-
-### 1. Clone and configure
-
+### Package a theme for upload
 ```bash
-git clone https://github.com/BlendWitTech/blendwit-cms-saas.git
-cd blendwit-cms-saas
-cp backend/.env.example backend/.env
+node scripts/zip-theme.js <theme-slug>
+# Example:
+node scripts/zip-theme.js cms-starter
+# Output: themes/cms-starter.zip
 ```
 
-Edit `backend/.env` — update `JWT_SECRET` at minimum.
+Upload via: **Admin → Appearance → Themes → Upload Theme**
 
-### 2. Start all containers
-
-```bash
-docker-compose up -d
-```
-
-Services started:
-| Service | URL |
-|---|---|
-| Admin UI | http://localhost:3000 |
-| Backend API | http://localhost:3001 |
-| pgAdmin | http://localhost:5050 |
-
-### 3. Run the setup wizard
-
-Open **http://localhost:3000/setup** — same steps as above.
-
-> **Note:** After the wizard completes and calls `process.exit(0)`, Docker's `restart: always` policy automatically brings the backend container back up.
-
-### Customising Docker defaults
-
-Create a `.env` file at the project root:
-
-```env
-ORG_NAME=mycompany
-DB_USER=admin
-DB_PASSWORD=strongpassword
-DB_NAME=mycompany_cms
-JWT_SECRET=very-long-secret-here
-PGADMIN_EMAIL=admin@mycompany.com
-PGADMIN_PASSWORD=pgadminpassword
-CORS_ORIGINS=https://mycompany.com,https://cms.mycompany.com
-NEXT_PUBLIC_API_URL=https://api.mycompany.com
-```
+### Themes in Docker
+`themes/<slug>/` directories with a valid `theme.json` are copied into `/themes/` in the Docker image and appear automatically in the backend.
 
 ---
 
-## Changing Modules After Setup
+## 8. Ports Reference (Local)
 
-Go to **Dashboard → Settings → Modules**. Toggling modules will:
-1. Rebuild the schema with new selections
-2. Run `prisma db push` (new tables added; unused tables left in place)
-3. Restart the server
-
-> **Warning:** Disabling a module does not drop its tables or delete data. Re-enabling it later restores full access.
-
----
-
-## Resetting
-
-```bash
-npm run reset
-```
-
-Wipes `node_modules`, build artifacts, `.env` files, and drops the database. Use this to start fresh.
+| Service          | Port |
+|------------------|------|
+| Frontend (Next)  | 3000 |
+| Backend (NestJS) | 3001 |
+| PostgreSQL        | 5432 |
 
 ---
 
-## Ports Reference
+## 9. Troubleshooting
 
-| Service | Port |
-|---|---|
-| Admin UI (Next.js) | 3000 |
-| Backend API (NestJS) | 3001 |
-| Marketing theme | 3002 |
-| PostgreSQL | 5432 |
-| pgAdmin | 5050 |
+**`prisma generate` fails in Docker**
+- Ensure `ARG DATABASE_URL` and `ENV DATABASE_URL` are set in `backend/Dockerfile` — they are, with a CI placeholder value.
 
----
+**`dist/main.js` not found after build**
+- Check `backend/tsconfig.build.json` has `"rootDir": "src"` — this prevents TypeScript from widening the output path to `dist/src/main.js`.
 
-## Troubleshooting
+**Themes not showing in dashboard**
+- Ensure the Railway root directory is the repo root (not `backend/`) so Docker can `COPY themes/ /themes/`
+- Each theme directory must contain a valid `theme.json`
 
-**Setup wizard can't connect to backend**
-- Ensure the backend is running: `npm run dev:backend`
-- Check `NEXT_PUBLIC_API_URL` in `frontend/.env.local` (or environment)
+**CORS errors from Vercel to Railway**
+- Set `CORS_ORIGINS` in Railway env vars to your Vercel URL
+- For Vercel preview URLs: also set `CORS_VERCEL_PROJECT` to your Vercel project name
 
-**`prisma db push` fails during setup**
-- Check `DATABASE_URL` is correct in `backend/.env`
-- Ensure PostgreSQL is running and the database exists
-
-**Server doesn't restart after setup**
-- In dev: ensure you're using `nodemon` (the default `npm run start:dev`)
-- In Docker: `restart: always` handles this automatically
-- In PM2: `process.exit(0)` triggers PM2's restart policy
-
-**Theme not showing in Themes page**
-- Ensure the theme folder has a `theme.json` file
-- Built-in themes must be in the `themes/` directory at the project root
-- In Docker, the `themes/` directory is volume-mounted to `/themes` inside the container
+**Setup wizard shows 500 errors**
+- Run "Setup Theme" (Fresh Start) BEFORE clicking "Activate with demo content"
+- The demo seed only runs when `setupType === 'FRESH'`

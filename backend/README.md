@@ -1,98 +1,108 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Mero CMS — Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS REST API for Mero CMS. Runs on port **3001**.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tech
 
-## Description
+- **NestJS** — framework
+- **Prisma** — ORM
+- **PostgreSQL** — database
+- **Passport / JWT** — authentication
+- **bcrypt** — password hashing
+- **TOTP** — 2FA
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## Local Setup
 
 ```bash
-$ npm install
+cd backend
+cp .env.development.example .env
+# Edit .env — set DATABASE_URL and JWT_SECRET
+
+npm install
+npx prisma migrate dev
+npm run start:dev
 ```
 
-## Compile and run the project
+API: http://localhost:3001
+
+## Scripts
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run start:dev     # Development (watch mode)
+npm run start:prod    # Production (runs dist/main.js)
+npm run build         # Compile TypeScript to dist/
+npm run lint          # ESLint
+npm run test          # Jest unit tests
+npm run test:e2e      # E2E tests
 ```
 
-## Run tests
+## Key Endpoints
+
+| Method | Path                          | Auth     | Description                    |
+|--------|-------------------------------|----------|--------------------------------|
+| POST   | /auth/login                   | No       | Login, returns JWT             |
+| GET    | /auth/me                      | JWT      | Current user profile           |
+| GET    | /public/site-data             | No       | All public data for themes     |
+| GET    | /public/blogs                 | No       | Published blog posts           |
+| GET    | /public/blogs/:slug           | No       | Single post by slug            |
+| GET    | /public/pages/:slug           | No       | Single page by slug            |
+| GET    | /public/services              | No       | Service listings               |
+| GET    | /public/menus/:slug           | No       | Navigation menu                |
+| POST   | /setup/init                   | No       | Run setup wizard               |
+| POST   | /setup/complete               | No       | Complete setup                 |
+| GET    | /themes                       | JWT      | List available themes          |
+| POST   | /themes/:slug/activate        | JWT      | Activate a theme               |
+| POST   | /themes/:slug/setup           | JWT      | Seed theme content             |
+| POST   | /themes/upload                | JWT      | Upload theme ZIP               |
+| GET    | /blogs                        | JWT      | List all blog posts (admin)    |
+| POST   | /blogs                        | JWT      | Create blog post               |
+| PATCH  | /blogs/:id                    | JWT      | Update blog post               |
+| DELETE | /blogs/:id                    | JWT      | Delete blog post               |
+| GET    | /settings                     | JWT      | Site settings                  |
+| PATCH  | /settings                     | JWT      | Update settings                |
+| GET    | /users                        | JWT      | List users (admin)             |
+| GET    | /roles                        | JWT      | List roles                     |
+
+## Prisma Schema
+
+The `prisma/schema.prisma` is assembled from fragments in `prisma/modules/` by `scripts/build-schema.js`. Do not edit `schema.prisma` directly — edit the module fragment instead.
 
 ```bash
-# unit tests
-$ npm run test
+# Apply migrations in development
+npx prisma migrate dev
 
-# e2e tests
-$ npm run test:e2e
+# Push schema without migration (staging)
+npx prisma db push
 
-# test coverage
-$ npm run test:cov
+# Regenerate Prisma client after schema changes
+npx prisma generate
+
+# View database in browser
+npx prisma studio
 ```
 
-## Deployment
+## Docker
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+The backend is containerized using `backend/Dockerfile`. The Docker build context is the **repo root** (not `backend/`) so themes are included:
 
 ```bash
-$ npm install -g mau
-$ mau deploy
+# From repo root
+docker build -f backend/Dockerfile -t mero-cms-backend .
+docker run -e DATABASE_URL="..." -e JWT_SECRET="..." -p 3001:3001 mero-cms-backend
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+On Railway, this is handled automatically by `railway.json`.
 
-## Resources
+## CORS
 
-Check out a few resources that may come in handy when working with NestJS:
+Allowed origins are configured via environment variables:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```env
+# Explicit origins (comma-separated)
+CORS_ORIGINS=http://localhost:3000,https://your-app.vercel.app
 
-## Support
+# Allow all Vercel preview URLs for a project
+CORS_VERCEL_PROJECT=your-vercel-project-name
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+For detailed architecture and patterns, see [DEVELOPER_GUIDE.md](../DEVELOPER_GUIDE.md).
