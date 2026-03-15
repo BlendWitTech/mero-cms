@@ -23,4 +23,5 @@ RUN test -f dist/main.js || (echo "ERROR: dist/main.js not found" && exit 1)
 
 EXPOSE 3001
 
-CMD ["npm", "run", "start:prod"]
+# Push DB schema on every container start so tables exist before setup wizard runs
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && npm run start:prod"]
