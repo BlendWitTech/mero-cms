@@ -101,6 +101,16 @@ export interface Project {
   createdAt: string;
 }
 
+export interface Page {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  status: 'draft' | 'published';
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ProjectsResponse {
   data: Project[];
   total: number;
@@ -116,7 +126,7 @@ const FALLBACK_SITE_DATA: SiteData = {
     tagline: "Kathmandu Valley's Trusted Land Partner",
     logoUrl: null,
     faviconUrl: null,
-    primaryColor: '#1B4332',
+    primaryColor: '#CC1414',
     footerText: null,
     contactEmail: null,
     contactPhone: null,
@@ -163,7 +173,7 @@ export async function getSiteData(): Promise<SiteData> {
 
 export async function getFeaturedPlots(): Promise<Project[]> {
   try {
-    const res = await fetch(`${API}/projects/public/featured`, { next: { revalidate: 120 } });
+    const res = await fetch(`${API}/plots/public/featured`, { next: { revalidate: 120 } });
     if (!res.ok) return [];
     return res.json();
   } catch {
@@ -181,7 +191,7 @@ export async function getPlots(params?: {
   if (params?.limit) q.set('limit', String(params.limit));
   if (params?.category) q.set('category', params.category);
   try {
-    const res = await fetch(`${API}/projects/public/list?${q}`, { next: { revalidate: 120 } });
+    const res = await fetch(`${API}/plots/public/list?${q}`, { next: { revalidate: 120 } });
     if (!res.ok) return { data: [], total: 0, page: 1, limit: 10 };
     return res.json();
   } catch {
@@ -189,9 +199,19 @@ export async function getPlots(params?: {
   }
 }
 
+export async function getPageBySlug(slug: string): Promise<Page | null> {
+  try {
+    const res = await fetch(`${API}/public/pages/${slug}`, { next: { revalidate: 60 } });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
 export async function getPlotBySlug(slug: string): Promise<Project | null> {
   try {
-    const res = await fetch(`${API}/projects/public/${slug}`, { next: { revalidate: 120 } });
+    const res = await fetch(`${API}/plots/public/${slug}`, { next: { revalidate: 120 } });
     if (!res.ok) return null;
     const p = await res.json();
     if (!p) return null;
@@ -241,8 +261,8 @@ export async function submitLead(data: {
       body: JSON.stringify(data),
     });
     const json = await res.json();
-    if (!res.ok && !json.success) return { success: false, message: json.message || 'Failed to submit.' };
-    return { success: true };
+    if (!res.ok || json.success === false) return { success: false, message: json.message || 'Failed to submit.' };
+    return { success: true, message: json.message };
   } catch {
     return { success: false, message: 'Network error. Please try again.' };
   }

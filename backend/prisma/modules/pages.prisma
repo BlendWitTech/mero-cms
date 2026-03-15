@@ -8,6 +8,7 @@ model Page {
   featuredImage String?
   status        String   @default("DRAFT")
   settings      Json?
+  theme         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

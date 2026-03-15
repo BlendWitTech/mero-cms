@@ -11,15 +11,27 @@ export class PagesService {
         private notificationsService: NotificationsService
     ) { }
 
-    async create(data: any) {
-        const slug = data.slug || data.title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+    async create(createPageDto: any) {
+        const { seo, ...pageData } = createPageDto;
+        
+        const activeThemeSetting = await (this.prisma as any).setting.findUnique({ where: { key: 'active_theme' } });
+        const theme = activeThemeSetting?.value || null;
 
         const page = await (this.prisma as any).page.create({
             data: {
-                ...data,
-                slug,
-            },
+                ...pageData,
+                theme
+            }
         });
+
+        if (seo) {
+            await this.seoMetaService.upsert({
+                pageType: 'page',
+                pageId: page.id,
+                title: seo.title,
+                description: seo.description
+            });
+        }
 
         await this.notificationsService.create({
             type: 'SUCCESS',
@@ -33,7 +45,11 @@ export class PagesService {
     }
 
     async findAll() {
+        const activeThemeSetting = await (this.prisma as any).setting.findUnique({ where: { key: 'active_theme' } });
+        const activeTheme = activeThemeSetting?.value || null;
+
         const pages = await (this.prisma as any).page.findMany({
+            where: activeTheme ? { theme: activeTheme } : undefined,
             orderBy: { updatedAt: 'desc' },
         });
 
@@ -129,9 +145,9 @@ export class PagesService {
 
     /** Upsert a page by slug — used by the Site Pages section editor. */
     async upsertBySlug(slug, dto) {
-        const existing = await this.prisma.page.findFirst({ where: { slug } });
+        const existing = await (this.prisma as any).page.findFirst({ where: { slug } });
         if (existing) {
-            return this.prisma.page.update({
+            return (this.prisma as any).page.update({
                 where: { id: existing.id },
                 data: {
                     ...(dto.title ? { title: dto.title } : {}),
@@ -140,12 +156,16 @@ export class PagesService {
                 },
             });
         }
-        return this.prisma.page.create({
+
+        const activeThemeSetting = await (this.prisma as any).setting.findUnique({ where: { key: 'active_theme' } });
+
+        return (this.prisma as any).page.create({
             data: {
                 slug,
                 title: dto.title || slug,
                 data: dto.data || {},
                 status: dto.status || 'PUBLISHED',
+                theme: activeThemeSetting?.value || null
             },
         });
     }

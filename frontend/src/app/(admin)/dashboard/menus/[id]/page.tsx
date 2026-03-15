@@ -10,17 +10,22 @@ import {
     CloudArrowUpIcon,
     LinkIcon,
     IdentificationIcon,
-    PaperAirplaneIcon
+    PaperAirplaneIcon,
+    ExclamationCircleIcon
 } from '@heroicons/react/24/outline';
 import { apiRequest } from '@/lib/api';
 import { useNotification } from '@/context/NotificationContext';
+import { useSettings } from '@/context/SettingsContext';
 import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
 
 export default function MenuEditor({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const router = useRouter();
     const { showToast } = useNotification();
+    const { settings } = useSettings();
     const isNew = id === 'new';
+    const [isReadOnly, setIsReadOnly] = useState(false);
+    const [contentTheme, setContentTheme] = useState<string | null>(null);
 
     const [name, setName] = useState('');
     const [slug, setSlug] = useState('');
@@ -49,6 +54,18 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
     const fetchMenu = async () => {
         try {
             const data = await apiRequest(`/menus/${id}`);
+            
+            const activeTheme = settings['active_theme'];
+            const menuTheme = data.theme;
+
+            if (menuTheme && activeTheme && menuTheme !== activeTheme) {
+                setIsReadOnly(true);
+                setContentTheme(menuTheme);
+            } else {
+                setIsReadOnly(false);
+                setContentTheme(null);
+            }
+
             setName(data.name);
             setSlug(data.slug);
             setItems(data.items || []);
@@ -138,6 +155,21 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
                 isSaving={isSaving}
             />
 
+            {isReadOnly && (
+                <div className="bg-amber-50 border border-amber-200 rounded-[2rem] p-6 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500 mx-2">
+                    <div className="bg-amber-100 p-3 rounded-2xl">
+                        <ExclamationCircleIcon className="h-6 w-6 text-amber-600" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-amber-900 tracking-tight">Incompatible Theme Menu</h3>
+                        <p className="text-xs font-semibold text-amber-700 mt-0.5">
+                            This menu structure belongs to the <span className="underline decoration-2 underline-offset-2 capitalize">{contentTheme || 'another'}</span> theme. 
+                            You can inspect its links here, but modifications are restricted unless you switch themes in Settings.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center justify-between bg-white/80 backdrop-blur-md p-4 rounded-[2rem] border border-slate-200/50 shadow-sm sticky top-4 z-20 mx-2">
                 <div className="flex items-center gap-4">
@@ -149,13 +181,13 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
                         <h1 className="text-xl font-bold text-slate-900 tracking-tight">{isNew ? 'Create New Menu' : name}</h1>
                     </div>
                 </div>
-                <button
+                 <button
                     onClick={() => handleSave().then(success => { if (success) router.push('/dashboard/menus'); })}
-                    disabled={isSaving}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 active:scale-95 disabled:opacity-50"
+                    disabled={isSaving || isReadOnly}
+                    className="flex items-center gap-2 bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <CloudArrowUpIcon className="h-5 w-5" />
-                    {isSaving ? 'Saving...' : 'Save Changes'}
+                    {isSaving ? 'Saving...' : (isReadOnly ? 'Read Only' : 'Save Changes')}
                 </button>
             </div>
 
@@ -168,14 +200,15 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Menu Name</label>
                                 <div className="relative group">
                                     <IdentificationIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                                    <input
+                                     <input
                                         type="text"
                                         value={name}
+                                        disabled={isReadOnly}
                                         onChange={(e) => {
                                             setName(e.target.value);
                                             if (isNew) setSlug(e.target.value.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''));
                                         }}
-                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all"
+                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all disabled:opacity-50"
                                         placeholder="e.g. Main Header Menu"
                                     />
                                 </div>
@@ -185,11 +218,12 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Menu API Slug</label>
                                 <div className="relative group">
                                     <PaperAirplaneIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                                    <input
+                                     <input
                                         type="text"
                                         value={slug}
+                                        disabled={isReadOnly}
                                         onChange={(e) => setSlug(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold font-mono text-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all"
+                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold font-mono text-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all disabled:opacity-50"
                                         placeholder="main-menu"
                                     />
                                 </div>
@@ -207,9 +241,10 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
                                 <h3 className="text-lg font-black text-slate-900 tracking-tight">Menu Items</h3>
                                 <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Manage links and hierarchy</p>
                             </div>
-                            <button
+                             <button
                                 onClick={addMenuItem}
-                                className="flex items-center gap-2 bg-slate-50 text-blue-600 hover:bg-blue-600 hover:text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
+                                disabled={isReadOnly}
+                                className="flex items-center gap-2 bg-slate-50 text-blue-600 hover:bg-blue-600 hover:text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <PlusIcon className="h-4 w-4" strokeWidth={3} />
                                 Add Link
@@ -232,21 +267,23 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
                                             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-1.5">
                                                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Label</label>
-                                                    <input
+                                                     <input
                                                         type="text"
                                                         value={item.label}
+                                                        disabled={isReadOnly}
                                                         onChange={(e) => updateMenuItem(index, 'label', e.target.value)}
-                                                        className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5"
+                                                        className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 disabled:opacity-50"
                                                         placeholder="e.g. Services"
                                                     />
                                                 </div>
                                                 <div className="space-y-1.5">
                                                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">URL / Path</label>
-                                                    <input
+                                                     <input
                                                         type="text"
                                                         value={item.url}
+                                                        disabled={isReadOnly}
                                                         onChange={(e) => updateMenuItem(index, 'url', e.target.value)}
-                                                        className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5"
+                                                        className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 disabled:opacity-50"
                                                         placeholder="/services"
                                                     />
                                                 </div>
@@ -254,19 +291,21 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
                                                     <div className="flex items-center gap-4">
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Target:</span>
-                                                            <select
+                                                             <select
                                                                 value={item.target}
+                                                                disabled={isReadOnly}
                                                                 onChange={(e) => updateMenuItem(index, 'target', e.target.value)}
-                                                                className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold focus:outline-none"
+                                                                className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold focus:outline-none disabled:opacity-50"
                                                             >
                                                                 <option value="_self">Same Window</option>
                                                                 <option value="_blank">New Tab</option>
                                                             </select>
                                                         </div>
                                                     </div>
-                                                    <button
+                                                     <button
                                                         onClick={() => removeMenuItem(index)}
-                                                        className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                                        disabled={isReadOnly}
+                                                        className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all disabled:opacity-0 disabled:cursor-not-allowed"
                                                     >
                                                         <TrashIcon className="h-4 w-4" />
                                                     </button>

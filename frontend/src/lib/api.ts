@@ -24,7 +24,16 @@ export async function apiRequest(endpoint: string, options: RequestOptions = {})
             body: body ? JSON.stringify(body) : undefined,
         });
 
-        const data = await response.json();
+        const text = await response.text();
+        let data: any = {};
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch (e) {
+            console.error('Failed to parse JSON response:', text);
+            if (!response.ok) {
+                throw new Error(text || 'An unexpected error occurred');
+            }
+        }
 
         if (!response.ok) {
             const errorMessage = data.message || 'An unexpected error occurred';

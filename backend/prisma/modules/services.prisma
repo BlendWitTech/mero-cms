@@ -5,6 +5,9 @@ model Service {
   icon         String?
   processSteps Json?
   order        Int      @default(0)
+  image        String?
+  theme        String?
+  attributes   Json?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

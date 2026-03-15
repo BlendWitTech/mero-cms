@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getPlots } from '@/lib/cms';
-import { getImageUrl } from '@/lib/cms';
+import { getPlots, getImageUrl, getSiteData, getSection, type PageRecord } from '@/lib/cms';
 
 export const metadata: Metadata = {
   title: 'Available Plots',
@@ -25,8 +24,16 @@ export default async function PlotsPage({ searchParams }: Props) {
   const page = Number(params.page || 1);
   const category = params.category;
 
-  const { data: plots, total } = await getPlots({ page, limit: 9, category });
+  const [{ data: plots, total }, siteData] = await Promise.all([
+    getPlots({ page, limit: 9, category }),
+    getSiteData(),
+  ]);
   const totalPages = Math.ceil(total / 9);
+
+  const pages = (siteData as any).pages as PageRecord[] ?? [];
+  const heroSec = getSection(pages, 'plots', 'hero');
+  const heroTitle    = heroSec.data.title    || 'Available Plots';
+  const heroSubtitle = heroSec.data.subtitle || 'Browse our verified land plots across Kathmandu Valley. All with clear legal titles and professional support.';
 
   const categories = [
     { slug: '', label: 'All Plots' },
@@ -38,16 +45,16 @@ export default async function PlotsPage({ searchParams }: Props) {
   return (
     <>
       {/* Header */}
-      <div style={{ background: '#1E1E1E', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
+      <div className="page-hero-band" style={{ background: '#1E1E1E', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
         {/* Red left accent — brand marker */}
         <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '5px', background: '#CC1414' }} />
         <div className="container">
           <div className="tag-label">Land Listings</div>
           <h1 style={{ color: '#FFFFFF', fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', fontWeight: 900, marginBottom: '1rem' }}>
-            Available Plots
+            {heroTitle}
           </h1>
           <p style={{ color: '#A0A0A0', maxWidth: '480px', lineHeight: 1.7 }}>
-            Browse our verified land plots across Kathmandu Valley. All with clear legal titles and professional support.
+            {heroSubtitle}
           </p>
         </div>
       </div>

@@ -19,7 +19,7 @@ const OUTPUT_FILE = path.join(BACKEND_ROOT, 'prisma', 'schema.prisma');
  * Maps CMS module key → which .prisma files are required.
  * Categories/Tags are bundled in blogs.prisma (Category/Tag tables live there).
  * Comments depends on blogs (Comment.post FK → Post).
- * ProjectCategories is bundled in projects.prisma.
+ * PlotCategories is bundled in plots.prisma.
  * Sitemap has no DB tables.
  */
 const MODULE_SCHEMA_MAP = {
@@ -27,12 +27,11 @@ const MODULE_SCHEMA_MAP = {
   categories: ['blogs'],
   tags: ['blogs'],
   comments: ['blogs', 'comments'],
-  projects: ['projects'],
-  'project-categories': ['projects'],
+  plots: ['plots'],
+  'plot-categories': ['plots'],
   team: ['team'],
   services: ['services'],
-  testimonials: ['testimonials'],
-  timeline: ['timeline'],
+  testimonials: ['testimonials'],
   menus: ['menus'],
   pages: ['pages'],
   leads: ['leads'],
@@ -104,6 +103,12 @@ function buildSchema(enabledModules) {
 
 // Parse CLI argument: comma-separated list of module keys
 const arg = process.argv[2] || '';
-const enabledModules = arg ? arg.split(',').map(s => s.trim()).filter(Boolean) : [];
+let enabledModules;
+
+if (arg === 'all') {
+  enabledModules = Object.keys(MODULE_SCHEMA_MAP);
+} else {
+  enabledModules = arg ? arg.split(',').map(s => s.trim()).filter(Boolean) : [];
+}
 
 buildSchema(enabledModules);

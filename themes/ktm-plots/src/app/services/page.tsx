@@ -82,7 +82,7 @@ export default async function ServicesPage() {
   return (
     <>
       {/* Hero */}
-      <section style={{ background: '#1E1E1E', padding: '5rem 0 4rem', position: 'relative', overflow: 'hidden' }}>
+      <section className="page-hero-band" style={{ background: '#1E1E1E', padding: '5rem 0 4rem', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '5px', background: '#CC1414' }} />
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '36px 36px' }} />
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
@@ -101,13 +101,13 @@ export default async function ServicesPage() {
       {/* Services grid */}
       <section style={{ padding: '5rem 0', background: '#F4F4F4' }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '2rem' }}>
-            {(cmsServices.length > 0 ? cmsServices.map((s, i) => ({
+          <div className="services-detail-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: '2rem' }}>
+            {(cmsServices.length > 0 ? cmsServices.map((s: any, i) => ({
               icon: ALL_SERVICES[i % ALL_SERVICES.length]?.icon,
               title: s.title,
-              subtitle: '',
+              subtitle: s.subtitle || '',
               description: s.description,
-              steps: [],
+              steps: Array.isArray(s.processSteps) ? s.processSteps : [],
             })) : ALL_SERVICES).map((service, i) => (
               <div
                 key={i}
@@ -129,7 +129,7 @@ export default async function ServicesPage() {
                   </p>
                   {service.steps.length > 0 && (
                     <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                      {service.steps.map((step, j) => (
+                      {service.steps.map((step: string, j: number) => (
                         <li key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', fontSize: '0.85rem', color: '#374151' }}>
                           <span style={{ width: '20px', height: '20px', background: '#FEE2E2', color: '#CC1414', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.7rem', flexShrink: 0 }}>{j + 1}</span>
                           {step}

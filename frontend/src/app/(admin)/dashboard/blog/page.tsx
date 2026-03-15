@@ -14,7 +14,8 @@ import {
     ArrowLeftIcon,
     CloudArrowUpIcon,
     PhotoIcon,
-    CalendarIcon
+    CalendarIcon,
+    ExclamationCircleIcon
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -26,12 +27,17 @@ import { useNotification } from '@/context/NotificationContext';
 import { useForm } from '@/context/FormContext';
 import { apiRequest } from '@/lib/api';
 import PermissionGuard from '@/components/auth/PermissionGuard';
+import { useSettings } from '@/context/SettingsContext';
 
 function BlogPageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { showToast } = useNotification();
     const { isDirty, setIsDirty } = useForm();
+    const { settings } = useSettings();
+
+    const [isReadOnly, setIsReadOnly] = useState(false);
+    const [contentTheme, setContentTheme] = useState<string | null>(null);
 
     // View derived from URL
     const action = searchParams.get('action');
@@ -105,20 +111,21 @@ function BlogPageContent() {
         try {
             const [postsData, catsData, tagsData, profile] = await Promise.all([
                 apiRequest('/blogs'),
-                apiRequest('/categories'),
-                apiRequest('/tags'),
-                apiRequest('/auth/profile')
+                apiRequest('/categories').catch(() => []),
+                apiRequest('/tags').catch(() => []),
+                apiRequest('/auth/profile').catch(() => null),
             ]);
 
             setPosts(Array.isArray(postsData) ? postsData : []);
             setCategories(Array.isArray(catsData) ? catsData : []);
             setTags(Array.isArray(tagsData) ? tagsData : []);
 
-            if (profile.role?.permissions?.manage_content || profile.role?.name === 'Super Admin' || profile.role?.name === 'Admin') {
+            if (profile?.role?.permissions?.manage_content || profile?.role?.name === 'Super Admin' || profile?.role?.name === 'Admin') {
                 setCanManageContent(true);
             }
         } catch (error) {
             console.error('Failed to fetch data', error);
+            showToast('Failed to load blog posts', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -150,12 +157,25 @@ function BlogPageContent() {
         setFormData(data);
         setInitialState(data);
         setCurrentPostId(post.id);
+
+        const activeTheme = settings['active_theme'];
+        const postTheme = post.theme;
+
+        if (postTheme && activeTheme && postTheme !== activeTheme) {
+            setIsReadOnly(true);
+            setContentTheme(postTheme);
+        } else {
+            setIsReadOnly(false);
+            setContentTheme(null);
+        }
     };
 
     const resetForm = () => {
         setFormData(defaultFormData);
         setInitialState(defaultFormData);
         setCurrentPostId(null);
+        setIsReadOnly(false);
+        setContentTheme(null);
     };
 
     const handleCreate = () => {
@@ -269,6 +289,21 @@ function BlogPageContent() {
                     isSaving={isSaving}
                 />
 
+                {isReadOnly && (
+                    <div className="mx-2 bg-amber-50 border border-amber-200 rounded-2xl p-6 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                        <div className="bg-amber-100 p-3 rounded-xl">
+                            <ExclamationCircleIcon className="h-6 w-6 text-amber-600" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-amber-900 tracking-tight">Incompatible Theme Post</h3>
+                            <p className="text-xs font-semibold text-amber-700 mt-0.5">
+                                This article belongs to the <span className="underline decoration-2 underline-offset-2 capitalize">{contentTheme || 'another'}</span> theme. 
+                                It is in read-only mode to prevent layout issues on your active site.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Editor Header */}
                 <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200/50 shadow-sm sticky top-4 z-10">
                     <div className="flex items-center gap-4">
@@ -283,16 +318,21 @@ function BlogPageContent() {
                     <div className="flex items-center gap-3">
                         <select
                             value={formData.status}
+                            disabled={isReadOnly}
                             onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                            className="bg-slate-50 border-none text-xs font-bold text-slate-600 py-2.5 px-4 rounded-xl focus:ring-0 cursor-pointer"
+                            className="bg-slate-50 border-none text-xs font-bold text-slate-600 py-2.5 px-4 rounded-xl focus:ring-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <option value="DRAFT">Draft</option>
                             <option value="PUBLISHED">Published</option>
                             <option value="ARCHIVED">Archived</option>
                         </select>
-                        <button onClick={() => handleSave()} className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                        <button 
+                            onClick={() => handleSave()} 
+                            disabled={isSaving || isReadOnly}
+                            className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                             <CloudArrowUpIcon className="h-4 w-4" />
-                            {isSaving ? 'Saving...' : 'Save Changes'}
+                            {isSaving ? 'Saving...' : (isReadOnly ? 'Read Only' : 'Save Changes')}
                         </button>
                     </div>
                 </div>
@@ -310,8 +350,9 @@ function BlogPageContent() {
                                     type="text"
                                     placeholder="Enter a captivating headline..."
                                     value={formData.title}
+                                    disabled={isReadOnly}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value, slug: e.target.value.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') })}
-                                    className="w-full text-4xl lg:text-5xl font-bold text-slate-900 placeholder:text-slate-200 border-none focus:ring-0 p-0 font-display bg-transparent transition-all decoration-blue-600/30 hover:decoration-blue-600/50"
+                                    className="w-full text-4xl lg:text-5xl font-bold text-slate-900 placeholder:text-slate-200 border-none focus:ring-0 p-0 font-display bg-transparent transition-all decoration-blue-600/30 hover:decoration-blue-600/50 disabled:opacity-50"
                                 />
                             </div>
 
@@ -322,15 +363,18 @@ function BlogPageContent() {
                                     <span className="text-slate-300 font-mono text-xs">/blog/</span>
                                     <input
                                         value={formData.slug}
+                                        disabled={isReadOnly}
                                         onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                                        className="bg-transparent border-none focus:ring-0 p-0 text-blue-600 font-bold text-xs min-w-[200px]"
+                                        className="bg-transparent border-none focus:ring-0 p-0 text-blue-600 font-bold text-xs min-w-[200px] disabled:opacity-50"
                                     />
                                 </div>
                             </div>
                         </div>
 
                         {/* Rich Text Editor */}
-                        <PostEditor content={formData.content} onChange={(html) => setFormData({ ...formData, content: html })} />
+                        <div className={isReadOnly ? "pointer-events-none opacity-80" : ""}>
+                            <PostEditor content={formData.content} onChange={(html) => setFormData({ ...formData, content: html })} />
+                        </div>
                     </div>
 
                     {/* Sidebar Metadata */}
@@ -339,13 +383,13 @@ function BlogPageContent() {
                         <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Cover Image</h3>
-                                {formData.coverImage && (
+                                {formData.coverImage && !isReadOnly && (
                                     <button onClick={() => setFormData({ ...formData, coverImage: '' })} className="text-[10px] font-bold text-red-500 uppercase tracking-widest hover:text-red-600 transition-colors">Remove</button>
                                 )}
                             </div>
-                            <div
-                                onClick={() => setIsMediaOpen(true)}
-                                className="aspect-video bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100/50 hover:border-blue-400 hover:text-blue-500 transition-all cursor-pointer group overflow-hidden relative"
+                             <div
+                                onClick={() => !isReadOnly && setIsMediaOpen(true)}
+                                className={`aspect-video bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 ${!isReadOnly ? 'hover:bg-slate-100/50 hover:border-blue-400 hover:text-blue-500 cursor-pointer' : 'cursor-not-allowed opacity-50'} transition-all group overflow-hidden relative`}
                             >
                                 {formData.coverImage ? (
                                     <img src={formData.coverImage} className="w-full h-full object-cover" />
@@ -373,11 +417,12 @@ function BlogPageContent() {
                             <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
                                 {categories.map(cat => (
                                     <label key={cat.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors">
-                                        <input
+                                         <input
                                             type="checkbox"
+                                            disabled={isReadOnly}
                                             checked={formData.categories.includes(cat.id)}
                                             onChange={() => handleCategoryToggle(cat.id)}
-                                            className="rounded-md border-slate-300 text-blue-600 focus:ring-blue-600"
+                                            className="rounded-md border-slate-300 text-blue-600 focus:ring-blue-600 disabled:opacity-50"
                                         />
                                         <span className="text-xs font-bold text-slate-700">{cat.name}</span>
                                     </label>
@@ -393,15 +438,16 @@ function BlogPageContent() {
                                 {formData.tags.map((tag: string) => (
                                     <span key={tag} className="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-widest rounded-lg flex items-center gap-1">
                                         {tag}
-                                        <button onClick={() => setFormData({ ...formData, tags: formData.tags.filter((t: string) => t !== tag) })} className="hover:text-blue-800">×</button>
+                                        {!isReadOnly && <button onClick={() => setFormData({ ...formData, tags: formData.tags.filter((t: string) => t !== tag) })} className="hover:text-blue-800">×</button>}
                                     </span>
                                 ))}
                             </div>
                             <div className="relative">
-                                <input
+                                 <input
                                     type="text"
-                                    className="w-full bg-slate-50 border-none rounded-xl text-xs font-bold px-4 py-3 focus:ring-2 focus:ring-blue-600/10"
-                                    placeholder="Search or add tag..."
+                                    className="w-full bg-slate-50 border-none rounded-xl text-xs font-bold px-4 py-3 focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
+                                    placeholder={isReadOnly ? "Read-only tags" : "Search or add tag..."}
+                                    disabled={isReadOnly}
                                     value={tagSearch}
                                     onChange={(e) => {
                                         setTagSearch(e.target.value);
@@ -464,22 +510,24 @@ function BlogPageContent() {
                             <div className="space-y-3">
                                 <div>
                                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Meta Title</label>
-                                    <input
+                                     <input
                                         type="text"
                                         value={formData.seo.title}
+                                        disabled={isReadOnly}
                                         onChange={(e) => setFormData({ ...formData, seo: { ...formData.seo, title: e.target.value } })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
                                         placeholder="Title for search engines"
                                     />
                                     <p className="text-[10px] text-slate-400 mt-1 text-right">{formData.seo.title.length}/60</p>
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Meta Description</label>
-                                    <textarea
+                                     <textarea
                                         value={formData.seo.description}
+                                        disabled={isReadOnly}
                                         onChange={(e) => setFormData({ ...formData, seo: { ...formData.seo, description: e.target.value } })}
                                         rows={3}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 resize-none"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 resize-none disabled:opacity-50"
                                         placeholder="Brief description for search results"
                                     />
                                     <p className="text-[10px] text-slate-400 mt-1 text-right">{formData.seo.description.length}/160</p>
@@ -494,11 +542,12 @@ function BlogPageContent() {
                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Publish Date</label>
                                 <div className="relative">
                                     <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                    <input
+                                     <input
                                         type="datetime-local"
                                         value={formData.publishedAt ? new Date(formData.publishedAt).toISOString().slice(0, 16) : ''}
+                                        disabled={isReadOnly}
                                         onChange={(e) => setFormData({ ...formData, publishedAt: e.target.value })}
-                                        className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10"
+                                        className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
                                     />
                                 </div>
                                 <p className="text-[10px] text-slate-400 mt-2 ml-1">

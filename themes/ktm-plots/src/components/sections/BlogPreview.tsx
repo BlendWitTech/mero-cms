@@ -7,9 +7,10 @@ import { getImageUrl, formatDate } from '@/lib/cms';
 
 interface Props {
   posts: Post[];
+  secData?: Record<string, any>;
 }
 
-export default function BlogPreview({ posts }: Props) {
+export default function BlogPreview({ posts, secData = {} }: Props) {
   if (posts.length === 0) return null;
 
   return (
@@ -18,13 +19,13 @@ export default function BlogPreview({ posts }: Props) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '3rem' }}>
           <div>
             <div style={{ color: '#CC1414', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.8rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
-              Latest Articles
+              {secData.label || 'Latest Articles'}
             </div>
-            <h2 className="section-title" style={{ marginBottom: '0.25rem' }}>From Our Blog</h2>
-            <p style={{ color: '#6B7280', fontSize: '0.95rem' }}>Expert insights on land investment and property in Nepal</p>
+            <h2 className="section-title" style={{ marginBottom: '0.25rem' }}>{secData.title || 'From Our Blog'}</h2>
+            <p style={{ color: '#6B7280', fontSize: '0.95rem' }}>{secData.subtitle || 'Expert insights on land investment and property in Nepal'}</p>
           </div>
           <Link href="/blog" className="btn-green" style={{ padding: '0.65rem 1.5rem', fontSize: '0.9rem' }}>
-            All Articles →
+            {secData.viewAllText || 'All Articles →'}
           </Link>
         </div>
 

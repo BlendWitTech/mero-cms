@@ -1,19 +1,27 @@
 import type { NextConfig } from "next";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: 'http', hostname: 'localhost' },
+      { protocol: 'https', hostname: '**' },
+    ],
+  },
   async rewrites() {
     return [
       {
         source: '/sitemap.xml',
-        destination: 'http://127.0.0.1:3001/sitemap.xml',
+        destination: `${API_URL}/sitemap.xml`,
       },
       {
         source: '/sitemap-posts.xml',
-        destination: 'http://127.0.0.1:3001/sitemap-posts.xml',
+        destination: `${API_URL}/sitemap-posts.xml`,
       },
       {
         source: '/sitemap-index.xml',
-        destination: 'http://127.0.0.1:3001/sitemap-index.xml',
+        destination: `${API_URL}/sitemap-index.xml`,
       },
     ];
   },

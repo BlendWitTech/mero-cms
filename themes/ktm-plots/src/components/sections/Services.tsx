@@ -37,9 +37,10 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 
 interface Props {
   services: Service[];
+  secData?: Record<string, any>;
 }
 
-export default function Services({ services }: Props) {
+export default function Services({ services, secData = {} }: Props) {
   const list = services.length > 0 ? services : [
     { id: '1', title: 'Land Plot Sales', slug: 'land-plot-sales', description: 'Premium plots at strategic locations with clear legal documentation.', icon: 'map-pin' },
     { id: '2', title: 'Legal Documentation', slug: 'legal-docs', description: 'Full support for title verification and ownership transfer.', icon: 'file-text' },
@@ -52,13 +53,13 @@ export default function Services({ services }: Props) {
   return (
     <section id="services" style={{ padding: '5rem 0', background: '#FFFFFF' }}>
       <div className="container">
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+        <div className="animate-slide-up" style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <div style={{ color: '#CC1414', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.8rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
-            What We Offer
+            {secData.label || 'What We Offer'}
           </div>
-          <h2 className="section-title">Our Services</h2>
+          <h2 className="section-title">{secData.title || 'Our Services'}</h2>
           <p className="section-subtitle" style={{ maxWidth: '560px', margin: '0 auto 2.5rem' }}>
-            From finding the right plot to completing the registration, we support you at every step of the journey.
+            {secData.subtitle || 'From finding the right plot to completing the registration, we support you at every step of the journey.'}
           </p>
         </div>
 
@@ -66,33 +67,36 @@ export default function Services({ services }: Props) {
           {list.map((service, i) => (
             <div
               key={service.id || i}
+              className={`animate-slide-up delay-${Math.min(i * 100, 600)}`}
               style={{
-                background: '#F4F4F4',
-                borderRadius: '12px',
+                background: '#FFFFFF',
+                borderRadius: '16px',
                 padding: '2rem',
                 borderBottom: '4px solid #CC1414',
-                transition: 'transform 0.2s, box-shadow 0.2s',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(200,20,20,0.12)';
+                e.currentTarget.style.transform = 'translateY(-6px)';
+                e.currentTarget.style.boxShadow = '0 12px 32px rgba(204,20,20,0.14)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = '';
-                e.currentTarget.style.boxShadow = '';
+                e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)';
               }}
             >
               <div
                 style={{
-                  width: '52px',
-                  height: '52px',
-                  borderRadius: '12px',
-                  background: '#CC1414',
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '14px',
+                  background: 'linear-gradient(135deg, #CC1414, #8B0000)',
                   color: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '1.25rem',
+                  boxShadow: '0 4px 12px rgba(204,20,20,0.3)',
                 }}
               >
                 {ICON_MAP[service.icon || ''] ?? ICON_MAP['map-pin']}

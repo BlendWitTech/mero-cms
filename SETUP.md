@@ -33,13 +33,13 @@ PORT=3001
 CORS_ORIGINS="http://localhost:3000,http://localhost:3002"
 ```
 
-### 3. Start a local PostgreSQL database (optional — skip if you have one)
+### 3. Start a local PostgreSQL database (infrastructure only)
 
 ```bash
-docker-compose up -d db
+docker-compose up -d db pgadmin
 ```
 
-This starts PostgreSQL on port `5432`.
+This starts PostgreSQL on port `5432` and pgAdmin on port `5050`. Note that the frontend and backend are intended to be run locally in this mode for the best development experience.
 
 ### 4. Start development servers
 
@@ -81,7 +81,9 @@ npm run dev:theme
 
 ---
 
-## Option B — Docker (All Services)
+## Option B — Docker (All Services Containerized)
+
+This option runs the entire stack (Admin UI, Backend API, and Database) inside Docker. This is useful for testing the production-like environment.
 
 ### 1. Clone and configure
 

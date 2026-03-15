@@ -26,6 +26,7 @@ interface ThemeDetails {
     requiredModules: string[];
     previewUrl: string | null;
     deployedUrl: string;
+    setupType?: 'FRESH' | 'LEGACY' | null;
 }
 
 export default function ThemesPage() {
@@ -42,9 +43,11 @@ export default function ThemesPage() {
     // Modal states
     const [setupModalTheme, setSetupModalTheme] = useState<string | null>(null);
     const [activateModalTheme, setActivateModalTheme] = useState<string | null>(null);
-    
+    const [showResetModal, setShowResetModal] = useState(false);
+    const [isResetting, setIsResetting] = useState(false);
+
     // Modal form states
-    const [startFresh, setStartFresh] = useState(false);
+    const [isFreshSetup, setIsFreshSetup] = useState(false);
     const [importDemoContent, setImportDemoContent] = useState(true);
     
     const [deployedUrls, setDeployedUrls] = useState<Record<string, string>>({});
@@ -149,7 +152,7 @@ export default function ThemesPage() {
         }
     };
 
-    const handleConfirmSetup = async (importDemo: boolean) => {
+    const handleConfirmSetup = async (fresh: boolean) => {
         const slug = setupModalTheme;
         if (!slug) return;
         setSetupModalTheme(null);
@@ -165,16 +168,12 @@ export default function ThemesPage() {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ importDemoContent: importDemo })
+                body: JSON.stringify({ clearPrevious: fresh })
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'Setup failed');
-            const r = data.results || {};
-            const summary = Object.entries(r)
-                .filter(([, v]) => (v as number) > 0)
-                .map(([k, v]) => `${v} ${k}`)
-                .join(', ');
-            showToast(`Theme setup complete! ${summary || 'Dependencies installed.'}`, 'success');
+            showToast(`Theme setup complete! ${fresh ? 'Old theme data purged.' : 'Existing data kept.'}`, 'success');
+            fetchThemes();
         } catch (error: any) {
             showToast(error.message || 'Setup failed', 'error');
         } finally {
@@ -199,14 +198,21 @@ export default function ThemesPage() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ 
-                    clearData: startFresh, 
-                    importDemoContent: startFresh ? importDemoContent : false 
+                    importDemoContent: importDemoContent 
                 })
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'Activation failed');
+            
+            const r = data.results || {};
+            const summary = Object.entries(r)
+                .filter(([, v]) => (v as number) > 0)
+                .map(([k, v]) => `${v} ${k}`)
+                .join(', ');
+
             setActiveTheme(slug);
-            showToast(`Theme "${slug}" is now active`, 'success');
+            showToast(`Theme "${slug}" is now active! ${summary}`, 'success');
+            fetchThemes();
         } catch (error: any) {
             showToast(error.message || 'Activation failed', 'error');
         } finally {
@@ -226,6 +232,21 @@ export default function ThemesPage() {
         }
     };
 
+    const handleReset = async () => {
+        setShowResetModal(false);
+        try {
+            setIsResetting(true);
+            await apiRequest('/themes/reset', { method: 'POST' });
+            setActiveTheme(null);
+            showToast('CMS reset to base state. All content and theme settings cleared.', 'success');
+            fetchThemes();
+        } catch {
+            showToast('Failed to reset CMS', 'error');
+        } finally {
+            setIsResetting(false);
+        }
+    };
+
     const getDisabledModules = (requiredModules: string[]) =>
         requiredModules.filter(m => !isModuleEnabled(m));
 
@@ -241,24 +262,34 @@ export default function ThemesPage() {
                         Upload, configure and activate website themes.
                     </p>
                 </div>
-                <div className="relative">
-                    <input
-                        type="file"
-                        accept=".zip"
-                        onChange={handleFileUpload}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                        disabled={isUploading}
-                    />
+                <div className="flex items-center gap-3">
                     <button
-                        className="px-6 py-2.5 rounded-xl bg-blue-600 shadow-lg shadow-blue-600/30 text-white font-bold text-xs uppercase tracking-widest hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center gap-2"
-                        disabled={isUploading}
+                        onClick={() => setShowResetModal(true)}
+                        disabled={isResetting}
+                        className="px-4 py-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 font-bold text-xs uppercase tracking-widest hover:bg-red-100 transition-all flex items-center gap-2 disabled:opacity-50"
                     >
-                        {isUploading
-                            ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            : <CloudArrowUpIcon className="h-4 w-4" />
-                        }
-                        {isUploading ? 'Uploading...' : 'Upload Theme'}
+                        <TrashIcon className="h-4 w-4" />
+                        {isResetting ? 'Resetting...' : 'Reset CMS'}
                     </button>
+                    <div className="relative">
+                        <input
+                            type="file"
+                            accept=".zip"
+                            onChange={handleFileUpload}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            disabled={isUploading}
+                        />
+                        <button
+                            className="px-6 py-2.5 rounded-xl bg-blue-600 shadow-lg shadow-blue-600/30 text-white font-bold text-xs uppercase tracking-widest hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                            disabled={isUploading}
+                        >
+                            {isUploading
+                                ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                : <CloudArrowUpIcon className="h-4 w-4" />
+                            }
+                            {isUploading ? 'Uploading...' : 'Upload Theme'}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -396,27 +427,57 @@ export default function ThemesPage() {
                         </div>
                         <div className="p-6 space-y-6">
                             <div className="flex gap-4 items-start">
-                                <div className="w-12 h-12 rounded-xl bg-blue-50 flex flex-shrink-0 items-center justify-center">
-                                    <DocumentDuplicateIcon className="w-6 h-6 text-blue-600" />
+                                <div className="w-12 h-12 rounded-xl bg-orange-50 flex flex-shrink-0 items-center justify-center">
+                                    <TrashIcon className="w-6 h-6 text-orange-600" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-slate-900">Import Demo Content?</h3>
-                                    <p className="text-sm text-slate-500 mt-1">This will populate your site with sample pages, posts, and menus designed for this theme.</p>
+                                    <h3 className="font-bold text-slate-900">How would you like to set up?</h3>
+                                    <p className="text-sm text-slate-500 mt-1">
+                                        Choose if you want to keep data from the current active theme or start completely fresh.
+                                    </p>
                                 </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => setIsFreshSetup(true)}
+                                    className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex gap-4 ${isFreshSetup ? 'border-red-600 bg-red-50/50' : 'border-slate-100 bg-white hover:border-red-200'}`}
+                                >
+                                    <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${isFreshSetup ? 'border-red-600' : 'border-slate-300'}`}>
+                                        {isFreshSetup && <div className="w-2.5 h-2.5 rounded-full bg-red-600" />}
+                                    </div>
+                                    <div>
+                                        <div className={`font-bold ${isFreshSetup ? 'text-red-900' : 'text-slate-900'}`}>Fresh Install</div>
+                                        <div className="text-xs text-slate-500 mt-0.5">Delete all content (pages, menus, posts) from the current active theme.</div>
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={() => setIsFreshSetup(false)}
+                                    className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex gap-4 ${!isFreshSetup ? 'border-blue-600 bg-blue-50/50' : 'border-slate-100 bg-white hover:border-blue-200'}`}
+                                >
+                                    <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${!isFreshSetup ? 'border-blue-600' : 'border-slate-300'}`}>
+                                        {!isFreshSetup && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
+                                    </div>
+                                    <div>
+                                        <div className={`font-bold ${!isFreshSetup ? 'text-blue-900' : 'text-slate-900'}`}>Keep Existing Data</div>
+                                        <div className="text-xs text-slate-500 mt-0.5">Prepare the theme files but keep all your current content.</div>
+                                    </div>
+                                </button>
                             </div>
                         </div>
                         <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
                             <button
-                                onClick={() => handleConfirmSetup(false)}
+                                onClick={() => setSetupModalTheme(null)}
                                 className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors text-sm"
                             >
-                                Setup Without Data
+                                Cancel
                             </button>
                             <button
-                                onClick={() => handleConfirmSetup(true)}
-                                className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all text-sm"
+                                onClick={() => handleConfirmSetup(isFreshSetup)}
+                                className={`px-5 py-2.5 rounded-xl text-white font-bold transition-all text-sm shadow-lg ${isFreshSetup ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
                             >
-                                Import Demo Data
+                                {isFreshSetup ? 'Purge & Setup' : 'Regular Setup'}
                             </button>
                         </div>
                     </div>
@@ -429,54 +490,22 @@ export default function ThemesPage() {
                     <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden ring-1 ring-slate-200 animate-in zoom-in-95">
                         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                             <h2 className="text-lg font-bold text-slate-900">Activate Theme</h2>
-                            <button onClick={() => { setActivateModalTheme(null); setStartFresh(false); setImportDemoContent(true); }} className="p-2 -mr-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors">
+                            <button onClick={() => { setActivateModalTheme(null); setImportDemoContent(true); }} className="p-2 -mr-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors">
                                 <XMarkIcon className="w-5 h-5" />
                             </button>
                         </div>
                         <div className="p-6 space-y-6">
-                            {/* Design always changes */}
                             <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
-                                <svg className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                <CheckCircleIcon className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-xs font-bold text-blue-800">Design always updates</p>
-                                    <p className="text-xs text-blue-600 mt-0.5">The visual design and layout will always switch to the new theme. The choice below only affects your content (posts, plots, pages, menus).</p>
+                                    <p className="text-xs font-bold text-blue-800">Ready to activate</p>
+                                    <p className="text-xs text-blue-600 mt-0.5">This will switch your site's design to the new theme.</p>
                                 </div>
                             </div>
 
-                            {/* Data Options */}
-                            <div className="space-y-3">
-                                <button
-                                    onClick={() => setStartFresh(false)}
-                                    className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex gap-4 ${!startFresh ? 'border-blue-600 bg-blue-50/50 shadow-sm' : 'border-slate-100 bg-white hover:border-blue-200'}`}
-                                >
-                                    <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${!startFresh ? 'border-blue-600' : 'border-slate-300'}`}>
-                                        {!startFresh && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
-                                    </div>
-                                    <div>
-                                        <div className={`font-bold ${!startFresh ? 'text-blue-900' : 'text-slate-900'}`}>Keep Existing Content</div>
-                                        <div className="text-sm text-slate-500 mt-0.5">Activate the theme but leave all my current posts, pages, and menus exactly as they are.</div>
-                                    </div>
-                                </button>
-
-                                <button
-                                    onClick={() => setStartFresh(true)}
-                                    className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex gap-4 ${startFresh ? 'border-red-600 bg-red-50/50 shadow-sm' : 'border-slate-100 bg-white hover:border-red-200'}`}
-                                >
-                                    <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${startFresh ? 'border-red-600' : 'border-slate-300'}`}>
-                                        {startFresh && <div className="w-2.5 h-2.5 rounded-full bg-red-600" />}
-                                    </div>
-                                    <div>
-                                        <div className={`font-bold flex items-center gap-2 ${startFresh ? 'text-red-900' : 'text-slate-900'}`}>
-                                            Start Fresh <TrashIcon className="w-4 h-4 text-red-500" />
-                                        </div>
-                                        <div className="text-sm text-slate-500 mt-0.5">Clear out all existing old data to give the new theme a clean slate.</div>
-                                    </div>
-                                </button>
-                            </div>
-
-                            {/* Demo Content Toggle (Only shown if starting fresh) */}
-                            {startFresh && (
-                                <div className="pt-4 border-t border-slate-100 animate-in fade-in slide-in-from-top-2">
+                            {/* Only show demo import if theme was setup as FRESH */}
+                            {themes.find(t => t.slug === activateModalTheme)?.setupType === 'FRESH' ? (
+                                <div className="pt-2 animate-in fade-in slide-in-from-top-2">
                                     <label className="flex items-start gap-3 cursor-pointer group">
                                         <div className="relative flex items-center justify-center mt-1">
                                             <input 
@@ -491,24 +520,69 @@ export default function ThemesPage() {
                                         </div>
                                         <div>
                                             <div className="font-bold text-slate-900">Import Demo Content</div>
-                                            <div className="text-sm text-slate-500">Also populate the clean slate with this theme's demo posts, pages, and menus to get started quickly.</div>
+                                            <div className="text-sm text-slate-500">Populate the clean slate with this theme's demo posts, pages, and menus to get started quickly.</div>
                                         </div>
                                     </label>
                                 </div>
+                            ) : (
+                                <p className="text-sm text-slate-500 italic">This theme was setup in "Keep Data" mode, so no demo content will be imported to prevent duplicates.</p>
                             )}
                         </div>
                         <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
                             <button
-                                onClick={() => { setActivateModalTheme(null); setStartFresh(false); setImportDemoContent(true); }}
+                                onClick={() => { setActivateModalTheme(null); setImportDemoContent(true); }}
                                 className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors text-sm"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleConfirmActivate}
-                                className={`px-5 py-2.5 rounded-xl text-white font-bold transition-all text-sm shadow-lg ${startFresh ? 'bg-red-600 hover:bg-red-700 shadow-red-600/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'}`}
+                                className="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all text-sm"
                             >
-                                {startFresh ? 'Clear Data & Activate' : 'Activate Theme'}
+                                Confirm Activation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reset to Base State Modal */}
+            {showResetModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden ring-1 ring-slate-200 animate-in zoom-in-95">
+                        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                            <h2 className="text-lg font-bold text-slate-900">Reset CMS to Base State</h2>
+                            <button onClick={() => setShowResetModal(false)} className="p-2 -mr-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors">
+                                <XMarkIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div className="flex items-start gap-3 p-3 bg-red-50 rounded-xl border border-red-200">
+                                <ExclamationTriangleIcon className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-xs font-bold text-red-800">This action cannot be undone</p>
+                                    <p className="text-xs text-red-600 mt-0.5">All content, pages, menus, projects, team, testimonials, services, and theme settings will be permanently deleted.</p>
+                                </div>
+                            </div>
+                            <p className="text-sm text-slate-600">
+                                The following will be <strong>kept</strong>: your admin user accounts, roles, and CMS system settings.
+                            </p>
+                            <p className="text-sm text-slate-600">
+                                After reset you can set up any theme fresh with demo content.
+                            </p>
+                        </div>
+                        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowResetModal(false)}
+                                className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleReset}
+                                className="px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 shadow-lg shadow-red-600/20 transition-all text-sm"
+                            >
+                                Yes, Reset Everything
                             </button>
                         </div>
                     </div>

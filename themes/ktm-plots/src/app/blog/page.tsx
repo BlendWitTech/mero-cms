@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getPosts, getImageUrl, formatDate } from '@/lib/cms';
+import { getPosts, getImageUrl, formatDate, getSiteData, getSection, type PageRecord } from '@/lib/cms';
 
 export const metadata: Metadata = {
   title: 'Blog',
@@ -15,22 +15,29 @@ interface Props {
 export default async function BlogPage({ searchParams }: Props) {
   const params = await searchParams;
   const page = Number(params.page || 1);
-  const { data: posts, total } = await getPosts({ page, limit: 9 });
+  const [{ data: posts, total }, siteData] = await Promise.all([
+    getPosts({ page, limit: 9 }),
+    getSiteData(),
+  ]);
   const totalPages = Math.ceil(total / 9);
+
+  const pages = (siteData as any).pages as PageRecord[] ?? [];
+  const heroSec = getSection(pages, 'blog', 'hero');
+  const heroTitle    = heroSec.data.title    || 'Our Blog';
+  const heroSubtitle = heroSec.data.subtitle || 'Expert insights, guides, and market updates on land investment in Nepal.';
 
   return (
     <>
       {/* Header */}
-      <div style={{ background: '#1E1E1E', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
-        {/* Red left accent — brand marker */}
+      <div className="page-hero-band" style={{ background: '#1E1E1E', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '5px', background: '#CC1414' }} />
         <div className="container">
           <div className="tag-label">Knowledge Hub</div>
           <h1 style={{ color: '#FFFFFF', fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', fontWeight: 900, marginBottom: '1rem' }}>
-            Our Blog
+            {heroTitle}
           </h1>
           <p style={{ color: '#A0A0A0', maxWidth: '480px' }}>
-            Expert insights, guides, and market updates on land investment in Nepal.
+            {heroSubtitle}
           </p>
         </div>
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import {
     PlusIcon,
     PencilSquareIcon,
@@ -8,21 +8,29 @@ import {
     ArrowLeftIcon,
     CloudArrowUpIcon,
     PhotoIcon,
-    UserGroupIcon
+    UserGroupIcon,
+    ExclamationCircleIcon
 } from '@heroicons/react/24/outline';
 import { useSearchParams, useRouter } from 'next/navigation';
-import MediaLibrary from '@/components/media/MediaLibrary';
+import { useSettings } from '@/context/SettingsContext';
+import MediaPickerModal from '@/components/ui/MediaPickerModal';
 import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
 import AlertDialog from '@/components/ui/AlertDialog';
 import { useNotification } from '@/context/NotificationContext';
 import { useForm } from '@/context/FormContext';
 import { apiRequest } from '@/lib/api';
+import ThemeCompatibilityBanner, { useThemeCompatibility } from '@/components/ui/ThemeCompatibilityBanner';
+
 
 function TeamPageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { showToast } = useNotification();
+    const { settings } = useSettings();
     const { isDirty, setIsDirty } = useForm();
+    const [isReadOnly, setIsReadOnly] = useState(false);
+    const [contentTheme, setContentTheme] = useState<string | null>(null);
+    const { isSupported } = useThemeCompatibility('team');
 
     // View derived from URL
     const action = searchParams.get('action');
@@ -108,6 +116,17 @@ function TeamPageContent() {
     };
 
     const populateForm = (member: any) => {
+        const activeTheme = settings['active_theme'];
+        const memberTheme = member.theme;
+
+        if (memberTheme && activeTheme && memberTheme !== activeTheme) {
+            setIsReadOnly(true);
+            setContentTheme(memberTheme);
+        } else {
+            setIsReadOnly(false);
+            setContentTheme(null);
+        }
+
         const data = {
             name: member.name,
             role: member.role,
@@ -122,6 +141,8 @@ function TeamPageContent() {
     };
 
     const resetForm = () => {
+        setIsReadOnly(false);
+        setContentTheme(null);
         const data = { ...defaultFormData, order: team.length };
         setFormData(data);
         setInitialState(data);
@@ -219,6 +240,23 @@ function TeamPageContent() {
                     variant="success"
                 />
 
+                {isReadOnly && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                        <div className="bg-amber-100 p-2 rounded-xl">
+                            <ExclamationCircleIcon className="h-6 w-6 text-amber-600" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-amber-900">Incompatible Theme Content</h3>
+                            <p className="text-xs font-semibold text-amber-700 mt-0.5">
+                                This team member was added for the <span className="underline decoration-2 underline-offset-2 capitalize">{contentTheme || 'another'}</span> theme. 
+                                You can view their details, but to make changes, please switch the active theme in Settings.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                <ThemeCompatibilityBanner moduleName="team" />
+
                 <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200/50 shadow-sm sticky top-4 z-10">
                     <div className="flex items-center gap-4">
                         <button onClick={handleBackClick} className="p-2 hover:bg-slate-50 rounded-xl text-slate-500 transition-colors">
@@ -229,9 +267,13 @@ function TeamPageContent() {
                             <h1 className="text-xl font-bold text-slate-900 font-display">{formData.name || 'Untitled Member'}</h1>
                         </div>
                     </div>
-                    <button onClick={() => handleSave()} className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                     <button 
+                        onClick={() => handleSave()} 
+                        disabled={isSaving || isReadOnly || !isSupported}
+                        className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                         <CloudArrowUpIcon className="h-4 w-4" />
-                        {isSaving ? 'Saving...' : 'Save Changes'}
+                        {!isSupported ? 'Unsupported by Theme' : isSaving ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
 
@@ -240,21 +282,23 @@ function TeamPageContent() {
                         <div className="bg-white rounded-2xl p-10 border border-slate-200/60 shadow-xl space-y-6">
                             <div>
                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Full Name</label>
-                                <input
+                                 <input
                                     type="text"
                                     placeholder="Enter team member name..."
                                     value={formData.name}
+                                    disabled={isReadOnly}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full text-3xl font-bold text-slate-900 placeholder:text-slate-200 border-none focus:ring-0 p-0 font-display bg-transparent mt-2"
+                                    className="w-full text-3xl font-bold text-slate-900 placeholder:text-slate-200 border-none focus:ring-0 p-0 font-display bg-transparent mt-2 disabled:opacity-50"
                                 />
                             </div>
                             <div>
                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Role / Position</label>
-                                <input
+                                 <input
                                     type="text"
                                     value={formData.role}
+                                    disabled={isReadOnly}
                                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 mt-2"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 mt-2 disabled:opacity-50"
                                     placeholder="e.g., Principal Architect, Senior Designer"
                                 />
                             </div>
@@ -262,11 +306,12 @@ function TeamPageContent() {
 
                         <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Biography</h3>
-                            <textarea
+                             <textarea
                                 value={formData.bio}
+                                disabled={isReadOnly}
                                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                                 rows={6}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 resize-none"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 resize-none disabled:opacity-50"
                                 placeholder="Brief professional background and expertise..."
                             />
                         </div>
@@ -274,25 +319,28 @@ function TeamPageContent() {
                         <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Social Links</h3>
                             <div className="space-y-3">
-                                <input
+                                 <input
                                     type="text"
                                     value={formData.socialLinks.linkedin}
+                                    disabled={isReadOnly}
                                     onChange={(e) => setFormData({ ...formData, socialLinks: { ...formData.socialLinks, linkedin: e.target.value } })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
                                     placeholder="LinkedIn URL"
                                 />
                                 <input
                                     type="text"
                                     value={formData.socialLinks.twitter}
+                                    disabled={isReadOnly}
                                     onChange={(e) => setFormData({ ...formData, socialLinks: { ...formData.socialLinks, twitter: e.target.value } })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
                                     placeholder="Twitter URL"
                                 />
                                 <input
                                     type="text"
                                     value={formData.socialLinks.instagram}
+                                    disabled={isReadOnly}
                                     onChange={(e) => setFormData({ ...formData, socialLinks: { ...formData.socialLinks, instagram: e.target.value } })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
                                     placeholder="Instagram URL"
                                 />
                             </div>
@@ -303,13 +351,16 @@ function TeamPageContent() {
                         <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Profile Photo</h3>
-                                {formData.image && (
+                                 {formData.image && !isReadOnly && (
                                     <button onClick={() => setFormData({ ...formData, image: '' })} className="text-[10px] font-bold text-red-500 uppercase tracking-widest hover:text-red-600 transition-colors">Remove</button>
                                 )}
                             </div>
-                            <div
-                                onClick={() => setIsMediaOpen(true)}
-                                className="aspect-square bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100/50 hover:border-blue-400 hover:text-blue-500 transition-all cursor-pointer group overflow-hidden relative"
+                             <div
+                                onClick={() => {
+                                    if (isReadOnly) return;
+                                    setIsMediaOpen(true);
+                                }}
+                                className={`aspect-square bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 ${!isReadOnly ? 'hover:bg-slate-100/50 hover:border-blue-400 hover:text-blue-500 cursor-pointer' : 'cursor-not-allowed'} transition-all group overflow-hidden relative`}
                             >
                                 {formData.image ? (
                                     <img src={formData.image} className="w-full h-full object-cover" alt="" />
@@ -322,7 +373,7 @@ function TeamPageContent() {
                             </div>
                         </div>
 
-                        <MediaLibrary
+                        <MediaPickerModal
                             isOpen={isMediaOpen}
                             onClose={() => setIsMediaOpen(false)}
                             onSelect={(url) => {
@@ -333,11 +384,12 @@ function TeamPageContent() {
 
                         <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Display Order</h3>
-                            <input
+                             <input
                                 type="number"
                                 value={formData.order}
+                                disabled={isReadOnly}
                                 onChange={(e) => setFormData({ ...formData, order: e.target.value === '' ? '' : parseInt(e.target.value) })}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
                             />
                             <p className="text-[10px] text-slate-400">Lower numbers appear first</p>
                         </div>
@@ -356,15 +408,21 @@ function TeamPageContent() {
                     </h1>
                     <p className="mt-1 text-xs text-slate-500 font-semibold tracking-tight">Manage your team members and their profiles.</p>
                 </div>
-                <div className="flex items-center gap-3">
+                 <div className="flex items-center gap-3">
                     {canManageContent && (
-                        <button onClick={handleCreate} className="inline-flex items-center gap-x-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-all active:scale-95 leading-none">
+                        <button 
+                            onClick={handleCreate} 
+                            disabled={!isSupported}
+                            className="inline-flex items-center gap-x-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-all active:scale-95 leading-none disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                             <PlusIcon className="h-4 w-4" strokeWidth={3} />
                             Add Member
                         </button>
                     )}
                 </div>
             </div>
+
+            <ThemeCompatibilityBanner moduleName="team" />
 
             <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden">
                 <div className="overflow-x-auto">

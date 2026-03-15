@@ -1,4 +1,10 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
 import './globals.css';
 import { getSiteData } from '@/lib/cms';
 import Header from '@/components/layout/Header';
@@ -8,10 +14,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const { settings } = await getSiteData();
   return {
     title: {
-      default: settings.siteTitle || 'KTM Plots',
-      template: `%s | ${settings.siteTitle || 'KTM Plots'}`,
+      default: settings.siteTitle || 'Mero CMS',
+      template: `%s | ${settings.siteTitle || 'Mero CMS'}`,
     },
-    description: settings.tagline || "Kathmandu Valley's Trusted Land Partner",
+    description: settings.tagline || 'The modular CMS that adapts to every project',
     icons: settings.faviconUrl ? { icon: settings.faviconUrl } : undefined,
   };
 }

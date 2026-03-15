@@ -30,7 +30,7 @@ if (-not (Test-Path "backend/.env")) {
 # 3. Database Infrastructure
 if ($choice -eq "2") {
     Write-Host "[3/5] Starting Docker containers..." -ForegroundColor Gray
-    docker-compose up -d
+    docker-compose up -d db pgadmin
     Write-Host "Waiting for database to be ready..." -ForegroundColor Gray
     
     $max_retries = 30
@@ -71,6 +71,7 @@ if ($choice -eq "2") {
 
 # 4. Database Initialization
 Write-Host "[4/5] Initializing database..." -ForegroundColor Gray
+node scripts/build-schema.js all
 Set-Location backend
 npx prisma generate
 npx prisma migrate dev --name init

@@ -7,9 +7,15 @@ export class MenusService {
 
     async create(data: any) {
         const { items, ...menuData } = data;
+        const siteSettings = await (this.prisma as any).setting.findMany({
+            where: { key: 'active_theme' }
+        });
+        const activeTheme = siteSettings[0]?.value;
+
         return this.prisma.menu.create({
             data: {
                 ...menuData,
+                theme: activeTheme,
                 items: {
                     create: items || []
                 }

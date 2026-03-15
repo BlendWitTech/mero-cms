@@ -33,7 +33,7 @@ export default async function BlogPostPage({ params }: Props) {
   return (
     <>
       {/* Hero */}
-      <div style={{ background: '#1E1E1E', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
+      <div className="page-hero-band" style={{ background: '#1E1E1E', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '5px', background: '#CC1414' }} />
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
           {/* Breadcrumb */}
@@ -64,8 +64,8 @@ export default async function BlogPostPage({ params }: Props) {
 
       <section style={{ padding: '3rem 0 5rem', background: '#F4F4F4' }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr min(680px, 100%) 1fr', gap: 0 }}>
-            <div style={{ gridColumn: '2' }}>
+          <div className="blog-post-grid" style={{ display: 'grid', gridTemplateColumns: '1fr min(680px, 100%) 1fr', gap: 0 }}>
+            <div className="blog-post-col" style={{ gridColumn: '2' }}>
               {/* Featured image */}
               {imgUrl && (
                 <div style={{ borderRadius: '12px', overflow: 'hidden', marginBottom: '2rem', aspectRatio: '16/9', position: 'relative' }}>
@@ -86,7 +86,7 @@ export default async function BlogPostPage({ params }: Props) {
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                     .replace(/\*(.*?)\*/g, '<em>$1</em>')
                     .replace(/^- (.*)/gm, '<li>$1</li>')
-                    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>'),
+                    .replace(/(<li>[\s\S]*<\/li>)/, '<ul>$1</ul>'),
                 }}
               />
 
@@ -103,8 +103,8 @@ export default async function BlogPostPage({ params }: Props) {
 
               {/* CTA */}
               <div style={{ marginTop: '3rem', background: '#CC1414', borderRadius: '12px', padding: '2rem', textAlign: 'center' }}>
-                <h3 style={{ color: '#CC1414', fontWeight: 700, marginBottom: '0.5rem' }}>Looking for Land in Kathmandu Valley?</h3>
-                <p style={{ color: '#A0A0A0', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                <h3 style={{ color: '#FFFFFF', fontWeight: 700, marginBottom: '0.5rem' }}>Looking for Land in Kathmandu Valley?</h3>
+                <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
                   Browse our verified plots or speak with one of our property consultants today.
                 </p>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>

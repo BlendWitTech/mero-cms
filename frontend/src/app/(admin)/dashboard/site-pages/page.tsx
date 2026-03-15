@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     DocumentTextIcon,
     ChevronRightIcon,
@@ -16,15 +16,21 @@ import {
 } from '@heroicons/react/24/outline';
 import { apiRequest } from '@/lib/api';
 import { useNotification } from '@/context/NotificationContext';
+import MediaPickerModal from '@/components/ui/MediaPickerModal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface FieldDef {
     key: string;
     label: string;
-    type: 'text' | 'textarea' | 'richtext' | 'image' | 'number' | 'toggle' | 'button' | 'buttons' | 'url';
+    type: 'text' | 'textarea' | 'richtext' | 'image' | 'number' | 'toggle' | 'button' | 'buttons' | 'url' | 'stats';
     placeholder?: string;
+    description?: string;
     max?: number;
+    /** Settings table key to seed from when no page section data exists */
+    settingsKey?: string;
+    /** Hard-coded fallback shown when neither page data nor settings has a value */
+    defaultValue?: any;
 }
 
 interface SectionDef {
@@ -47,6 +53,53 @@ interface SectionData {
 
 interface PageSections {
     [sectionId: string]: SectionData;
+}
+
+// ─── Image field (own component so useState is always called at top level) ────
+
+function ImageField({ value, onChange, disabled, base }: { value: any; onChange: (v: any) => void; disabled: boolean; base: string }) {
+    const [pickerOpen, setPickerOpen] = useState(false);
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const previewSrc = value ? (value.startsWith('http') ? value : `${API_BASE}${value}`) : '';
+    return (
+        <div className="space-y-2">
+            <div className="flex gap-2 items-center">
+                <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => setPickerOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold hover:bg-slate-700 transition-all disabled:opacity-40 shrink-0 shadow"
+                >
+                    <PhotoIcon className="w-4 h-4" />
+                    Choose Image
+                </button>
+                <input
+                    type="text"
+                    disabled={disabled}
+                    value={value || ''}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder="or paste URL / path"
+                    className={base + ' flex-1'}
+                />
+                {value && (
+                    <button type="button" disabled={disabled} onClick={() => onChange('')} className="p-2 text-slate-400 hover:text-red-500 transition-colors disabled:opacity-40">
+                        <XMarkIcon className="w-4 h-4" />
+                    </button>
+                )}
+            </div>
+            {previewSrc && (
+                <div className="relative h-24 w-32 rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
+                    <img src={previewSrc} alt="preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                </div>
+            )}
+            <MediaPickerModal
+                isOpen={pickerOpen}
+                onClose={() => setPickerOpen(false)}
+                onSelect={(url) => { onChange(url); setPickerOpen(false); }}
+                current={value}
+            />
+        </div>
+    );
 }
 
 // ─── Field renderer ──────────────────────────────────────────────────────────
@@ -85,23 +138,7 @@ function FieldEditor({ field, value, onChange, disabled }: {
     }
 
     if (field.type === 'image') {
-        return (
-            <div className="space-y-2">
-                <input
-                    type="text"
-                    disabled={disabled}
-                    value={value || ''}
-                    onChange={(e) => onChange(e.target.value)}
-                    placeholder={field.placeholder || 'Paste image URL or path (e.g. /uploads/hero.jpg)'}
-                    className={base}
-                />
-                {value && (
-                    <div className="relative h-24 w-32 rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
-                        <img src={value.startsWith('http') ? value : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${value}`} alt="preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
-                    </div>
-                )}
-            </div>
-        );
+        return <ImageField value={value} onChange={onChange} disabled={disabled} base={base} />;
     }
 
     if (field.type === 'button') {
@@ -131,6 +168,38 @@ function FieldEditor({ field, value, onChange, disabled }: {
                 {buttons.length < max && (
                     <button disabled={disabled} onClick={() => onChange([...buttons, { text: '', url: '' }])} className="flex items-center gap-1.5 text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-40">
                         <PlusIcon className="w-4 h-4" /> Add Button
+                    </button>
+                )}
+            </div>
+        );
+    }
+
+    if (field.type === 'stats') {
+        const items: { value: string; label: string }[] = Array.isArray(value) ? value : [];
+        const max = field.max || 4;
+        return (
+            <div className="space-y-2">
+                {items.length === 0 && (
+                    <p className="text-xs text-slate-400 italic mb-1">No stats yet. Add up to {max} counter items.</p>
+                )}
+                {items.map((stat, i) => (
+                    <div key={i} className="flex gap-2 items-center">
+                        <div className="flex flex-col gap-1 w-28 shrink-0">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Value</span>
+                            <input type="text" disabled={disabled} value={stat.value || ''} onChange={(e) => { const ns = [...items]; ns[i] = { ...ns[i], value: e.target.value }; onChange(ns); }} placeholder="500+" className={base + ' text-center font-bold'} />
+                        </div>
+                        <div className="flex flex-col gap-1 flex-1">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Label</span>
+                            <input type="text" disabled={disabled} value={stat.label || ''} onChange={(e) => { const ns = [...items]; ns[i] = { ...ns[i], label: e.target.value }; onChange(ns); }} placeholder="Plots Sold" className={base} />
+                        </div>
+                        <button disabled={disabled} onClick={() => onChange(items.filter((_, j) => j !== i))} className="p-2 text-red-400 hover:text-red-600 disabled:opacity-40 mt-4">
+                            <TrashIcon className="w-4 h-4" />
+                        </button>
+                    </div>
+                ))}
+                {items.length < max && (
+                    <button disabled={disabled} onClick={() => onChange([...items, { value: '', label: '' }])} className="flex items-center gap-1.5 text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-40 mt-1">
+                        <PlusIcon className="w-4 h-4" /> Add Stat
                     </button>
                 )}
             </div>
@@ -202,7 +271,8 @@ function SectionCard({ sectionDef, sectionData, onToggle, onDataChange, saving }
                 <div className="bg-slate-50 border-t border-slate-100 px-5 py-4 space-y-4">
                     {sectionDef.fields.map((field) => (
                         <div key={field.key}>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">{field.label}</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{field.label}</label>
+                            {field.description && <p className="text-xs text-slate-400 mb-1.5">{field.description}</p>}
                             <FieldEditor
                                 field={field}
                                 value={sectionData.data?.[field.key]}
@@ -231,25 +301,46 @@ export default function SitePagesPage() {
     const load = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [schemaRes, pagesRes] = await Promise.all([
+            const [schemaRes, pagesRes, settingsRes] = await Promise.all([
                 apiRequest('/themes/active/page-schema'),
                 apiRequest('/pages'),
+                apiRequest('/settings').catch(() => ({})),
             ]);
-            const schema: PageDef[] = schemaRes.pageSchema || [];
+            // Controller returns array directly; fall back to legacy wrapper just in case
+            const schema: PageDef[] = Array.isArray(schemaRes) ? schemaRes : (schemaRes?.pageSchema || []);
+            // Settings returns a flat { key: value } object
+            const settingsMap: Record<string, string> = (settingsRes && typeof settingsRes === 'object' && !Array.isArray(settingsRes)) ? settingsRes : {};
+
             setPageSchema(schema);
             if (schema.length > 0 && !activePage) setActivePage(schema[0].slug);
 
             // Build initial sections state from saved Page records
             const saved: Record<string, PageSections> = {};
             for (const pageDef of schema) {
-                const pageRecord = pagesRes.find((p: any) => p.slug === pageDef.slug);
+                const pageRecord = Array.isArray(pagesRes) ? pagesRes.find((p: any) => p.slug === pageDef.slug) : null;
                 const rawSections: any[] = pageRecord?.data?.sections || [];
                 const sections: PageSections = {};
                 for (const sec of pageDef.sections) {
                     const saved_sec = rawSections.find((s: any) => s.id === sec.id);
+                    // Priority: saved page data > settings value > theme defaultValue
+                    const data: Record<string, any> = { ...(saved_sec?.data || {}) };
+                    for (const field of sec.fields) {
+                        const isEmpty = data[field.key] === undefined || data[field.key] === null || data[field.key] === '' || (Array.isArray(data[field.key]) && data[field.key].length === 0);
+                        if (isEmpty) {
+                            // Try settings first
+                            if (field.settingsKey) {
+                                const sv = settingsMap[field.settingsKey];
+                                if (sv) { data[field.key] = sv; continue; }
+                            }
+                            // Fall back to theme defaultValue
+                            if (field.defaultValue !== undefined) {
+                                data[field.key] = field.defaultValue;
+                            }
+                        }
+                    }
                     sections[sec.id] = {
                         enabled: saved_sec ? saved_sec.enabled !== false : true,
-                        data: saved_sec?.data || {},
+                        data,
                     };
                 }
                 saved[pageDef.slug] = sections;
@@ -434,8 +525,8 @@ export default function SitePagesPage() {
             <div className="mt-10 bg-amber-50 border border-amber-200 rounded-2xl p-6">
                 <h3 className="font-bold text-amber-800 text-sm mb-2">About Content Modules</h3>
                 <p className="text-xs text-amber-700 leading-relaxed">
-                    This theme uses the <strong>Projects</strong> module to store <strong>Plots</strong>, and the <strong>Services</strong> module for property services. You can manage plots under <em>Content → Projects</em> in the sidebar.
-                    Theme developers can rename modules for any use-case by setting <code>moduleAliases</code> in <code>theme.json</code>.
+                    Dynamic content like plots, team members, testimonials, and services is managed under <em>Content</em> in the sidebar.
+                    Theme developers can customise which sections appear on each page by editing <code>pageSchema</code> in <code>theme.json</code>.
                 </p>
             </div>
         </div>

@@ -14,51 +14,56 @@ export default async function HomePage() {
   ]);
 
   const pages = (siteData as any).pages as PageRecord[] ?? [];
+  const sec   = (id: string) => getSection(pages, 'home', id);
+  const show  = (id: string) => isSectionEnabled(pages, 'home', id);
 
-  // Helper: read a field from the "home" page's section config
-  const sec = (sectionId: string) => getSection(pages, 'home', sectionId);
-  const show = (sectionId: string) => isSectionEnabled(pages, 'home', sectionId);
-
-  // Merge section-level overrides into siteData.settings so existing
-  // components continue to work without needing a new prop
-  const heroSec = sec('hero');
+  const heroSec  = sec('hero');
   const aboutSec = sec('about');
-  const ctaSec = sec('cta');
+  const ctaSec   = sec('cta');
 
+  // Merge section-level content overrides into settings
   const mergedSettings = {
     ...siteData.settings,
-    // Hero overrides from Site Pages editor
-    ...(heroSec.data.title       && { heroTitle:   heroSec.data.title }),
-    ...(heroSec.data.subtitle    && { heroSubtitle: heroSec.data.subtitle }),
-    ...(heroSec.data.bgImage     && { heroBgImage:  heroSec.data.bgImage }),
-    ...(heroSec.data.bgVideo     && { heroBgVideo:  heroSec.data.bgVideo }),
-    ...(heroSec.data.buttons?.[0]?.text && { ctaText: heroSec.data.buttons[0].text }),
-    ...(heroSec.data.buttons?.[0]?.url  && { ctaUrl:  heroSec.data.buttons[0].url }),
-    // About overrides
-    ...(aboutSec.data.title   && { aboutTitle:   aboutSec.data.title }),
-    ...(aboutSec.data.content && { aboutContent: aboutSec.data.content }),
-    ...(aboutSec.data.image   && { aboutImage:   aboutSec.data.image }),
-    // CTA overrides
-    ...(ctaSec.data.buttons?.[0]?.text && { ctaText: ctaSec.data.buttons[0].text }),
-    ...(ctaSec.data.buttons?.[0]?.url  && { ctaUrl:  ctaSec.data.buttons[0].url }),
+    ...(heroSec.data.title          && { heroTitle:       heroSec.data.title }),
+    ...(heroSec.data.subtitle       && { heroSubtitle:    heroSec.data.subtitle }),
+    ...(heroSec.data.bgImage        && { heroBgImage:     heroSec.data.bgImage }),
+    ...(heroSec.data.bgVideo        && { heroBgVideo:     heroSec.data.bgVideo }),
+    ...(heroSec.data.trustBadge     && { heroBadge:       heroSec.data.trustBadge }),
+    ...(heroSec.data.buttons?.[0]?.text && { ctaText:     heroSec.data.buttons[0].text }),
+    ...(heroSec.data.buttons?.[0]?.url  && { ctaUrl:      heroSec.data.buttons[0].url }),
+    ...(heroSec.data.buttons?.[1]?.text && { cta2Text:    heroSec.data.buttons[1].text }),
+    ...(heroSec.data.buttons?.[1]?.url  && { cta2Url:     heroSec.data.buttons[1].url }),
+    ...(heroSec.data.brandName      && { heroBrandName:   heroSec.data.brandName }),
+    ...(heroSec.data.brandSuffix    && { heroBrandSuffix: heroSec.data.brandSuffix }),
+    ...(heroSec.data.brandEstYear   && { heroBrandYear:   heroSec.data.brandEstYear }),
+    ...(aboutSec.data.title         && { aboutTitle:      aboutSec.data.title }),
+    ...(aboutSec.data.content       && { aboutContent:    aboutSec.data.content }),
+    ...(aboutSec.data.image         && { aboutImage:      aboutSec.data.image }),
+    ...(ctaSec.data.buttons?.[0]?.text && { ctaText:      ctaSec.data.buttons[0].text }),
+    ...(ctaSec.data.buttons?.[0]?.url  && { ctaUrl:       ctaSec.data.buttons[0].url }),
   };
-
   const enrichedSiteData = { ...siteData, settings: mergedSettings };
 
-  // Plots section config
-  const plotsSec = sec('plots');
-  const plotLimit = Number(plotsSec.data.limit) || 6;
+  // Stats: from Site Pages hero section, fallback to null (Hero.tsx has defaults)
+  const heroStats = heroSec.data.stats as Array<{ value: string; label: string }> | undefined;
+
+  // Banner items for bottom strip when image is set
+  const heroBannerItems = heroSec.data.bannerItems as Array<{ value: string; label: string }> | undefined;
+
+  // Plots limit from section config
+  const plotLimit   = Number(sec('plots').data.limit) || 6;
   const limitedPlots = featuredPlots.slice(0, plotLimit);
 
   return (
     <>
-      {show('hero') && <Hero siteData={enrichedSiteData} />}
-      {show('about') && <About siteData={enrichedSiteData} />}
-      {show('services') && <Services services={siteData.services} />}
-      {show('plots') && <Plots plots={limitedPlots} />}
-      {show('testimonials') && <Testimonials testimonials={siteData.testimonials} />}
-      {show('cta') && <CtaStrip siteData={enrichedSiteData} />}
-      {show('blog') && <BlogPreview posts={siteData.recentPosts.slice(0, Number(sec('blog').data.limit) || 3)} />}
+      {show('hero')         && <Hero siteData={enrichedSiteData} stats={heroStats} bannerItems={heroBannerItems} />}
+      {show('about')        && <About siteData={enrichedSiteData} secData={sec('about').data} />}
+      {show('services')     && <Services services={siteData.services} secData={sec('services').data} />}
+      {show('plots')        && <Plots plots={limitedPlots} secData={sec('plots').data} />}
+      {show('testimonials') && <Testimonials testimonials={siteData.testimonials} secData={sec('testimonials').data} />}
+      {show('cta')          && <CtaStrip siteData={enrichedSiteData} secData={sec('cta').data} />}
+
+      {show('blog')         && <BlogPreview posts={siteData.recentPosts.slice(0, Number(sec('blog').data.limit) || 3)} secData={sec('blog').data} />}
     </>
   );
 }

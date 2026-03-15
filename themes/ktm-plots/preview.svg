@@ -1,69 +1,91 @@
 <svg width="800" height="500" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
   <!-- Background -->
-  <rect width="800" height="500" fill="#F9F6F0"/>
+  <rect width="800" height="500" fill="#111111"/>
+
+  <defs>
+    <!-- Dot Grid Pattern -->
+    <pattern id="dots" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+      <circle fill="rgba(255,255,255,0.06)" cx="2" cy="2" r="1"></circle>
+    </pattern>
+    <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#CC1414"/>
+      <stop offset="100%" stop-color="#8B0000"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Hero BG & Dot grid -->
+  <rect width="800" height="220" fill="url(#dots)"/>
 
   <!-- Header -->
-  <rect width="800" height="60" fill="#1B4332"/>
-  <text x="30" y="38" font-size="18" font-weight="bold" fill="#D4A017">KTM Plots</text>
-  <text x="450" y="38" font-size="11" fill="#FFFFFF">Home</text>
-  <text x="510" y="38" font-size="11" fill="#FFFFFF">About</text>
-  <text x="560" y="38" font-size="11" fill="#FFFFFF">Plots</text>
-  <text x="610" y="38" font-size="11" fill="#FFFFFF">Services</text>
-  <text x="665" y="38" font-size="11" fill="#FFFFFF">Contact</text>
+  <rect width="800" height="60" fill="#0A0A0A"/>
+  <rect x="0" y="0" width="4" height="60" fill="#CC1414"/>
+  <text x="30" y="38" font-size="18" font-weight="900" fill="#FFFFFF">KTM <tspan fill="#CC1414">PLOTS</tspan></text>
+  <text x="450" y="38" font-size="11" font-weight="600" fill="#FFFFFF">Home</text>
+  <text x="510" y="38" font-size="11" font-weight="600" fill="#A0A0A0">About</text>
+  <text x="560" y="38" font-size="11" font-weight="600" fill="#A0A0A0">Plots</text>
+  <text x="610" y="38" font-size="11" font-weight="600" fill="#A0A0A0">Services</text>
+  <text x="665" y="38" font-size="11" font-weight="600" fill="#A0A0A0">Contact</text>
 
   <!-- Hero Section -->
-  <rect y="60" width="800" height="160" fill="#1B4332"/>
-  <!-- Mountain silhouette -->
-  <polygon points="0,220 100,140 200,180 320,100 440,160 560,110 680,150 800,120 800,220" fill="#2D6A4F" opacity="0.5"/>
-  <polygon points="0,220 60,170 150,200 260,130 380,180 500,140 620,170 750,145 800,165 800,220" fill="#2D6A4F" opacity="0.3"/>
+  <rect y="60" width="800" height="160" fill="transparent"/>
+  
+  <!-- Right red slab in Hero -->
+  <!-- clipPath equivalent manually calculated for polygon -->
+  <!-- 42% width corresponds to ~336px right side. Let's make it start around x=500 -->
+  <polygon points="560,60 800,60 800,220 480,220" fill="url(#redGrad)"/>
+  
+  <text x="630" y="130" font-size="36" font-weight="900" fill="#FFFFFF" opacity="0.9">KTM</text>
+  <text x="630" y="160" font-size="14" font-weight="900" fill="#FFFFFF" opacity="0.8" letter-spacing="4">PLOTS</text>
+
   <!-- Hero text -->
-  <text x="80" y="130" font-size="28" font-weight="bold" fill="#FFFFFF">Find Your Perfect Plot</text>
-  <text x="80" y="158" font-size="14" fill="#D4A017">in Kathmandu Valley</text>
-  <rect x="80" y="175" width="130" height="32" rx="4" fill="#D4A017"/>
-  <text x="112" y="196" font-size="12" font-weight="bold" fill="#1B4332">View Plots</text>
-  <rect x="225" y="175" width="130" height="32" rx="4" fill="transparent" stroke="#FFFFFF" stroke-width="1.5"/>
-  <text x="255" y="196" font-size="12" fill="#FFFFFF">Contact Us</text>
+  <rect x="0" y="60" width="4" height="160" fill="#CC1414"/>
+  <text x="40" y="100" font-size="9" font-weight="700" fill="#A0A0A0" letter-spacing="2">KATHMANDU VALLEY'S TRUSTED PARTNER</text>
+  
+  <text x="40" y="130" font-size="28" font-weight="900" fill="#FFFFFF">Find Your Perfect <tspan fill="#CC1414">Land Plot</tspan></text>
+  <text x="40" y="152" font-size="12" fill="#A0A0A0">Premium plots with clear legal titles and full registration</text>
+  <text x="40" y="168" font-size="12" fill="#A0A0A0">support across the beautiful Kathmandu Valley.</text>
+
+  <rect x="40" y="185" width="120" height="32" rx="4" fill="#CC1414"/>
+  <text x="70" y="206" font-size="12" font-weight="bold" fill="#FFFFFF">Browse Plots</text>
+  
+  <rect x="175" y="185" width="130" height="32" rx="4" fill="transparent" stroke="#333333" stroke-width="1.5"/>
+  <text x="195" y="206" font-size="12" font-weight="bold" fill="#FFFFFF">Free Consultation</text>
+
+  <!-- White body area for contrast -->
+  <rect y="220" width="800" height="280" fill="#F9F9F9"/>
 
   <!-- Featured Plots -->
-  <text x="30" y="250" font-size="14" font-weight="bold" fill="#1B4332">Featured Plots</text>
+  <text x="40" y="260" font-size="18" font-weight="bold" fill="#111111">Featured Projects</text>
+  
   <!-- Plot card 1 -->
-  <rect x="20" y="260" width="235" height="100" rx="6" fill="#FFFFFF" stroke="#E5E0D5" stroke-width="1"/>
-  <rect x="20" y="260" width="235" height="50" rx="6" fill="#2D6A4F"/>
-  <text x="32" y="282" font-size="10" font-weight="bold" fill="#FFFFFF">Shankhapur Green Valley</text>
-  <text x="32" y="296" font-size="9" fill="#D4A017">Residential · Available</text>
-  <text x="32" y="324" font-size="9" fill="#666">From NPR 15 Lakhs/Anna</text>
-  <text x="32" y="340" font-size="9" fill="#666">3 Anna – 16 Anna · Kavre</text>
+  <rect x="40" y="280" width="220" height="135" rx="6" fill="#FFFFFF" stroke="#EAEAEA" stroke-width="1"/>
+  <rect x="40" y="280" width="220" height="60" fill="#E0E0E0"/> <!-- placeholder image -->
+  <!-- Tag -->
+  <rect x="50" y="290" width="55" height="16" rx="2" fill="#CC1414"/>
+  <text x="56" y="301" font-size="8" font-weight="bold" fill="#FFFFFF">FEATURED</text>
+  
+  <text x="50" y="360" font-size="12" font-weight="bold" fill="#111111">Shankhapur Green Valley</text>
+  <text x="50" y="375" font-size="10" font-weight="bold" fill="#CC1414">From NPR 15 Lakhs</text>
+  <text x="50" y="390" font-size="9" fill="#666">Residential · Kavre</text>
 
   <!-- Plot card 2 -->
-  <rect x="270" y="260" width="235" height="100" rx="6" fill="#FFFFFF" stroke="#E5E0D5" stroke-width="1"/>
-  <rect x="270" y="260" width="235" height="50" rx="6" fill="#2D6A4F"/>
-  <text x="282" y="282" font-size="10" font-weight="bold" fill="#FFFFFF">Godawari Sunrise Plots</text>
-  <text x="282" y="296" font-size="9" fill="#D4A017">Residential · Available</text>
-  <text x="282" y="324" font-size="9" fill="#666">From NPR 25 Lakhs/Anna</text>
-  <text x="282" y="340" font-size="9" fill="#666">2 Anna – 8 Anna · Lalitpur</text>
+  <rect x="290" y="280" width="220" height="135" rx="6" fill="#FFFFFF" stroke="#EAEAEA" stroke-width="1"/>
+  <rect x="290" y="280" width="220" height="60" fill="#E0E0E0"/>
+  <text x="300" y="360" font-size="12" font-weight="bold" fill="#111111">Godawari Sunrise Plots</text>
+  <text x="300" y="375" font-size="10" font-weight="bold" fill="#CC1414">From NPR 25 Lakhs</text>
+  <text x="300" y="390" font-size="9" fill="#666">Residential · Lalitpur</text>
 
   <!-- Plot card 3 -->
-  <rect x="520" y="260" width="260" height="100" rx="6" fill="#FFFFFF" stroke="#E5E0D5" stroke-width="1"/>
-  <rect x="520" y="260" width="260" height="50" rx="6" fill="#2D6A4F"/>
-  <text x="532" y="282" font-size="10" font-weight="bold" fill="#FFFFFF">Budhanilkantha Hill Estate</text>
-  <text x="532" y="296" font-size="9" fill="#D4A017">Residential · Limited</text>
-  <text x="532" y="324" font-size="9" fill="#666">From NPR 60 Lakhs/Anna</text>
-  <text x="532" y="340" font-size="9" fill="#666">5 Anna – 1 Ropani · Kathmandu</text>
-
-  <!-- Services strip -->
-  <rect y="375" width="800" height="60" fill="#1B4332"/>
-  <text x="30" y="400" font-size="11" font-weight="bold" fill="#D4A017">Our Services</text>
-  <text x="30" y="420" font-size="9" fill="#FFFFFF">Plot Sales</text>
-  <text x="150" y="420" font-size="9" fill="#FFFFFF">Legal Docs</text>
-  <text x="270" y="420" font-size="9" fill="#FFFFFF">Site Visits</text>
-  <text x="400" y="420" font-size="9" fill="#FFFFFF">Investment Consulting</text>
-  <text x="570" y="420" font-size="9" fill="#FFFFFF">Construction Referral</text>
-  <text x="710" y="420" font-size="9" fill="#FFFFFF">After-Sales</text>
+  <rect x="540" y="280" width="220" height="135" rx="6" fill="#FFFFFF" stroke="#EAEAEA" stroke-width="1"/>
+  <rect x="540" y="280" width="220" height="60" fill="#E0E0E0"/>
+  <text x="550" y="360" font-size="12" font-weight="bold" fill="#111111">Budhanilkantha Hill</text>
+  <text x="550" y="375" font-size="10" font-weight="bold" fill="#CC1414">From NPR 60 Lakhs</text>
+  <text x="550" y="390" font-size="9" fill="#666">Residential · Kathmandu</text>
 
   <!-- Footer -->
   <rect y="435" width="800" height="65" fill="#111111"/>
-  <text x="30" y="460" font-size="12" font-weight="bold" fill="#D4A017">KTM Plots</text>
-  <text x="30" y="478" font-size="9" fill="#999">Kathmandu Valley's Trusted Land Partner</text>
-  <text x="30" y="492" font-size="8" fill="#666">© 2024 KTM Plots. All rights reserved.</text>
-  <text x="580" y="460" font-size="9" fill="#999">Plots  ·  About  ·  Blog  ·  Contact</text>
+  <text x="40" y="460" font-size="12" font-weight="bold" fill="#FFFFFF">KTM <tspan fill="#CC1414">PLOTS</tspan></text>
+  <text x="40" y="478" font-size="9" fill="#A0A0A0">Kathmandu Valley's Trusted Land Partner</text>
+  <text x="40" y="492" font-size="8" fill="#666666">© 2024 KTM Plots. All rights reserved.</text>
+  <text x="580" y="465" font-size="10" fill="#A0A0A0">Plots  ·  About  ·  Blog  ·  Contact</text>
 </svg>

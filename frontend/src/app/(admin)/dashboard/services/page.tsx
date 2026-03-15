@@ -16,6 +16,8 @@ import IconPicker, { iconMap } from '@/components/ui/IconPicker';
 import { useForm } from '@/context/FormContext';
 import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
 import AlertDialog from '@/components/ui/AlertDialog';
+import ThemeCompatibilityBanner, { useThemeCompatibility } from '@/components/ui/ThemeCompatibilityBanner';
+
 
 interface Service {
     id: string;
@@ -31,6 +33,7 @@ function ServicesPageContent() {
     const router = useRouter();
     const { setIsDirty, registerSaveHandler } = useForm();
     const { showToast } = useNotification();
+    const { isSupported } = useThemeCompatibility('services');
 
     // Derived state
     const view = searchParams.get('action') === 'new' || searchParams.get('action') === 'edit' ? 'editor' : 'list';
@@ -221,6 +224,8 @@ function ServicesPageContent() {
                     </div>
                 </div>
 
+                <ThemeCompatibilityBanner moduleName="services" />
+
                 <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200/50 space-y-6">
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700">Service Title</label>
@@ -228,8 +233,9 @@ function ServicesPageContent() {
                             type="text"
                             required
                             value={formData.title}
+                            disabled={!isSupported}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white focus:border-blue-600 transition-all"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white focus:border-blue-600 transition-all disabled:opacity-50"
                             placeholder="e.g. Architectural Design"
                         />
                     </div>
@@ -237,10 +243,11 @@ function ServicesPageContent() {
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700">Description</label>
                         <textarea
-                            value={formData.description}
+                             value={formData.description}
+                            disabled={!isSupported}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             rows={3}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-medium text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white focus:border-blue-600 transition-all resize-none"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-medium text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white focus:border-blue-600 transition-all resize-none disabled:opacity-50"
                             placeholder="Brief description of the service..."
                         />
                     </div>
@@ -249,9 +256,10 @@ function ServicesPageContent() {
                         <label className="text-sm font-bold text-slate-700">Display Order</label>
                         <input
                             type="number"
-                            value={formData.order}
+                             value={formData.order}
+                            disabled={!isSupported}
                             onChange={(e) => setFormData({ ...formData, order: e.target.value })}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white focus:border-blue-600 transition-all"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white focus:border-blue-600 transition-all disabled:opacity-50"
                         />
                     </div>
 
@@ -269,9 +277,9 @@ function ServicesPageContent() {
                         >
                             Cancel
                         </button>
-                        <button
+                         <button
                             onClick={() => handleSave()}
-                            disabled={isSaving}
+                            disabled={isSaving || !isSupported}
                             className="inline-flex items-center gap-2 px-8 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 hover:shadow-emerald-600/30 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {isSaving ? (
@@ -279,7 +287,7 @@ function ServicesPageContent() {
                             ) : (
                                 <CloudArrowUpIcon className="h-5 w-5" strokeWidth={2} />
                             )}
-                            <span>{currentId ? 'Update Service' : 'Create Service'}</span>
+                            <span>{!isSupported ? 'Unsupported by Theme' : (currentId ? 'Update Service' : 'Create Service')}</span>
                         </button>
                     </div>
                 </div>
@@ -311,14 +319,17 @@ function ServicesPageContent() {
                         Manage your service offerings and their display order.
                     </p>
                 </div>
-                <button
+                 <button
                     onClick={handleCreate}
-                    className="px-6 py-2.5 rounded-xl bg-emerald-600 shadow-lg shadow-emerald-600/30 text-white font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 hover:-translate-y-0.5 transition-all active:translate-y-0 active:scale-95 flex items-center gap-2"
+                    disabled={!isSupported}
+                    className="px-6 py-2.5 rounded-xl bg-emerald-600 shadow-lg shadow-emerald-600/30 text-white font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 hover:-translate-y-0.5 transition-all active:translate-y-0 active:scale-95 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                 >
                     <PlusIcon className="h-4 w-4" />
                     New Service
                 </button>
             </div>
+
+            <ThemeCompatibilityBanner moduleName="services" />
 
             {/* List */}
             <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 shadow-xl shadow-slate-200/20 overflow-hidden">

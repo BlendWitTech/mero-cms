@@ -27,22 +27,28 @@ const outfit = Outfit({
 
 async function getGlobalSeo() {
   try {
-    const res = await fetch('http://localhost:3001/seo-meta/GLOBAL', { next: { revalidate: 60 } });
+    const res = await fetch('http://localhost:3001/seo-meta/GLOBAL', {
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(3000),
+    });
     if (!res.ok) return null;
     const text = await res.text();
     return text ? JSON.parse(text) : null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
 
 async function getAnalyticsConfig() {
   try {
-    const res = await fetch('http://localhost:3001/analytics/config', { next: { revalidate: 60 } });
+    const res = await fetch('http://localhost:3001/analytics/config', {
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(3000),
+    });
     if (!res.ok) return null;
     const text = await res.text();
     return text ? JSON.parse(text) : null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

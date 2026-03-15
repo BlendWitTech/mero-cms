@@ -16,6 +16,8 @@ import { useNotification } from '@/context/NotificationContext';
 import { useForm } from '@/context/FormContext';
 import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
 import AlertDialog from '@/components/ui/AlertDialog';
+import ThemeCompatibilityBanner, { useThemeCompatibility } from '@/components/ui/ThemeCompatibilityBanner';
+
 
 interface Testimonial {
     id: string;
@@ -32,6 +34,8 @@ function TestimonialsPageContent() {
     const router = useRouter();
     const { setIsDirty } = useForm();
     const { showToast } = useNotification();
+    const { isSupported } = useThemeCompatibility('testimonials');
+
 
     // Derived state
     const view = searchParams.get('action') === 'new' || searchParams.get('action') === 'edit' ? 'editor' : 'list';
@@ -192,6 +196,8 @@ function TestimonialsPageContent() {
                     </div>
                 </div>
 
+                <ThemeCompatibilityBanner moduleName="testimonials" />
+
                 <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 shadow-xl shadow-slate-200/20 p-8">
                     <form onSubmit={handleSave} className="space-y-6">
                         <div className="space-y-5">
@@ -200,12 +206,13 @@ function TestimonialsPageContent() {
                                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center justify-between">
                                         Client Name <span className="text-blue-500 font-bold">*</span>
                                     </label>
-                                    <input
+                                     <input
                                         type="text"
                                         required
                                         value={formData.clientName}
+                                        disabled={!isSupported}
                                         onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10"
+                                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10 disabled:opacity-50"
                                         placeholder="e.g. John Doe"
                                     />
                                 </div>
@@ -214,11 +221,12 @@ function TestimonialsPageContent() {
                                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center justify-between">
                                         Client Role
                                     </label>
-                                    <input
+                                     <input
                                         type="text"
                                         value={formData.clientRole}
+                                        disabled={!isSupported}
                                         onChange={(e) => setFormData({ ...formData, clientRole: e.target.value })}
-                                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10"
+                                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10 disabled:opacity-50"
                                         placeholder="e.g. CEO, Tech Corp"
                                     />
                                 </div>
@@ -228,12 +236,13 @@ function TestimonialsPageContent() {
                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
                                     Testimonial Content <span className="text-blue-500 font-bold">*</span>
                                 </label>
-                                <textarea
+                                 <textarea
                                     required
                                     value={formData.content}
+                                    disabled={!isSupported}
                                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                                     rows={4}
-                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10 resize-none"
+                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10 resize-none disabled:opacity-50"
                                     placeholder="What did they say?"
                                 />
                             </div>
@@ -251,6 +260,7 @@ function TestimonialsPageContent() {
                                             <button
                                                 key={star}
                                                 type="button"
+                                                disabled={!isSupported}
                                                 onMouseMove={(e) => {
                                                     const { left, width } = e.currentTarget.getBoundingClientRect();
                                                     const percent = (e.clientX - left) / width;
@@ -261,7 +271,7 @@ function TestimonialsPageContent() {
                                                     const finalRating = hoverRating || formData.rating;
                                                     setFormData({ ...formData, rating: finalRating });
                                                 }}
-                                                className="relative focus:outline-none transition-transform active:scale-95 p-1"
+                                                className="relative focus:outline-none transition-transform active:scale-95 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 {/* Background Star (Outline) */}
                                                 <StarIconOutline className="h-8 w-8 text-slate-300" />
@@ -287,11 +297,12 @@ function TestimonialsPageContent() {
                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
                                     Client Image URL
                                 </label>
-                                <input
+                                 <input
                                     type="text"
                                     value={formData.image}
+                                    disabled={!isSupported}
                                     onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10"
+                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10 disabled:opacity-50"
                                     placeholder="https://..."
                                 />
                                 <p className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">Enter the URL of the image from your media library</p>
@@ -306,9 +317,9 @@ function TestimonialsPageContent() {
                             >
                                 Cancel
                             </button>
-                            <button
+                             <button
                                 type="submit"
-                                disabled={isSaving}
+                                disabled={isSaving || !isSupported}
                                 className="inline-flex items-center gap-2 px-8 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 hover:shadow-emerald-600/30 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {isSaving ? (
@@ -316,7 +327,7 @@ function TestimonialsPageContent() {
                                 ) : (
                                     <CloudArrowUpIcon className="h-5 w-5" strokeWidth={2} />
                                 )}
-                                <span>{currentId ? 'Update Testimonial' : 'Create Testimonial'}</span>
+                                <span>{!isSupported ? 'Unsupported by Theme' : (currentId ? 'Update Testimonial' : 'Create Testimonial')}</span>
                             </button>
                         </div>
                     </form>
@@ -368,14 +379,17 @@ function TestimonialsPageContent() {
                         Manage customer reviews and feedback.
                     </p>
                 </div>
-                <button
+                 <button
                     onClick={handleCreate}
-                    className="px-6 py-2.5 rounded-xl bg-emerald-600 shadow-lg shadow-emerald-600/30 text-white font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 hover:-translate-y-0.5 transition-all active:translate-y-0 active:scale-95 flex items-center gap-2"
+                    disabled={!isSupported}
+                    className="px-6 py-2.5 rounded-xl bg-emerald-600 shadow-lg shadow-emerald-600/30 text-white font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 hover:-translate-y-0.5 transition-all active:translate-y-0 active:scale-95 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                 >
                     <PlusIcon className="h-4 w-4" />
                     New Testimonial
                 </button>
             </div>
+
+            <ThemeCompatibilityBanner moduleName="testimonials" />
 
             {/* List */}
             <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 shadow-xl shadow-slate-200/20 overflow-hidden">

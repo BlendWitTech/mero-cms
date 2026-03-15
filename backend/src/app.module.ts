@@ -22,13 +22,12 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { SitemapModule } from './sitemap/sitemap.module';
 import { RobotsModule } from './robots/robots.module';
 import { MenusModule } from './menus/menus.module';
-import { ProjectsModule } from './projects/projects.module';
 import { TeamModule } from './team/team.module';
-import { TimelineModule } from './timeline/timeline.module';
 import { ServicesModule } from './services/services.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { LeadsModule } from './leads/leads.module';
-import { ProjectCategoriesModule } from './project-categories/project-categories.module';
+import { PlotsModule } from './plots/plots.module';
+import { PlotCategoriesModule } from './plot-categories/plot-categories.module';
 import { PagesModule } from './pages/pages.module';
 import { ThemesModule } from './themes/themes.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -39,7 +38,7 @@ import { ModuleEnabledGuard } from './setup/module-enabled.guard';
 
 /**
  * Read ENABLED_MODULES once at startup.
- * Format: comma-separated optional module keys, e.g. "blogs,projects,team"
+ * Format: comma-separated optional module keys, e.g. "blogs,plots,team"
  * Core modules (auth, users, roles, settings, media, etc.) are always loaded.
  *
  * Selective loading only applies when BOTH:
@@ -91,14 +90,13 @@ function when(...keys: string[]) {
     ...when('blogs', 'tags')(TagsModule),
     ...when('blogs', 'comments')(CommentsModule),
 
-    // Portfolio ecosystem: project-categories bundled with projects
-    ...when('projects', 'project-categories')(ProjectsModule),
-    ...when('projects', 'project-categories')(ProjectCategoriesModule),
+    // Plots ecosystem: land plot listings
+    ...when('plots', 'plot-categories')(PlotsModule),
+    ...when('plots', 'plot-categories')(PlotCategoriesModule),
 
     ...when('team')(TeamModule),
     ...when('services')(ServicesModule),
     ...when('testimonials')(TestimonialsModule),
-    ...when('timeline')(TimelineModule),
 
     ...when('menus')(MenusModule),
     ...when('pages')(PagesModule),

@@ -45,6 +45,8 @@ async function main() {
 
     // 3. Initialize Default Settings
     const defaultSettings = [
+        { key: 'site_title', value: 'Blendwit CMS' },
+        { key: 'site_tagline', value: 'The modular CMS that adapts to every project' },
         { key: 'cms_title', value: 'Blendwit CMS' },
         { key: 'cms_subtitle', value: 'Elevate Your Content Strategy' },
         { key: 'cms_login_avatar', value: '/assets/boy_idea_shock.png' },
@@ -56,7 +58,7 @@ async function main() {
                 'blogs', 'categories', 'tags', 'comments',
                 'seo', 'redirects', 'analytics', 'sitemap', 'robots',
                 'menus', 'pages', 'themes',
-                'projects', 'project-categories', 'team', 'timeline',
+                'plots', 'plot-categories', 'team',
                 'services', 'testimonials', 'leads',
             ])
         },
@@ -72,7 +74,9 @@ async function main() {
     }
 
     console.log('Default settings and modules initialized.');
+
     console.log('--- Seeding Completed ---');
+    console.log('Note: Theme demo content (plots, pages, menus etc.) is seeded via Themes → Activate with "Import demo content".');
 }
 
 main()

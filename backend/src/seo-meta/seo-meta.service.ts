@@ -28,10 +28,7 @@ export class SeoMetaService {
             }),
             (this.prisma as any).seoMeta.count({
                 where: {
-                    OR: [
-                        { pageType: { in: ['project', 'PROJECT', 'Project'] } },
-                        { projectId: { not: null } }
-                    ]
+                    pageType: { in: ['project', 'PROJECT', 'Project'] }
                 }
             })
         ]);
@@ -81,10 +78,7 @@ export class SeoMetaService {
 
         const metaMap = new Map();
         allMeta.forEach(m => {
-            // For projects, we might have projectId set. For others, use pageType:pageId.
-            if (m.projectId) {
-                metaMap.set(`project:${m.projectId}`, m);
-            } else if (m.pageId) {
+            if (m.pageId) {
                 metaMap.set(`${m.pageType.toLowerCase()}:${m.pageId}`, m);
             }
         });
@@ -124,34 +118,20 @@ export class SeoMetaService {
         const type = pageType.toLowerCase();
         return (this.prisma as any).seoMeta.findFirst({
             where: {
-                OR: [
-                    {
-                        pageType: { in: [type, type.toUpperCase()] },
-                        pageId: pageId || null
-                    },
-                    {
-                        projectId: type === 'project' ? pageId : undefined
-                    }
-                ]
+                pageType: { in: [type, type.toUpperCase()] },
+                pageId: pageId || null
             },
         });
     }
 
     async upsert(data: any) {
-        const { pageType, pageId, projectId, ...rest } = data;
+        const { pageType, pageId, ...rest } = data;
         const type = pageType?.toLowerCase();
 
         const existing = await (this.prisma as any).seoMeta.findFirst({
             where: {
-                OR: [
-                    {
-                        pageType: { in: [type, type?.toUpperCase()] },
-                        pageId: pageId || null
-                    },
-                    {
-                        projectId: projectId || (type === 'project' ? pageId : undefined)
-                    }
-                ]
+                pageType: { in: [type, type?.toUpperCase()] },
+                pageId: pageId || null
             },
         });
 
@@ -163,7 +143,7 @@ export class SeoMetaService {
         }
 
         return (this.prisma as any).seoMeta.create({
-            data,
+            data: { pageType: type, pageId, ...rest },
         });
     }
 

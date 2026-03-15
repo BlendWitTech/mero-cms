@@ -81,8 +81,8 @@ export default async function PlotDetailPage({ params }: Props) {
               )}
             </div>
 
-            {/* Right: Details panel */}
-            <div style={{ position: 'sticky', top: '5rem' }}>
+            {/* Right: Details panel — un-sticked on mobile via .plot-detail-sidebar */}
+            <div className="plot-detail-sidebar" style={{ position: 'sticky', top: '5rem' }}>
               <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '2rem', boxShadow: '0 4px 24px rgba(0,0,0,0.1)', marginBottom: '1.5rem' }}>
                 {/* Status */}
                 <div style={{ marginBottom: '1rem' }}>

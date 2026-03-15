@@ -6,39 +6,47 @@ export class ServicesService {
     constructor(private prisma: PrismaService) { }
 
     async create(createServiceDto: any) {
-        return this.prisma.service.create({
-            data: createServiceDto,
+        const siteSettings = await (this.prisma as any).setting.findMany({
+            where: { key: 'active_theme' }
+        });
+        const activeTheme = siteSettings[0]?.value;
+
+        return (this.prisma as any).service.create({
+            data: {
+                ...createServiceDto,
+                theme: activeTheme
+            },
         });
     }
 
     async findAll() {
-        return this.prisma.service.findMany({
+        return (this.prisma as any).service.findMany({
             orderBy: { order: 'asc' },
         });
     }
 
     async findOne(id: string) {
-        return this.prisma.service.findUnique({
+        return (this.prisma as any).service.findUnique({
             where: { id },
         });
     }
 
     async update(id: string, updateServiceDto: any) {
-        return this.prisma.service.update({
+        return (this.prisma as any).service.update({
             where: { id },
             data: updateServiceDto,
         });
     }
 
     async remove(id: string) {
-        return this.prisma.service.delete({
+        return (this.prisma as any).service.delete({
             where: { id },
         });
     }
 
     async reorder(updates: Array<{ id: string; order: number }>) {
         const promises = updates.map(({ id, order }) =>
-            this.prisma.service.update({
+            (this.prisma as any).service.update({
                 where: { id },
                 data: { order },
             })

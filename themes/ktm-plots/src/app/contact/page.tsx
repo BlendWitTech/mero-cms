@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
-import { getSiteData } from '@/lib/cms';
+import { getSiteData, getSection, type PageRecord } from '@/lib/cms';
 import ContactForm from './ContactForm';
+import ContactActions from './ContactActions';
 
 export const metadata: Metadata = {
   title: 'Contact Us',
@@ -11,6 +12,18 @@ export default async function ContactPage() {
   const siteData = await getSiteData();
   const { settings } = siteData;
 
+  const pages = (siteData as any).pages as PageRecord[] ?? [];
+  const heroSec  = getSection(pages, 'contact', 'hero');
+  const formSec  = getSection(pages, 'contact', 'form');
+  const infoSec  = getSection(pages, 'contact', 'info');
+  const mapSec   = getSection(pages, 'contact', 'map');
+
+  const heroTitle    = heroSec.data.title    || 'Contact Us';
+  const heroSubtitle = heroSec.data.subtitle || "Have a question about a plot or want to schedule a free site visit? Our team is ready to help.";
+  const formTitle    = formSec.data.title    || "We\u2019d Love to Hear from You";
+  const officeHours  = infoSec.data.hours    || null;
+  const mapEmbedUrl  = mapSec.data.embedUrl  || null;
+
   const contactItems = [
     ...(settings.address ? [{ icon: 'location', label: 'Address', value: settings.address, href: null }] : []),
     ...(settings.contactPhone ? [{ icon: 'phone', label: 'Phone', value: settings.contactPhone, href: `tel:${settings.contactPhone}` }] : []),
@@ -20,24 +33,27 @@ export default async function ContactPage() {
   return (
     <>
       {/* Header */}
-      <div style={{ background: '#1E1E1E', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
+      <div className="page-hero-band" style={{ background: '#1E1E1E', padding: '4rem 0 3rem', position: 'relative', overflow: 'hidden' }}>
         {/* Red left accent — brand marker */}
         <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '5px', background: '#CC1414' }} />
         <div className="container">
           <div className="tag-label">Get In Touch</div>
-          <h1 style={{ color: '#FFFFFF', fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', fontWeight: 900, marginBottom: '1rem' }}>Contact Us</h1>
+          <h1 style={{ color: '#FFFFFF', fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', fontWeight: 900, marginBottom: '1rem' }}>{heroTitle}</h1>
           <p style={{ color: '#A0A0A0', maxWidth: '480px', lineHeight: 1.7 }}>
-            Have a question about a plot or want to schedule a free site visit? Our team is ready to help.
+            {heroSubtitle}
           </p>
         </div>
       </div>
 
       <section style={{ padding: '4rem 0 5rem', background: '#F4F4F4' }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem', alignItems: 'start' }}>
+          {/* Quick action cards */}
+          <ContactActions />
+
+          <div className="contact-info-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem', alignItems: 'start' }}>
             {/* Contact info */}
             <div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1E1E1E', marginBottom: '1.5rem' }}>We&apos;d Love to Hear from You</h2>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1E1E1E', marginBottom: '1.5rem' }}>{formTitle}</h2>
               <p style={{ color: '#4B5563', lineHeight: 1.8, marginBottom: '2rem' }}>
                 Whether you&apos;re a first-time buyer, an experienced investor, or an NRN looking to invest in Nepal — our team is here to guide you every step of the way.
               </p>
@@ -73,15 +89,26 @@ export default async function ContactPage() {
               {/* Office hours */}
               <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '1.5rem', border: '1px solid #E5E7EB' }}>
                 <h4 style={{ fontWeight: 700, color: '#CC1414', marginBottom: '1rem' }}>Office Hours</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem', color: '#4B5563' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Sunday – Friday</span><span style={{ fontWeight: 600 }}>9:00 AM – 6:00 PM</span>
+                {officeHours ? (
+                  <p style={{ fontSize: '0.875rem', color: '#4B5563', lineHeight: 1.7 }}>{officeHours}</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem', color: '#4B5563' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Sunday – Friday</span><span style={{ fontWeight: 600 }}>9:00 AM – 6:00 PM</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Saturday</span><span style={{ fontWeight: 600 }}>10:00 AM – 4:00 PM</span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Saturday</span><span style={{ fontWeight: 600 }}>10:00 AM – 4:00 PM</span>
-                  </div>
-                </div>
+                )}
               </div>
+
+              {/* Map embed */}
+              {mapEmbedUrl && (
+                <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E7EB', marginTop: '0.5rem' }}>
+                  <iframe src={mapEmbedUrl} width="100%" height="220" style={{ border: 0, display: 'block' }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+                </div>
+              )}
             </div>
 
             {/* Contact form */}

@@ -27,6 +27,7 @@ import {
 import { apiRequest } from '@/lib/api';
 import Alert from '@/components/ui/Alert';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
+import MediaPickerModal from '@/components/ui/MediaPickerModal';
 import { useNotification } from '@/context/NotificationContext';
 import { useModules } from '@/context/ModulesContext';
 
@@ -53,7 +54,6 @@ export default function SettingsPage() {
     // Modules state
     const [availableModules, setAvailableModules] = useState<ModuleMeta[]>([]);
     const [selectedModules, setSelectedModules] = useState<string[]>([]);
-    const [modulesSaving, setModulesSaving] = useState(false);
 
     // Audit Logs State
     const [globalLogs, setGlobalLogs] = useState<any[]>([]);
@@ -61,6 +61,7 @@ export default function SettingsPage() {
     const [isLogsLoading, setIsLogsLoading] = useState(false);
     const [logsPagination, setLogsPagination] = useState({ skip: 0, take: 10 });
     const [editModes, setEditModes] = useState<Record<string, boolean>>({});
+    const [mediaPickerTarget, setMediaPickerTarget] = useState<'logo' | 'favicon' | null>(null);
     const [cancelModal, setCancelModal] = useState<{ isOpen: boolean, section: string | null }>({
         isOpen: false,
         section: null
@@ -113,21 +114,6 @@ export default function SettingsPage() {
         }
     }, [enabledModules]);
 
-    const saveModules = async () => {
-        setModulesSaving(true);
-        try {
-            await apiRequest('/setup/modules', {
-                method: 'POST',
-                body: { enabledModules: selectedModules },
-            });
-            await refreshModules();
-            showToast('Modules updated successfully.', 'success');
-        } catch (err: any) {
-            showToast(err.message || 'Failed to update modules.', 'error');
-        } finally {
-            setModulesSaving(false);
-        }
-    };
 
     const fetchGlobalLogs = async () => {
         setIsLogsLoading(true);
@@ -258,6 +244,82 @@ export default function SettingsPage() {
                                         className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:ring-[12px] focus:ring-blue-600/5 transition-all disabled:opacity-60"
                                     />
                                 </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {/* Logo */}
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Logo</label>
+                                        <div
+                                            onClick={() => isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && setMediaPickerTarget('logo')}
+                                            className={`relative flex items-center gap-4 p-4 bg-slate-50/50 border border-slate-100 rounded-2xl transition-all ${isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) ? 'cursor-pointer hover:border-blue-400 hover:bg-blue-50/30' : 'opacity-60'}`}
+                                        >
+                                            <div className="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                                {settings.logo_url
+                                                    ? <img src={settings.logo_url} alt="Logo" className="w-full h-full object-contain p-1" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                                    : <PhotoIcon className="w-7 h-7 text-slate-300" />
+                                                }
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs font-bold text-slate-700 mb-1">{settings.logo_url ? 'Logo set' : 'No logo'}</p>
+                                                {settings.logo_url && <p className="text-[10px] text-slate-400 truncate">{settings.logo_url}</p>}
+                                                {isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && (
+                                                    <span className="text-[10px] font-bold text-blue-600 mt-1 block">Click to choose from media library</span>
+                                                )}
+                                            </div>
+                                            {settings.logo_url && isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setSettings({ ...settings, logo_url: '' }); }}
+                                                    className="absolute top-2 right-2 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center text-red-500 hover:bg-red-200"
+                                                >
+                                                    <XCircleIcon className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {/* Favicon */}
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Favicon</label>
+                                        <div
+                                            onClick={() => isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && setMediaPickerTarget('favicon')}
+                                            className={`relative flex items-center gap-4 p-4 bg-slate-50/50 border border-slate-100 rounded-2xl transition-all ${isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) ? 'cursor-pointer hover:border-blue-400 hover:bg-blue-50/30' : 'opacity-60'}`}
+                                        >
+                                            <div className="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                                {settings.favicon_url
+                                                    ? <img src={settings.favicon_url} alt="Favicon" className="w-full h-full object-contain p-1" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                                    : <PhotoIcon className="w-7 h-7 text-slate-300" />
+                                                }
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs font-bold text-slate-700 mb-1">{settings.favicon_url ? 'Favicon set' : 'No favicon'}</p>
+                                                {settings.favicon_url && <p className="text-[10px] text-slate-400 truncate">{settings.favicon_url}</p>}
+                                                {isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && (
+                                                    <span className="text-[10px] font-bold text-blue-600 mt-1 block">Click to choose from media library</span>
+                                                )}
+                                            </div>
+                                            {settings.favicon_url && isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setSettings({ ...settings, favicon_url: '' }); }}
+                                                    className="absolute top-2 right-2 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center text-red-500 hover:bg-red-200"
+                                                >
+                                                    <XCircleIcon className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Media Picker Modal */}
+                                {mediaPickerTarget && (
+                                    <MediaPickerModal
+                                        isOpen={true}
+                                        onClose={() => setMediaPickerTarget(null)}
+                                        onSelect={(url) => {
+                                            if (mediaPickerTarget === 'logo') setSettings((s: any) => ({ ...s, logo_url: url }));
+                                            if (mediaPickerTarget === 'favicon') setSettings((s: any) => ({ ...s, favicon_url: url }));
+                                            setMediaPickerTarget(null);
+                                        }}
+                                    />
+                                )}
 
                                 {isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && editModes['branding'] && (
                                     <div className="flex gap-4 pt-4">
@@ -416,9 +478,10 @@ export default function SettingsPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-xl font-bold text-slate-900">Installed Modules</h3>
-                                        <p className="text-xs text-slate-400 mt-0.5">Enable or disable features for this CMS instance.</p>
+                                        <p className="text-xs text-slate-400 mt-0.5">Active modules for this CMS instance. Modules are managed via theme setup.</p>
                                     </div>
                                 </div>
+                                <span className="px-3 py-1.5 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-bold uppercase tracking-widest">View Only</span>
                             </div>
 
                             {MODULE_GROUPS.map(group => {
@@ -431,16 +494,11 @@ export default function SettingsPage() {
                                             {groupModules.map(mod => {
                                                 const isEnabled = selectedModules.includes(mod.key);
                                                 return (
-                                                    <button
+                                                    <div
                                                         key={mod.key}
-                                                        onClick={() => setSelectedModules(prev =>
-                                                            prev.includes(mod.key)
-                                                                ? prev.filter(k => k !== mod.key)
-                                                                : [...prev, mod.key]
-                                                        )}
-                                                        className={`text-left p-4 rounded-2xl border transition-all ${isEnabled
+                                                        className={`text-left p-4 rounded-2xl border select-none ${isEnabled
                                                             ? 'bg-blue-50 border-blue-200 text-slate-900'
-                                                            : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300'
+                                                            : 'bg-slate-50 border-slate-200 text-slate-400'
                                                             }`}
                                                     >
                                                         <div className="flex items-center justify-between mb-1">
@@ -450,23 +508,13 @@ export default function SettingsPage() {
                                                             </span>
                                                         </div>
                                                         <p className="text-xs text-slate-400 leading-snug">{mod.description}</p>
-                                                    </button>
+                                                    </div>
                                                 );
                                             })}
                                         </div>
                                     </div>
                                 );
                             })}
-
-                            <div className="flex gap-3 mt-6 pt-6 border-t border-slate-100">
-                                <button
-                                    onClick={saveModules}
-                                    disabled={modulesSaving}
-                                    className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all disabled:opacity-50"
-                                >
-                                    {modulesSaving ? 'Saving...' : 'Save Module Settings'}
-                                </button>
-                            </div>
                         </div>
                     </div>
                 )}
@@ -851,7 +899,7 @@ export default function SettingsPage() {
                                             </td>
                                             <td className="px-6 py-6">
                                                 <p className="text-[10px] font-mono font-bold text-slate-400 truncate max-w-[200px]" title={JSON.stringify(log.metadata)}>
-                                                    body: settings,.metadata)
+                                                    {log.metadata ? JSON.stringify(log.metadata) : '—'}
                                                 </p>
                                             </td>
                                             <td className="pr-10 py-6 text-right font-display italic">

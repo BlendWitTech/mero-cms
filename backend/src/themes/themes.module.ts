@@ -8,5 +8,6 @@ import { SetupModule } from '../setup/setup.module';
     imports: [PrismaModule, SetupModule],
     controllers: [ThemesController],
     providers: [ThemesService],
+    exports: [ThemesService],
 })
 export class ThemesModule { }

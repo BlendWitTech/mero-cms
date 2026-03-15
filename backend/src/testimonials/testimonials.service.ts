@@ -6,38 +6,46 @@ export class TestimonialsService {
     constructor(private prisma: PrismaService) { }
 
     async create(createTestimonialDto: any) {
-        return this.prisma.testimonial.create({
-            data: createTestimonialDto,
+        const siteSettings = await (this.prisma as any).setting.findMany({
+            where: { key: 'active_theme' }
+        });
+        const activeTheme = siteSettings[0]?.value;
+
+        return (this.prisma as any).testimonial.create({
+            data: {
+                ...createTestimonialDto,
+                theme: activeTheme
+            },
         });
     }
 
     async findAll() {
-        return this.prisma.testimonial.findMany({
+        return (this.prisma as any).testimonial.findMany({
             orderBy: { createdAt: 'desc' },
         });
     }
 
     async findOne(id: string) {
-        return this.prisma.testimonial.findUnique({
+        return (this.prisma as any).testimonial.findUnique({
             where: { id },
         });
     }
 
     async update(id: string, updateTestimonialDto: any) {
-        return this.prisma.testimonial.update({
+        return (this.prisma as any).testimonial.update({
             where: { id },
             data: updateTestimonialDto,
         });
     }
 
     async remove(id: string) {
-        return this.prisma.testimonial.delete({
+        return (this.prisma as any).testimonial.delete({
             where: { id },
         });
     }
 
     async findFeatured(limit: number = 5) {
-        return this.prisma.testimonial.findMany({
+        return (this.prisma as any).testimonial.findMany({
             where: { rating: { gte: 4 } },
             orderBy: { createdAt: 'desc' },
             take: limit,

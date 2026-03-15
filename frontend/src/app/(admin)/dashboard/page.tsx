@@ -10,8 +10,6 @@ import {
     InformationCircleIcon,
     XMarkIcon,
     ClockIcon,
-    FingerPrintIcon,
-    ShieldCheckIcon,
     EyeIcon
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
@@ -22,6 +20,7 @@ import Link from 'next/link';
 import { usePermissions } from '@/context/PermissionsContext';
 import { getVisibleStats, checkPermission } from '@/lib/permissions';
 import CreateContentModal from '@/components/dashboard/CreateContentModal';
+import DashboardLoading from './loading';
 
 function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ');
@@ -66,7 +65,7 @@ const humanizeAction = (action: string, metadata: any) => {
     return desc;
 };
 
-const AuditDetailModal = ({ isOpen, onClose, log }: { isOpen: boolean, onClose: () => void, log: ActivityLog | null }) => {
+const AuditDetailModal = ({ onClose, log }: { isOpen: boolean, onClose: () => void, log: ActivityLog | null }) => {
     if (!log) return null;
 
     return (
@@ -139,6 +138,7 @@ export default function DashboardPage() {
     const [stats, setStats] = useState(initialStats);
     const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
     const [isCreateModalOpen, setCreateModalOpen] = useState(false);
+    const [dataLoading, setDataLoading] = useState(true);
     const { showToast } = useNotification();
     const { permissions, isLoading: permissionsLoading } = usePermissions();
 
@@ -149,6 +149,7 @@ export default function DashboardPage() {
     }, [permissions, permissionsLoading]);
 
     const fetchData = async () => {
+        setDataLoading(true);
         try {
             const canViewAudit = checkPermission(permissions, 'audit_view');
             const canViewAnalytics = checkPermission(permissions, 'analytics_view');
@@ -187,8 +188,12 @@ export default function DashboardPage() {
         } catch (error) {
             console.error('Failed to fetch dashboard data', error);
             showToast('Failed to load dashboard data', 'error');
+        } finally {
+            setDataLoading(false);
         }
     };
+
+    if (permissionsLoading || dataLoading) return <DashboardLoading />;
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
@@ -358,14 +363,6 @@ export default function DashboardPage() {
             </div>
         </div>
     );
-}
-
-function ChevronDownIcon({ className }: { className?: string }) {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className={className}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-        </svg>
-    )
 }
 
 function ChevronRightIcon({ className }: { className?: string }) {

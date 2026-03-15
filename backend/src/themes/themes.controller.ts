@@ -41,19 +41,18 @@ export class ThemesController {
     @RequirePermissions(Permission.THEMES_MANAGE)
     async setupTheme(
         @Param('name') name: string,
-        @Body('importDemoContent') importDemoContent?: boolean
+        @Body('clearPrevious') clearPrevious?: boolean
     ) {
-        return this.themesService.setupTheme(name, importDemoContent);
+        return this.themesService.setupTheme(name, clearPrevious);
     }
 
     @Post(':name/activate')
     @RequirePermissions(Permission.THEMES_MANAGE)
     async activateTheme(
         @Param('name') name: string,
-        @Body('clearData') clearData?: boolean,
         @Body('importDemoContent') importDemoContent?: boolean
     ) {
-        return this.themesService.setActiveTheme(name, clearData, importDemoContent);
+        return this.themesService.setActiveTheme(name, importDemoContent);
     }
 
     @Get('details')
@@ -76,12 +75,23 @@ export class ThemesController {
 
     @Get('active/page-schema')
     async getPageSchema() {
-        return { pageSchema: await this.themesService.getPageSchema() };
+        return this.themesService.getPageSchema();
+    }
+
+    @Post('reset')
+    @RequirePermissions(Permission.THEMES_MANAGE)
+    async resetToBase() {
+        return this.themesService.resetToBaseState();
     }
 
     @Get('active/module-aliases')
     async getModuleAliases() {
         return { moduleAliases: await this.themesService.getModuleAliases() };
+    }
+
+    @Get('active/module-schemas')
+    async getModuleSchemas() {
+        return this.themesService.getModuleSchemas();
     }
 
     @Get('active/config')

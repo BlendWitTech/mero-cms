@@ -5,14 +5,19 @@ import { getImageUrl } from '@/lib/cms';
 
 interface Props {
   siteData: SiteData;
+  secData?: Record<string, any>;
 }
 
-export default function About({ siteData }: Props) {
+export default function About({ siteData, secData = {} }: Props) {
   const { settings } = siteData;
 
-  const title = settings.aboutTitle || "Kathmandu Valley's Most Trusted Land Partner";
-  const content = settings.aboutContent || 'Founded with a vision to make land ownership accessible and transparent, KTM Plots has helped over 500 families and investors secure their piece of the Kathmandu Valley. We specialise in residential, commercial, and agricultural plots across Kathmandu, Lalitpur, Bhaktapur, and surrounding districts.';
-  const aboutImageUrl = getImageUrl(settings.aboutImage);
+  const title = secData.title || settings.aboutTitle || "Kathmandu Valley's Most Trusted Land Partner";
+  const content = secData.content || settings.aboutContent || 'Founded with a vision to make land ownership accessible and transparent, KTM Plots has helped over 500 families and investors secure their piece of the Kathmandu Valley. We specialise in residential, commercial, and agricultural plots across Kathmandu, Lalitpur, Bhaktapur, and surrounding districts.';
+  const aboutImageUrl = getImageUrl(secData.image || settings.aboutImage);
+  const sectionLabel = secData.label || 'About KTM Plots';
+  const secondaryContent = secData.secondaryContent || 'Our team of legal experts, property consultants, and local specialists ensures that every transaction is smooth, secure, and stress-free — from your first site visit to the final registration at the Land Revenue Office.';
+  const buttonText = secData.buttonText || 'Learn More About Us';
+  const buttonUrl = secData.buttonUrl || '/about';
 
   const features = [
     {
@@ -61,7 +66,7 @@ export default function About({ siteData }: Props) {
           {/* Text content */}
           <div>
             <div style={{ color: '#CC1414', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.8rem', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
-              About KTM Plots
+              {sectionLabel}
             </div>
             <h2 className="section-title" style={{ marginBottom: '1rem' }}>
               {title}
@@ -70,10 +75,10 @@ export default function About({ siteData }: Props) {
               {content}
             </p>
             <p style={{ color: '#4B5563', marginBottom: '2rem', lineHeight: 1.8 }}>
-              Our team of legal experts, property consultants, and local specialists ensures that every transaction is smooth, secure, and stress-free — from your first site visit to the final registration at the Land Revenue Office.
+              {secondaryContent}
             </p>
-            <Link href="/about" className="btn-green">
-              Learn More About Us
+            <Link href={buttonUrl} className="btn-green">
+              {buttonText}
             </Link>
           </div>
 

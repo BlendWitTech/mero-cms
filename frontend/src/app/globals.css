@@ -115,6 +115,51 @@
   .low-opacity {
     @apply opacity-20;
   }
+
+  /* ─── Skeleton shimmer ─────────────────────────────────────── */
+  @keyframes shimmer {
+    0%   { transform: translateX(-150%) skewX(-12deg); }
+    100% { transform: translateX(150%)  skewX(-12deg); }
+  }
+
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: #e8edf4;
+  }
+
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent        30%,
+      rgba(255,255,255,0.75) 50%,
+      transparent        70%
+    );
+    animation: shimmer 1.9s ease-in-out infinite;
+  }
+
+  /* ─── Top loading bar ─────────────────────────────────────── */
+  @keyframes loadbar {
+    0%   { width: 0%;   opacity: 1; }
+    70%  { width: 85%;  opacity: 1; }
+    100% { width: 100%; opacity: 0; }
+  }
+
+  .loading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #2563eb, #818cf8, #2563eb);
+    background-size: 200% 100%;
+    animation: loadbar 2.2s ease-out forwards, shimmer 1.5s linear infinite;
+    z-index: 9999;
+    border-radius: 0 9999px 9999px 0;
+    box-shadow: 0 0 12px 2px #3b82f680;
+  }
 }
 
 @media (prefers-color-scheme: dark) {

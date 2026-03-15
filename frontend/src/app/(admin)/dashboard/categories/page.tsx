@@ -9,21 +9,25 @@ import {
     FolderIcon,
     ArrowPathIcon,
     SwatchIcon,
-    DocumentTextIcon
+    DocumentTextIcon,
+    EyeIcon,
+    ExclamationCircleIcon
 } from '@heroicons/react/24/outline';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
 import { useNotification } from '@/context/NotificationContext';
+import { useSettings } from '@/context/SettingsContext';
 import { apiRequest } from '@/lib/api';
 
 function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ');
 }
 
-type TabType = 'blog' | 'projects';
+type TabType = 'blog' | 'plots';
 
 export default function CategoriesPage() {
     const { showToast } = useNotification();
+    const { settings } = useSettings();
     const [activeTab, setActiveTab] = useState<TabType>('blog');
     const [categories, setCategories] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -33,11 +37,23 @@ export default function CategoriesPage() {
     const [initialFormData, setInitialFormData] = useState({ name: '', description: '', slug: '' });
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, id: '' });
     const [showUnsavedAlert, setShowUnsavedAlert] = useState(false);
+    const [isReadOnlyMode, setIsReadOnlyMode] = useState(false);
+    const [contentTheme, setContentTheme] = useState<string | null>(null);
 
     const [mounted, setMounted] = useState(false);
+    const [plotsAlias, setPlotsAlias] = useState('Plot');
 
     useEffect(() => {
         setMounted(true);
+        // Load module aliases to rename the "Project Categories" tab per active theme
+        apiRequest('/themes/active/module-aliases')
+            .then((res: any) => {
+                const raw = res?.moduleAliases?.plots || res?.moduleAliases?.['plot-categories'];
+                if (raw) {
+                    setPlotsAlias(raw.replace(/s$/i, ''));
+                }
+            })
+            .catch(() => {});
         return () => setMounted(false);
     }, []);
 
@@ -45,7 +61,7 @@ export default function CategoriesPage() {
 
     const endpoints = {
         blog: '/categories',
-        projects: '/project-categories'
+        plots: '/plot-categories'
     };
 
     const fetchCategories = async () => {
@@ -82,6 +98,8 @@ export default function CategoriesPage() {
         setEditingCategory(null);
         setFormData({ name: '', description: '', slug: '' });
         setShowUnsavedAlert(false);
+        setIsReadOnlyMode(false);
+        setContentTheme(null);
     };
 
     const openCreateModal = () => {
@@ -97,6 +115,18 @@ export default function CategoriesPage() {
         const initial = { name: cat.name, description: cat.description || '', slug: cat.slug };
         setFormData(initial);
         setInitialFormData(initial);
+
+        const activeTheme = settings['active_theme'];
+        const catTheme = cat.theme;
+
+        if (catTheme && activeTheme && catTheme !== activeTheme) {
+            setIsReadOnlyMode(true);
+            setContentTheme(catTheme);
+        } else {
+            setIsReadOnlyMode(false);
+            setContentTheme(null);
+        }
+
         setIsModalOpen(true);
     };
 
@@ -145,7 +175,7 @@ export default function CategoriesPage() {
                 onClose={() => setConfirmModal({ isOpen: false, id: '' })}
                 onConfirm={handleDelete}
                 title="Delete Category?"
-                message={`Are you sure you want to delete this ${activeTab === 'blog' ? 'blog' : 'project'} category?`}
+                message={`Are you sure you want to delete this ${activeTab === 'blog' ? 'blog' : plotsAlias.toLowerCase()} category?`}
                 variant="danger"
             />
 
@@ -161,45 +191,60 @@ export default function CategoriesPage() {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={handleCloseAttempt} />
                     <div className="relative bg-white rounded-2xl w-full max-w-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300">
-                        <h2 className="text-xl font-bold mb-6">
-                            {editingCategory ? 'Edit' : 'New'} {activeTab === 'blog' ? 'Blog' : 'Project'} Category
+                        <h2 className="text-xl font-bold">
+                            {editingCategory ? (isReadOnlyMode ? 'View' : 'Edit') : 'New'} {activeTab === 'blog' ? 'Blog' : plotsAlias} Category
                         </h2>
+
+                        {isReadOnlyMode && (
+                            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <ExclamationCircleIcon className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                                <div>
+                                    <p className="text-xs font-bold text-amber-900">Incompatible Theme Category</p>
+                                    <p className="text-[10px] font-semibold text-amber-700 mt-0.5">
+                                        This category is tied to the <span className="underline decoration-2 underline-offset-2 capitalize">{contentTheme || 'another'}</span> theme. Modifications are disabled.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                         <form onSubmit={handleSave} className="space-y-4">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Name</label>
-                                <input
+                                 <input
                                     type="text"
                                     required
+                                    disabled={isReadOnlyMode}
                                     value={formData.name}
                                     onChange={(e) => setFormData({
                                         ...formData,
                                         name: e.target.value,
                                         slug: !editingCategory ? e.target.value.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') : formData.slug
                                     })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white transition-all"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white transition-all disabled:opacity-50"
                                 />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Slug</label>
-                                <input
+                                 <input
                                     type="text"
+                                    disabled={isReadOnlyMode}
                                     value={formData.slug}
                                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white transition-all"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white transition-all disabled:opacity-50"
                                 />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Description</label>
-                                <textarea
+                                 <textarea
                                     value={formData.description}
+                                    disabled={isReadOnlyMode}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     rows={3}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white transition-all resize-none"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white transition-all resize-none disabled:opacity-50"
                                 />
                             </div>
-                            <div className="flex gap-3 pt-4">
-                                <button type="button" onClick={handleCloseAttempt} className="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-50 rounded-xl transition-colors">Cancel</button>
-                                <button type="submit" className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">Save Category</button>
+                             <div className="flex gap-3 pt-4">
+                                <button type="button" onClick={handleCloseAttempt} className="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-50 rounded-xl transition-colors">{isReadOnlyMode ? 'Close View' : 'Cancel'}</button>
+                                {!isReadOnlyMode && <button type="submit" className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">Save Category</button>}
                             </div>
                         </form>
                     </div>
@@ -219,7 +264,7 @@ export default function CategoriesPage() {
                     className="inline-flex items-center gap-x-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 leading-none"
                 >
                     <PlusIcon className="h-4 w-4" strokeWidth={3} />
-                    New {activeTab === 'blog' ? 'Blog' : 'Project'} Category
+                    New {activeTab === 'blog' ? 'Blog' : plotsAlias} Category
                 </button>
             </div>
 
@@ -238,16 +283,16 @@ export default function CategoriesPage() {
                     Blog Categories
                 </button>
                 <button
-                    onClick={() => setActiveTab('projects')}
+                    onClick={() => setActiveTab('plots')}
                     className={classNames(
                         "px-6 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2",
-                        activeTab === 'projects'
+                        activeTab === 'plots'
                             ? "bg-white text-blue-600 shadow-sm"
                             : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
                     )}
                 >
                     <SwatchIcon className="h-4 w-4" />
-                    Project Categories
+                    {plotsAlias} Categories
                 </button>
             </div>
 
@@ -273,7 +318,7 @@ export default function CategoriesPage() {
                                 <th className="pl-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Category</th>
                                 <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Slug</th>
                                 <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">
-                                    {activeTab === 'blog' ? 'Posts' : 'Projects'}
+                                    {activeTab === 'blog' ? 'Posts' : `${plotsAlias}s`}
                                 </th>
                                 <th className="pr-8 py-4 text-right"></th>
                             </tr>
@@ -306,17 +351,30 @@ export default function CategoriesPage() {
                                         </td>
                                         <td className="px-4 py-5 text-center">
                                             <span className="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-lg font-mono">
-                                                {cat._count?.posts || cat._count?.projects || 0}
+                                                {cat._count?.posts || cat._count?.plots || 0}
                                             </span>
                                         </td>
                                         <td className="pr-8 py-5 text-right">
                                             <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => openEditModal(cat)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm">
-                                                    <PencilSquareIcon className="h-4 w-4" />
+                                                 <button onClick={() => openEditModal(cat)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm">
+                                                    {(() => {
+                                                        const activeTheme = settings['active_theme'];
+                                                        const catTheme = cat.theme;
+                                                        const isReadOnly = catTheme && activeTheme && catTheme !== activeTheme;
+                                                        return isReadOnly ? <EyeIcon className="h-4 w-4" /> : <PencilSquareIcon className="h-4 w-4" />;
+                                                    })()}
                                                 </button>
-                                                <button onClick={() => setConfirmModal({ isOpen: true, id: cat.id })} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 transition-all shadow-sm">
-                                                    <TrashIcon className="h-4 w-4" />
-                                                </button>
+                                                {(() => {
+                                                    const activeTheme = settings['active_theme'];
+                                                    const catTheme = cat.theme;
+                                                    const isReadOnly = catTheme && activeTheme && catTheme !== activeTheme;
+                                                    if (isReadOnly) return null;
+                                                    return (
+                                                        <button onClick={() => setConfirmModal({ isOpen: true, id: cat.id })} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 transition-all shadow-sm">
+                                                            <TrashIcon className="h-4 w-4" />
+                                                        </button>
+                                                    );
+                                                })()}
                                             </div>
                                         </td>
                                     </tr>

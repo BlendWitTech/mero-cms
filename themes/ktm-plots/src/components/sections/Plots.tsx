@@ -7,6 +7,7 @@ import { getImageUrl } from '@/lib/cms';
 
 interface Props {
   plots: Project[];
+  secData?: Record<string, any>;
 }
 
 function StatusBadge({ status }: { status: string | null }) {
@@ -16,14 +17,19 @@ function StatusBadge({ status }: { status: string | null }) {
   return <span className="badge-available">Available</span>;
 }
 
-export default function Plots({ plots }: Props) {
+export default function Plots({ plots, secData = {} }: Props) {
   const list = plots.length > 0 ? plots : [];
+  const sectionLabel = secData.label || 'Available Now';
+  const sectionTitle = secData.title || 'Featured Plots';
+  const sectionSubtitle = secData.subtitle || 'Handpicked plots across the Kathmandu Valley';
+  const viewAllText = secData.viewAllText || 'View All Plots →';
+  const viewAllUrl = secData.viewAllUrl || '/plots';
 
   if (list.length === 0) {
     return (
       <section id="plots" style={{ padding: '5rem 0', background: '#F4F4F4' }}>
         <div className="container" style={{ textAlign: 'center' }}>
-          <h2 className="section-title">Featured Plots</h2>
+          <h2 className="section-title">{sectionTitle}</h2>
           <p style={{ color: '#6B7280' }}>No plots available at the moment. Please check back soon.</p>
         </div>
       </section>
@@ -33,27 +39,28 @@ export default function Plots({ plots }: Props) {
   return (
     <section id="plots" style={{ padding: '5rem 0', background: '#F4F4F4' }}>
       <div className="container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '3rem' }}>
+        <div className="animate-slide-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '3rem' }}>
           <div>
             <div style={{ color: '#CC1414', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.8rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
-              Available Now
+              {sectionLabel}
             </div>
-            <h2 className="section-title" style={{ marginBottom: '0.25rem' }}>Featured Plots</h2>
-            <p style={{ color: '#6B7280', fontSize: '0.95rem' }}>Handpicked plots across the Kathmandu Valley</p>
+            <h2 className="section-title" style={{ marginBottom: '0.25rem' }}>{sectionTitle}</h2>
+            <p style={{ color: '#6B7280', fontSize: '0.95rem' }}>{sectionSubtitle}</p>
           </div>
-          <Link href="/plots" className="btn-green" style={{ padding: '0.65rem 1.5rem', fontSize: '0.9rem' }}>
-            View All Plots →
+          <Link href={viewAllUrl} className="btn-green" style={{ padding: '0.65rem 1.5rem', fontSize: '0.9rem' }}>
+            {viewAllText}
           </Link>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.75rem' }}>
-          {list.map((plot) => {
+          {list.map((plot, idx) => {
             const imgUrl = getImageUrl(plot.featuredImageUrl);
             return (
               <Link
                 key={plot.id}
                 href={`/plots/${plot.slug}`}
-                style={{ textDecoration: 'none', display: 'block', background: '#FFFFFF', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', transition: 'transform 0.2s, box-shadow 0.2s' }}
+                className={`animate-scale-in delay-${Math.min(idx * 100, 400)}`}
+                style={{ textDecoration: 'none', display: 'block', background: '#FFFFFF', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', transition: 'transform 0.25s ease, box-shadow 0.25s ease' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-4px)';
                   e.currentTarget.style.boxShadow = '0 12px 32px rgba(200,20,20,0.15)';

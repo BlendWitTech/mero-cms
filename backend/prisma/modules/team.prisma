@@ -6,6 +6,8 @@ model TeamMember {
   image       String?
   socialLinks Json?
   order       Int      @default(0)
+  theme       String?
+  attributes  Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

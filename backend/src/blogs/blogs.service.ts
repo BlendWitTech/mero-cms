@@ -43,6 +43,9 @@ export class BlogsService {
             };
         }
 
+        const activeThemeSetting = await (this.prisma as any).setting.findUnique({ where: { key: 'active_theme' } });
+        data.theme = activeThemeSetting?.value || null;
+
         const post = await (this.prisma as any).post.create({ data });
 
         if (seo) {

@@ -15,7 +15,7 @@ export const OPTIONAL_MODULES = [
     'blogs', 'categories', 'tags', 'comments',
     'seo', 'redirects', 'analytics', 'sitemap', 'robots',
     'menus', 'pages', 'themes',
-    'projects', 'project-categories', 'team', 'timeline',
+    'plots', 'plot-categories', 'team',
     'services', 'testimonials', 'leads',
 ];
 
@@ -24,12 +24,11 @@ export const MODULE_LABELS: Record<string, { label: string; description: string;
     categories: { label: 'Blog Categories', description: 'Categorize blog posts', group: 'Content' },
     tags: { label: 'Blog Tags', description: 'Tag blog posts for filtering', group: 'Content' },
     comments: { label: 'Comments', description: 'Reader comments on blog posts', group: 'Content' },
-    projects: { label: 'Portfolio', description: 'Project showcase with galleries and 3D models', group: 'Content' },
-    'project-categories': { label: 'Project Categories', description: 'Categorize portfolio projects', group: 'Content' },
+    plots: { label: 'Plots', description: 'Land plot listings for real-estate themes', group: 'Content' },
+    'plot-categories': { label: 'Plot Categories', description: 'Categorize land plots', group: 'Content' },
     team: { label: 'Team', description: 'Team member profiles', group: 'Content' },
     services: { label: 'Services', description: 'Service offerings with process steps', group: 'Content' },
     testimonials: { label: 'Testimonials', description: 'Client reviews and testimonials', group: 'Content' },
-    timeline: { label: 'Timeline', description: 'Company milestones and history', group: 'Content' },
     leads: { label: 'Lead Forms', description: 'Contact form lead capture and CRM', group: 'Marketing' },
     menus: { label: 'Navigation Menus', description: 'Dynamic nested menu management', group: 'Site' },
     pages: { label: 'Static Pages', description: 'Custom page management', group: 'Site' },

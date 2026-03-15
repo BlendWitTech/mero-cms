@@ -149,6 +149,49 @@ body {
   margin-bottom: 0.6rem;
 }
 
+/* ─── Animations ─────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.93); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes bounceMouse {
+  0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.28; }
+  50%       { transform: translateX(-50%) translateY(6px); opacity: 0.5; }
+}
+@keyframes counterReveal {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-fade-in   { animation: fadeIn    0.7s ease both; }
+.animate-slide-up  { animation: slideUp   0.7s ease both; }
+.animate-slide-right { animation: slideRight 0.6s ease both; }
+.animate-scale-in  { animation: scaleIn   0.6s ease both; }
+.animate-bounce-mouse { animation: bounceMouse 2s ease-in-out infinite; }
+.animate-counter   { animation: counterReveal 0.6s ease both; }
+
+.delay-0   { animation-delay: 0s; }
+.delay-100 { animation-delay: 0.10s; }
+.delay-200 { animation-delay: 0.20s; }
+.delay-300 { animation-delay: 0.30s; }
+.delay-400 { animation-delay: 0.40s; }
+.delay-500 { animation-delay: 0.50s; }
+.delay-600 { animation-delay: 0.60s; }
+.delay-700 { animation-delay: 0.70s; }
+.delay-800 { animation-delay: 0.80s; }
+
 /* ─── Status badges ───────────────────────────────────────────────── */
 .badge-available {
   background: #D1FAE5;
@@ -173,4 +216,79 @@ body {
   font-weight: 700;
   padding: 0.2rem 0.65rem;
   border-radius: 9999px;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+
+/* 480px and below */
+@media (max-width: 480px) {
+  .container { padding: 0 1rem; }
+  .section-title { font-size: 1.5rem; }
+  .section-subtitle { font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .btn-primary, .btn-outline, .btn-green, .btn-outline-dark {
+    padding: 0.7rem 1.4rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* 768px and below */
+@media (max-width: 768px) {
+  /* Inner page hero bands */
+  .page-hero-band { padding: 2.5rem 0 2rem !important; }
+
+  /* Hero — no-image geometric elements hidden on mobile */
+  .hero-noimage-panel,
+  .hero-noimage-brandmark { display: none !important; }
+
+  /* Hero text column: full width when no image */
+  .hero-text-col { max-width: 100% !important; }
+
+  /* Hero container: reduce excessive top/bottom padding */
+  .hero-content-container { padding: 5rem 1.5rem 3rem !important; }
+
+  /* Hero stats row: hide dividers, add gap between items */
+  .hero-stats-divider { display: none !important; }
+  .hero-stats-row { gap: 1.5rem !important; flex-wrap: wrap !important; }
+
+  /* Hero bottom banner strip: tighter gap */
+  .hero-banner-strip { gap: 1.25rem !important; }
+
+  /* CTA Strip right column: remove left border when grid stacks */
+  .cta-right-panel { border-left: none !important; border-top: 1px solid rgba(255,255,255,0.08) !important; }
+
+  /* About page hero: hide red corner panel */
+  .about-hero-panel { display: none !important; }
+
+  /* Plot detail: un-stick sidebar on mobile */
+  .plot-detail-sidebar { position: static !important; top: auto !important; }
+
+  /* Blog post single-column layout */
+  .blog-post-grid { grid-template-columns: 1fr !important; }
+  .blog-post-col { grid-column: 1 !important; }
+
+  /* Contact info + form grid: reduce gap when stacked */
+  .contact-info-grid { gap: 2rem !important; }
+
+  /* Testimonial card padding */
+  .testimonials-card { padding: 1.5rem !important; }
+}
+
+/* 640px and below */
+@media (max-width: 640px) {
+  /* CTA button groups: stack vertically */
+  .hero-cta-buttons {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .hero-cta-buttons > * {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  /* Page hero band: tighter */
+  .page-hero-band { padding: 2rem 0 1.5rem !important; }
+
+  /* Services grid: allow single column on small phones */
+  .services-detail-grid { grid-template-columns: 1fr !important; }
 }

@@ -1,10 +1,13 @@
 model Testimonial {
-  id         String   @id @default(uuid())
-  clientName String
-  clientRole String?
-  content    String   @db.Text
-  rating     Int      @default(5)
-  image      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id            String   @id @default(uuid())
+  clientName    String
+  clientRole    String?
+  clientCompany String?
+  clientPhoto   String?
+  content       String   @db.Text
+  rating        Int      @default(5)
+  theme         String?
+  attributes    Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

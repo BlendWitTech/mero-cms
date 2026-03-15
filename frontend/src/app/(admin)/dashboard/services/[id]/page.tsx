@@ -12,11 +12,14 @@ import {
 import { apiRequest } from '@/lib/api';
 import { useNotification } from '@/context/NotificationContext';
 import { use } from 'react';
+import { useSettings } from '@/context/SettingsContext';
 import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
 
 interface ServiceFormData {
     title: string;
+    subtitle: string;
     description: string;
+    processSteps: string;
     icon: string;
     order: number;
 }
@@ -27,7 +30,10 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
     const [isLoading, setIsLoading] = useState(true);
     const [showUnsavedAlert, setShowUnsavedAlert] = useState(false);
     const { showToast } = useNotification();
+    const { settings } = useSettings();
     const router = useRouter();
+    const [isReadOnly, setIsReadOnly] = useState(false);
+    const [contentTheme, setContentTheme] = useState<string | null>(null);
     const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm<ServiceFormData>();
 
     useEffect(() => {
@@ -39,9 +45,23 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
             setIsLoading(true);
             const data = await apiRequest(`/services/${id}`);
             if (data) {
+                const activeTheme = settings['active_theme'];
+                const serviceTheme = data.theme;
+                
+                if (serviceTheme && activeTheme && serviceTheme !== activeTheme) {
+                    setIsReadOnly(true);
+                    setContentTheme(serviceTheme);
+                } else {
+                    setIsReadOnly(false);
+                    setContentTheme(null);
+                }
+
+                const steps = Array.isArray(data.processSteps) ? data.processSteps.join('\n') : '';
                 reset({
                     title: data.title,
+                    subtitle: data.subtitle || '',
                     description: data.description || '',
+                    processSteps: steps,
                     icon: data.icon || '',
                     order: data.order || 0
                 });
@@ -66,10 +86,14 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
     const onSubmit = async (data: ServiceFormData) => {
         setIsSubmitting(true);
         try {
+            const processSteps = data.processSteps
+                ? data.processSteps.split('\n').map(s => s.trim()).filter(Boolean)
+                : [];
             await apiRequest(`/services/${id}`, {
                 method: 'PATCH',
                 body: JSON.stringify({
                     ...data,
+                    processSteps,
                     order: Number(data.order)
                 })
             });
@@ -110,6 +134,21 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
                 isSaving={isSubmitting}
             />
 
+            {isReadOnly && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="bg-amber-100 p-2 rounded-xl">
+                        <ExclamationCircleIcon className="h-6 w-6 text-amber-600" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-amber-900">Incompatible Theme Content</h3>
+                        <p className="text-xs font-semibold text-amber-700 mt-0.5">
+                            This service was created for the <span className="underline decoration-2 underline-offset-2 capitalize">{contentTheme || 'another'}</span> theme. 
+                            You can view it here, but to make changes, please switch the active theme in Settings.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center gap-4">
                 <button
@@ -139,10 +178,11 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
                             <input
                                 type="text"
                                 {...register('title', { required: 'Title is required' })}
+                                disabled={isReadOnly}
                                 className={`w-full bg-slate-50 border-2 rounded-2xl px-5 py-4 text-sm font-medium transition-all ${errors.title
                                     ? 'border-red-200 focus:border-red-500 focus:ring-red-500/10'
                                     : 'border-slate-100 focus:border-blue-500 focus:ring-blue-500/10'
-                                    }`}
+                                    } ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 placeholder="e.g. Architectural Design"
                             />
                             {errors.title && (
@@ -155,14 +195,43 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
 
                         <div className="space-y-1.5">
                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                                Subtitle
+                            </label>
+                            <input
+                                type="text"
+                                {...register('subtitle')}
+                                disabled={isReadOnly}
+                                className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10 ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                placeholder="e.g. Residential · Commercial · Agricultural"
+                            />
+                            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">Short tagline shown below title</p>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
                                 Description
                             </label>
-                            <textarea
+                             <textarea
                                 {...register('description')}
+                                disabled={isReadOnly}
                                 rows={4}
-                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10"
+                                className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10 ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 placeholder="Brief description of the service..."
                             />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                                Process Steps
+                            </label>
+                            <textarea
+                                {...register('processSteps')}
+                                disabled={isReadOnly}
+                                rows={5}
+                                className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10 ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                placeholder="Site selection & shortlisting&#10;Legal title verification&#10;Price negotiation support&#10;Registration at Land Revenue Office"
+                            />
+                            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">One step per line — shown as numbered list on services page</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-6">
@@ -170,10 +239,11 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
                                     Icon Class
                                 </label>
-                                <input
+                                 <input
                                     type="text"
                                     {...register('icon')}
-                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10"
+                                    disabled={isReadOnly}
+                                    className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10 ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     placeholder="e.g. pencil-circle"
                                 />
                                 <p className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">Phosphor Icons class name</p>
@@ -183,10 +253,11 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
                                     Sort Order
                                 </label>
-                                <input
+                                 <input
                                     type="number"
                                     {...register('order')}
-                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10"
+                                    disabled={isReadOnly}
+                                    className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10 ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     placeholder="0"
                                 />
                             </div>
@@ -194,17 +265,17 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
                     </div>
 
                     <div className="pt-4">
-                        <button
+                         <button
                             type="submit"
-                            disabled={isSubmitting}
-                            className="w-full bg-slate-900 text-white py-5 rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/20 hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                            disabled={isSubmitting || isReadOnly}
+                            className="w-full bg-slate-900 text-white py-5 rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/20 hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                         >
                             {isSubmitting ? (
                                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
                             ) : (
                                 <>
-                                    Update Service
-                                    <PaperAirplaneIcon className="h-4 w-4 text-blue-400 -rotate-45" />
+                                    {isReadOnly ? 'Read Only Mode' : 'Update Service'}
+                                    {!isReadOnly && <PaperAirplaneIcon className="h-4 w-4 text-blue-400 -rotate-45" />}
                                 </>
                             )}
                         </button>

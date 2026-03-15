@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, HttpCode, HttpStatus, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
 import { SetupService } from '../setup/setup.service';
@@ -10,13 +10,40 @@ export class PublicController {
         private prisma: PrismaService,
         private settingsService: SettingsService,
         private setupService: SetupService,
+        private themesService: ThemesService,
     ) { }
+
+    @Get('pages/:slug')
+    async getPage(@Param('slug') slug: string) {
+        const activeThemeSetting = await (this.prisma as any).setting.findUnique({ where: { key: 'active_theme' } });
+        const theme = activeThemeSetting?.value || null;
+
+        // Try to find page for active theme first
+        let page = await (this.prisma as any).page.findFirst({
+            where: { slug, status: 'PUBLISHED', theme },
+        });
+
+        // Fallback: If no theme is active or page not found, try any published page with that slug
+        if (!page) {
+            page = await (this.prisma as any).page.findFirst({
+                where: { slug, status: 'PUBLISHED' },
+            });
+        }
+
+        if (!page) {
+            throw new NotFoundException(`Page '${slug}' not found`);
+        }
+
+        return page;
+    }
 
     @Get('site-data')
     async getSiteData() {
         const [settingsMap, enabledModules, pageSchema, moduleAliases] = await Promise.all([
             this.settingsService.findAll(),
             this.setupService.getEnabledModules(),
+            this.themesService.getPageSchema(),
+            this.themesService.getModuleAliases(),
         ]);
 
         // Build social links from individual keys or a JSON blob
@@ -68,11 +95,13 @@ export class PublicController {
             enabledModules,
         };
 
+        const activeTheme = settingsMap['active_theme'] || null;
         const fetches: Promise<void>[] = [];
 
         if (enabledModules.includes('menus')) {
             fetches.push(
                 (this.prisma as any).menu.findMany({
+                    where: activeTheme ? { theme: activeTheme } : undefined,
                     include: {
                         items: {
                             orderBy: { order: 'asc' },
@@ -89,22 +118,23 @@ export class PublicController {
         if (enabledModules.includes('pages')) {
             fetches.push(
                 (this.prisma as any).page.findMany({
-                    where: { status: 'PUBLISHED' },
-                    select: { id: true, title: true, slug: true, description: true, content: true },
+                    where: { status: 'PUBLISHED', ...(activeTheme ? { theme: activeTheme } : {}) },
+                    select: { id: true, title: true, slug: true, description: true, content: true, data: true },
                 }).then((pages: any[]) => { data.pages = pages; }),
             );
         }
 
-        if (enabledModules.includes('projects')) {
+
+
+        if (enabledModules.includes('plots')) {
             fetches.push(
-                (this.prisma as any).project.findMany({
-                    where: { featured: true },
+                (this.prisma as any).plot.findMany({
+                    where: { featured: true, ...(activeTheme ? { theme: activeTheme } : {}) },
                     include: { category: true },
                     orderBy: { createdAt: 'desc' },
                     take: 20,
-                }).then((projects: any[]) => {
-                    // Normalise coverImage → featuredImageUrl for theme compatibility
-                    data.projects = projects.map((p: any) => ({
+                }).then((plots: any[]) => {
+                    data.plots = plots.map((p: any) => ({
                         ...p,
                         featuredImageUrl: p.coverImage || null,
                         images: p.gallery || [],
@@ -112,10 +142,10 @@ export class PublicController {
                 }),
             );
         }
-
         if (enabledModules.includes('team')) {
             fetches.push(
                 (this.prisma as any).teamMember.findMany({
+                    where: activeTheme ? { theme: activeTheme } : undefined,
                     orderBy: { order: 'asc' },
                 }).then((team: any[]) => { data.team = team; }),
             );
@@ -124,6 +154,7 @@ export class PublicController {
         if (enabledModules.includes('testimonials')) {
             fetches.push(
                 (this.prisma as any).testimonial.findMany({
+                    where: activeTheme ? { theme: activeTheme } : undefined,
                     take: 20,
                     orderBy: { createdAt: 'desc' },
                 }).then((testimonials: any[]) => {
@@ -141,16 +172,9 @@ export class PublicController {
         if (enabledModules.includes('services')) {
             fetches.push(
                 (this.prisma as any).service.findMany({
+                    where: activeTheme ? { theme: activeTheme } : undefined,
                     orderBy: { order: 'asc' },
                 }).then((services: any[]) => { data.services = services; }),
-            );
-        }
-
-        if (enabledModules.includes('timeline')) {
-            fetches.push(
-                (this.prisma as any).milestone.findMany({
-                    orderBy: { order: 'asc' },
-                }).then((milestones: any[]) => { data.milestones = milestones; }),
             );
         }
 
@@ -217,15 +241,6 @@ export class PublicController {
         return { ...post, featuredImageUrl: post.coverImage || null };
     }
 
-    // ── Public pages ──────────────────────────────────────────────────────────
-
-    @Get('pages/:slug')
-    async getPage(@Param('slug') slug: string) {
-        return (this.prisma as any).page.findFirst({
-            where: { slug, status: 'PUBLISHED' },
-            select: { id: true, title: true, slug: true, content: true, description: true },
-        });
-    }
 
     // ── Lead capture ──────────────────────────────────────────────────────────
 
@@ -253,10 +268,13 @@ export class PublicController {
                     status: 'NEW',
                 },
             });
-            return { success: true, id: lead.id };
-        } catch (e) {
-            // If leads module is not active
-            return { success: true, message: 'Message received. We will get back to you soon.' };
+            return { success: true, id: lead.id, message: 'Thank you! Your message has been sent successfully.' };
+        } catch (error) {
+            console.error('Lead submission error:', error);
+            return { 
+                success: false, 
+                message: 'We are currently unable to process your request. Please try again later.' 
+            };
         }
     }
 }

@@ -51,7 +51,7 @@ mero_cms/
 │       ├── setup/    # Setup wizard page
 │       └── (admin)/dashboard/
 ├── themes/           # Built-in themes (auto-discovered)
-│   ├── mero-cms-marketing/  # Marketing site theme (port 3002)
+│   ├── mero-starter-theme/  # Mero Starter Theme (port 3002)
 │   └── starter/             # Minimal starter theme
 └── scripts/
     └── build-schema.js  # Assembles schema from selected modules
@@ -104,7 +104,7 @@ Themes are Next.js apps that read from the CMS public API (`GET /public/site-dat
 ```bash
 npm run dev          # Backend + Admin UI
 npm run dev:all      # Backend + Admin UI + Marketing theme
-npm run dev:theme    # Marketing theme only (port 3002)
+npm run dev:theme    # Starter theme only (port 3002)
 npm run build        # Build backend and frontend
 ```
 

@@ -8,12 +8,15 @@ import {
     ArrowLeftIcon,
     PaperAirplaneIcon,
     ExclamationCircleIcon,
+    ArrowUpTrayIcon,
     StarIcon as StarIconOutline
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { apiRequest } from '@/lib/api';
 import { useNotification } from '@/context/NotificationContext';
+import { useSettings } from '@/context/SettingsContext';
 import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
+import MediaPickerModal from '@/components/ui/MediaPickerModal';
 
 interface TestimonialFormData {
     clientName: string;
@@ -29,7 +32,11 @@ export default function EditTestimonialPage({ params }: { params: Promise<{ id: 
     const [isLoading, setIsLoading] = useState(true);
     const [showUnsavedAlert, setShowUnsavedAlert] = useState(false);
     const { showToast } = useNotification();
+    const { settings } = useSettings();
     const router = useRouter();
+    const [isReadOnly, setIsReadOnly] = useState(false);
+    const [contentTheme, setContentTheme] = useState<string | null>(null);
+    const [isMediaOpen, setIsMediaOpen] = useState(false);
     const { register, handleSubmit, watch, reset, setValue, formState: { errors, isDirty } } = useForm<TestimonialFormData>({
         defaultValues: {
             rating: 5
@@ -47,6 +54,17 @@ export default function EditTestimonialPage({ params }: { params: Promise<{ id: 
             setIsLoading(true);
             const data = await apiRequest(`/testimonials/${id}`);
             if (data) {
+                const activeTheme = settings['active_theme'];
+                const testimonialTheme = data.theme;
+
+                if (testimonialTheme && activeTheme && testimonialTheme !== activeTheme) {
+                    setIsReadOnly(true);
+                    setContentTheme(testimonialTheme);
+                } else {
+                    setIsReadOnly(false);
+                    setContentTheme(null);
+                }
+
                 reset({
                     clientName: data.clientName,
                     clientRole: data.clientRole || '',
@@ -119,6 +137,21 @@ export default function EditTestimonialPage({ params }: { params: Promise<{ id: 
                 isSaving={isSubmitting}
             />
 
+            {isReadOnly && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="bg-amber-100 p-2 rounded-xl">
+                        <ExclamationCircleIcon className="h-6 w-6 text-amber-600" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-amber-900">Incompatible Theme Content</h3>
+                        <p className="text-xs font-semibold text-amber-700 mt-0.5">
+                            This testimonial was created for the <span className="underline decoration-2 underline-offset-2 capitalize">{contentTheme || 'another'}</span> theme. 
+                            You can view it here, but to make changes, please switch the active theme in Settings.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center gap-4">
                 <button
@@ -146,13 +179,14 @@ export default function EditTestimonialPage({ params }: { params: Promise<{ id: 
                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center justify-between">
                                     Client Name <span className="text-blue-500 font-bold">*</span>
                                 </label>
-                                <input
+                                 <input
                                     type="text"
                                     {...register('clientName', { required: 'Client Name is required' })}
+                                    disabled={isReadOnly}
                                     className={`w-full bg-slate-50 border-2 rounded-2xl px-5 py-4 text-sm font-medium transition-all ${errors.clientName
                                         ? 'border-red-200 focus:border-red-500 focus:ring-red-500/10'
                                         : 'border-slate-100 focus:border-blue-500 focus:ring-blue-500/10'
-                                        }`}
+                                        } ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     placeholder="e.g. John Doe"
                                 />
                                 {errors.clientName && (
@@ -167,10 +201,11 @@ export default function EditTestimonialPage({ params }: { params: Promise<{ id: 
                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center justify-between">
                                     Client Role
                                 </label>
-                                <input
+                                 <input
                                     type="text"
                                     {...register('clientRole')}
-                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10"
+                                    disabled={isReadOnly}
+                                    className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10 ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     placeholder="e.g. CEO, Tech Corp"
                                 />
                             </div>
@@ -180,13 +215,14 @@ export default function EditTestimonialPage({ params }: { params: Promise<{ id: 
                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
                                 Testimonial Content <span className="text-blue-500 font-bold">*</span>
                             </label>
-                            <textarea
+                             <textarea
                                 {...register('content', { required: 'Content is required' })}
+                                disabled={isReadOnly}
                                 rows={4}
                                 className={`w-full bg-slate-50 border-2 rounded-2xl px-5 py-4 text-sm font-medium transition-all ${errors.content
                                     ? 'border-red-200 focus:border-red-500 focus:ring-red-500/10'
                                     : 'border-slate-100 focus:border-blue-500 focus:ring-blue-500/10'
-                                    }`}
+                                    } ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 placeholder="What did they say?"
                             />
                             {errors.content && (
@@ -203,16 +239,17 @@ export default function EditTestimonialPage({ params }: { params: Promise<{ id: 
                             </label>
                             <div className="flex items-center gap-2">
                                 {[1, 2, 3, 4, 5].map((star) => (
-                                    <button
+                                     <button
                                         key={star}
                                         type="button"
+                                        disabled={isReadOnly}
                                         onClick={() => setValue('rating', star)}
-                                        className="focus:outline-none transition-transform active:scale-90"
+                                        className={`focus:outline-none transition-transform ${!isReadOnly ? 'active:scale-90' : 'cursor-not-allowed'}`}
                                     >
                                         {star <= currentRating ? (
                                             <StarIconSolid className="h-8 w-8 text-yellow-400" />
                                         ) : (
-                                            <StarIconOutline className="h-8 w-8 text-slate-300 hover:text-yellow-400 transition-colors" />
+                                            <StarIconOutline className={`h-8 w-8 text-slate-300 ${!isReadOnly ? 'hover:text-yellow-400' : ''} transition-colors`} />
                                         )}
                                     </button>
                                 ))}
@@ -222,30 +259,47 @@ export default function EditTestimonialPage({ params }: { params: Promise<{ id: 
 
                         <div className="space-y-1.5">
                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                                Client Image URL
+                                Client Image
                             </label>
-                            <input
-                                type="text"
-                                {...register('image')}
-                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10"
-                                placeholder="https://..."
+                            <div
+                                onClick={() => { if (!isReadOnly) setIsMediaOpen(true); }}
+                                className={`aspect-square bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 ${!isReadOnly ? 'hover:bg-slate-100/50 hover:border-blue-400 hover:text-blue-500 cursor-pointer' : 'opacity-50 cursor-not-allowed'} transition-all group overflow-hidden relative`}
+                            >
+                                {watch('image') ? (
+                                    <img src={watch('image')} className="w-full h-full object-cover" alt="" />
+                                ) : (
+                                    <>
+                                        <ArrowUpTrayIcon className="h-6 w-6 mb-1 group-hover:scale-110 transition-transform" />
+                                        <span className="text-[10px] font-bold">Select from Library</span>
+                                    </>
+                                )}
+                            </div>
+                            {watch('image') && !isReadOnly && (
+                                <button type="button" onClick={() => setValue('image', '', { shouldDirty: true })} className="text-[10px] font-bold text-red-500 hover:text-red-600 uppercase tracking-widest transition-colors">
+                                    Remove
+                                </button>
+                            )}
+                            <MediaPickerModal
+                                isOpen={isMediaOpen}
+                                onClose={() => setIsMediaOpen(false)}
+                                onSelect={(url) => { setValue('image', url, { shouldDirty: true }); setIsMediaOpen(false); }}
+                                current={watch('image')}
                             />
-                            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">Enter the URL of the image from your media library</p>
                         </div>
                     </div>
 
                     <div className="pt-4">
-                        <button
+                         <button
                             type="submit"
-                            disabled={isSubmitting}
-                            className="w-full bg-slate-900 text-white py-5 rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/20 hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                            disabled={isSubmitting || isReadOnly}
+                            className="w-full bg-slate-900 text-white py-5 rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/20 hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                         >
                             {isSubmitting ? (
                                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
                             ) : (
                                 <>
-                                    Update Testimonial
-                                    <PaperAirplaneIcon className="h-4 w-4 text-blue-400 -rotate-45" />
+                                    {isReadOnly ? 'Read Only Mode' : 'Update Testimonial'}
+                                    {!isReadOnly && <PaperAirplaneIcon className="h-4 w-4 text-blue-400 -rotate-45" />}
                                 </>
                             )}
                         </button>
