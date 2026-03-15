@@ -18,6 +18,21 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+const CRC_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let j = 0; j < 8; j++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    table[i] = c;
+  }
+  return table;
+})();
+function crc32(buf) {
+  let crc = 0xffffffff;
+  for (let i = 0; i < buf.length; i++) crc = (crc >>> 8) ^ CRC_TABLE[(crc ^ buf[i]) & 0xff];
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
 // ── Argument parsing ─────────────────────────────────────────────────────────
 
 const themeSlug = process.argv[2];
@@ -50,7 +65,7 @@ console.log(`Output: ${outFile}`);
 // ── Excluded patterns ────────────────────────────────────────────────────────
 
 const EXCLUDE_DIRS = new Set(['node_modules', '.next', '.git']);
-const EXCLUDE_FILES = new Set(['package-lock.json', 'next-env.d.ts', '.env.local', '.DS_Store']);
+const EXCLUDE_FILES = new Set(['package-lock.json', 'next-env.d.ts', '.env.local', '.DS_Store', 'vercel.json']);
 const EXCLUDE_EXTENSIONS = new Set(['.log']);
 
 function shouldExclude(relPath) {
@@ -220,23 +235,3 @@ function writeZip(fileList, baseDir, outputPath) {
   fs.closeSync(fd);
 }
 
-/** CRC-32 implementation (no external dependencies). */
-function crc32(buf) {
-  let crc = 0xffffffff;
-  for (let i = 0; i < buf.length; i++) {
-    crc = (crc >>> 8) ^ CRC_TABLE[(crc ^ buf[i]) & 0xff];
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-const CRC_TABLE = (() => {
-  const table = new Uint32Array(256);
-  for (let i = 0; i < 256; i++) {
-    let c = i;
-    for (let j = 0; j < 8; j++) {
-      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    }
-    table[i] = c;
-  }
-  return table;
-})();

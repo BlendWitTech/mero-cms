@@ -7,6 +7,9 @@ build/
 .next/
 out/
 
+# Theme zip exports
+themes/*.zip
+
 # Environment files (never commit secrets)
 .env
 .env.local
