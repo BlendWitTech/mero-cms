@@ -190,7 +190,7 @@ function FieldEditor({ field, value, onChange, disabled }: {
                         </div>
                         <div className="flex flex-col gap-1 flex-1">
                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Label</span>
-                            <input type="text" disabled={disabled} value={stat.label || ''} onChange={(e) => { const ns = [...items]; ns[i] = { ...ns[i], label: e.target.value }; onChange(ns); }} placeholder="Plots Sold" className={base} />
+                            <input type="text" disabled={disabled} value={stat.label || ''} onChange={(e) => { const ns = [...items]; ns[i] = { ...ns[i], label: e.target.value }; onChange(ns); }} placeholder="Units Sold" className={base} />
                         </div>
                         <button disabled={disabled} onClick={() => onChange(items.filter((_, j) => j !== i))} className="p-2 text-red-400 hover:text-red-600 disabled:opacity-40 mt-4">
                             <TrashIcon className="w-4 h-4" />
@@ -439,7 +439,7 @@ export default function SitePagesPage() {
                     <p className="text-xs font-bold text-amber-800 mb-1">For theme developers:</p>
                     <p className="text-xs text-amber-700 leading-relaxed">
                         Add a <code className="bg-amber-100 px-1 rounded">pageSchema</code> array to your <code className="bg-amber-100 px-1 rounded">theme.json</code> to define which pages and sections are editable.
-                        See the KTM Plots theme as a reference implementation.
+                        See the <code className="bg-amber-100 px-1 rounded">cms-starter</code> theme as a reference implementation.
                     </p>
                 </div>
             </div>
@@ -525,7 +525,7 @@ export default function SitePagesPage() {
             <div className="mt-10 bg-amber-50 border border-amber-200 rounded-2xl p-6">
                 <h3 className="font-bold text-amber-800 text-sm mb-2">About Content Modules</h3>
                 <p className="text-xs text-amber-700 leading-relaxed">
-                    Dynamic content like plots, team members, testimonials, and services is managed under <em>Content</em> in the sidebar.
+                    Dynamic content like team members, testimonials, and services is managed under <em>Content</em> in the sidebar.
                     Theme developers can customise which sections appear on each page by editing <code>pageSchema</code> in <code>theme.json</code>.
                 </p>
             </div>

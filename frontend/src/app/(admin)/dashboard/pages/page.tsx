@@ -356,7 +356,7 @@ export default function PagesIndex() {
                                     value={seoFormData.keywords}
                                     onChange={(e) => setSeoFormData({ ...seoFormData, keywords: e.target.value })}
                                     className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10"
-                                    placeholder="land nepal, kathmandu plots, real estate..."
+                                    placeholder="cms, content management, website builder..."
                                 />
                             </div>
                         </div>

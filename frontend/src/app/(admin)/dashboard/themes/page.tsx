@@ -561,7 +561,7 @@ export default function ThemesPage() {
                                 <ExclamationTriangleIcon className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                                 <div>
                                     <p className="text-xs font-bold text-red-800">This action cannot be undone</p>
-                                    <p className="text-xs text-red-600 mt-0.5">All content, pages, menus, projects, team, testimonials, services, and theme settings will be permanently deleted.</p>
+                                    <p className="text-xs text-red-600 mt-0.5">All content, pages, menus, team, testimonials, services, and theme settings will be permanently deleted.</p>
                                 </div>
                             </div>
                             <p className="text-sm text-slate-600">

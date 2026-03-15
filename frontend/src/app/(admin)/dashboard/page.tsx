@@ -216,10 +216,10 @@ export default function DashboardPage() {
                     )}
                     {checkPermission(permissions, 'content_create') && (
                         <Link
-                            href="/dashboard/projects?action=new"
+                            href="/dashboard/blogs?action=new"
                             className="px-6 py-2.5 rounded-xl bg-blue-600 shadow-lg shadow-blue-600/30 text-white font-bold text-xs uppercase tracking-widest hover:bg-blue-700 hover:-translate-y-0.5 transition-all active:translate-y-0 active:scale-95 flex items-center justify-center"
                         >
-                            New Project
+                            New Post
                         </Link>
                     )}
                 </div>
