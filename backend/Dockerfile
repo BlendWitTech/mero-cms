@@ -1,12 +1,19 @@
 # Backend Dockerfile
+# Build context must be the repo root so themes/ can be copied.
+# In Railway: Root Directory = / (repo root), Dockerfile Path = backend/Dockerfile
 FROM node:20-slim
 
 WORKDIR /app
 
-COPY package*.json ./
+# Install backend dependencies
+COPY backend/package*.json ./
 RUN npm install
 
-COPY . .
+# Copy backend source
+COPY backend/ .
+
+# Copy built-in themes so the CMS can list and activate them
+COPY themes/ /themes/
 
 ARG DATABASE_URL=postgresql://ci:ci@localhost:5432/ci
 ENV DATABASE_URL=${DATABASE_URL}
