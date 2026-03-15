@@ -4,14 +4,16 @@
   "private": true,
   "workspaces": [
     "backend",
-    "frontend"
+    "frontend",
+    "demo"
   ],
   "scripts": {
     "dev:backend": "npm run start:dev -w backend",
     "dev:frontend": "npm run dev -w frontend",
+    "dev:demo": "npm run dev -w demo",
     "dev:theme": "node scripts/dev-theme.js",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:theme\"",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:demo\"",
     "build": "npm run build -w backend && npm run build -w frontend",
     "install:all": "npm install",
     "setup": "powershell -ExecutionPolicy Bypass -File ./scripts/setup.ps1",
