@@ -1,0 +1,11 @@
+backend/node_modules
+backend/dist
+backend/*.tsbuildinfo
+backend/.env
+backend/.env.local
+backend/coverage
+frontend/
+node_modules/
+themes/*/node_modules/
+themes/*/.next/
+themes/*/package-lock.json
