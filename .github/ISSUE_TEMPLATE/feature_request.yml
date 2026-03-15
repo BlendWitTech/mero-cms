@@ -1,0 +1,95 @@
+name: Feature Request
+description: Suggest a new feature or improvement. Available to license holders and approved contributors.
+title: "[Feature]: "
+labels: ["enhancement", "needs-review"]
+assignees:
+  - BlendWitTech
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature requests from **license holders** are prioritised in the roadmap.
+        Requests from approved contributors are also welcome.
+
+  - type: dropdown
+    id: access-type
+    attributes:
+      label: Access type
+      options:
+        - Approved Contributor
+        - License Holder — CMS Only
+        - License Holder — CMS + Custom Theme
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the problem or limitation you're facing.
+      placeholder: "e.g. I need to schedule blog posts to publish at a future date, but there's no scheduling option..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe how you'd like this to work.
+      placeholder: "e.g. Add a 'Publish At' date/time picker on the blog post editor. If set, the post stays in Draft until that time..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: Have you found any workarounds or alternative approaches?
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Which module or area does this affect?
+      options:
+        - Blogs / Categories / Tags
+        - Pages
+        - Menus
+        - Services
+        - Team
+        - Testimonials
+        - Leads
+        - Media
+        - Analytics
+        - SEO / Redirects / Sitemap
+        - Themes
+        - Roles & Permissions
+        - Auth / Users
+        - Setup Wizard
+        - Admin UI (general)
+        - Backend API (general)
+        - Docker / Deployment
+        - Demo Playground
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: How important is this to you?
+      options:
+        - Critical — blocking my use of the CMS
+        - High — would significantly improve my workflow
+        - Medium — nice to have
+        - Low — minor improvement
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues and this is not a duplicate
+          required: true

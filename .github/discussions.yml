@@ -1,0 +1,12 @@
+# Mero CMS — Discussion Categories
+# After enabling Discussions in GitHub Settings, create these categories manually:
+#
+# Category          Emoji  Format          Purpose
+# ─────────────────────────────────────────────────────────────────────────────
+# Announcements     📢     Announcement    Owner posts only — releases, news
+# Q&A               💬     Q&A             Questions from license holders & contributors
+# Feature Ideas     💡     Open-ended      Suggest and vote on features
+# Show & Tell       🎨     Open-ended      Share sites built with Mero CMS
+# General           🗣️     Open-ended      General discussion
+# ─────────────────────────────────────────────────────────────────────────────
+# See SETUP.md for step-by-step instructions to create these in GitHub UI.
