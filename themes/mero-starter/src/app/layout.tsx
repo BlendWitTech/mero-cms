@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
         default: settings.siteTitle,
         template: `%s | ${settings.siteTitle}`,
       },
-      description: settings.tagline,
+      description: settings.metaDescription || settings.tagline,
       icons: settings.faviconUrl ? { icon: cmsImageUrl(settings.faviconUrl)! } : {},
       openGraph: {
         type: 'website',
@@ -22,8 +22,8 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   } catch {
     return {
-      title: 'My Site',
-      description: 'Powered by Mero CMS',
+      title: 'Mero CMS',
+      description: 'The flexible CMS for modern websites',
     };
   }
 }

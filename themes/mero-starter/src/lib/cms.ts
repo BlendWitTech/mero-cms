@@ -1,5 +1,5 @@
 /**
- * Mero CMS Client Library
+ * Mero CMS Client Library — mero-starter theme
  * Typed, ISR-ready functions for fetching data from the CMS backend.
  *
  * Set CMS_API_URL in .env.local (default: http://localhost:3001)
@@ -12,28 +12,40 @@ const CMS_API_URL = process.env.CMS_API_URL || 'http://localhost:3001';
 export interface SiteSettings {
   siteTitle: string;
   tagline: string;
-  siteUrl: string;
-  contactEmail: string;
-  contactPhone: string;
-  address: string;
-  copyright: string;
-  socialLinks: {
-    facebook?: string;
-    twitter?: string;
-    instagram?: string;
-    linkedin?: string;
-    youtube?: string;
-    github?: string;
-  };
   logoUrl: string | null;
   faviconUrl: string | null;
+  primaryColor: string | null;
+  footerText: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  address: string | null;
+  socialLinks: Record<string, string> | null;
+  activeTheme: string | null;
+  // Hero & marketing section content (editable via Admin > Settings)
+  heroTitle: string | null;
+  heroSubtitle: string | null;
+  heroBgImage: string | null;
+  aboutTitle: string | null;
+  aboutContent: string | null;
+  aboutImage: string | null;
+  ctaText: string | null;
+  ctaUrl: string | null;
+  metaDescription: string | null;
+}
+
+export interface SiteData {
+  settings: SiteSettings;
+  menus: Menu[];
+  services: Service[];
+  testimonials: Testimonial[];
+  recentPosts: Post[];
 }
 
 export interface MenuItem {
   id: string;
   label: string;
   url: string;
-  target: '_self' | '_blank';
+  target?: '_self' | '_blank';
   order: number;
   children?: MenuItem[];
 }
@@ -52,30 +64,13 @@ export interface Post {
   excerpt: string | null;
   content: string;
   featuredImage: string | null;
-  status: 'draft' | 'published' | 'archived';
+  featuredImageUrl: string | null;
+  status: string;
   publishedAt: string | null;
   createdAt: string;
-  updatedAt: string;
-  author: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  categories: Category[];
-  tags: Tag[];
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-}
-
-export interface Tag {
-  id: string;
-  name: string;
-  slug: string;
+  author?: { id?: string; name: string; email?: string };
+  categories?: { id?: string; name: string; slug: string }[];
+  tags?: { id?: string; name: string; slug: string }[];
 }
 
 export interface Page {
@@ -86,29 +81,6 @@ export interface Page {
   status: 'draft' | 'published';
   createdAt: string;
   updatedAt: string;
-}
-
-export interface Project {
-  id: string;
-  title: string;
-  slug: string;
-  description: string | null;
-  content: string | null;
-  featuredImage: string | null;
-  clientName: string | null;
-  projectUrl: string | null;
-  completedAt: string | null;
-  status: string;
-  category: ProjectCategory | null;
-  technologies: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ProjectCategory {
-  id: string;
-  name: string;
-  slug: string;
 }
 
 export interface TeamMember {
@@ -132,26 +104,16 @@ export interface Testimonial {
   clientPhoto: string | null;
   content: string;
   rating: number | null;
-  order: number;
+  order?: number;
 }
 
 export interface Service {
   id: string;
   title: string;
-  slug: string;
+  slug?: string;
   description: string | null;
-  content: string | null;
   icon: string | null;
-  featuredImage: string | null;
-  order: number;
-}
-
-export interface Milestone {
-  id: string;
-  title: string;
-  description: string | null;
-  date: string | null;
-  order: number;
+  order?: number;
 }
 
 export interface SeoMeta {
@@ -165,18 +127,38 @@ export interface SeoMeta {
   noIndex: boolean;
 }
 
-export interface SiteData {
-  settings: SiteSettings;
-  enabledModules: string[];
-  menus: Menu[];
-  pages: Page[];
-  projects: Project[];
-  team: TeamMember[];
-  testimonials: Testimonial[];
-  services: Service[];
-  milestones: Milestone[];
-  recentPosts: Post[];
-}
+// ─── Fallback data ─────────────────────────────────────────────────────────
+
+const FALLBACK_SITE_DATA: SiteData = {
+  settings: {
+    siteTitle: 'Mero CMS',
+    tagline: 'The flexible CMS for modern websites',
+    logoUrl: null,
+    faviconUrl: null,
+    primaryColor: '#4f46e5',
+    footerText: null,
+    contactEmail: null,
+    contactPhone: null,
+    address: null,
+    socialLinks: null,
+    activeTheme: 'mero-starter',
+    heroTitle: 'Build Powerful Websites — Without the Complexity',
+    heroSubtitle:
+      'Mero CMS gives developers and businesses a clean content management system with a beautiful dashboard, theme switching, and a public REST API.',
+    heroBgImage: null,
+    aboutTitle: 'Why Mero CMS?',
+    aboutContent:
+      'Mero CMS is built for modern teams who need speed without sacrificing flexibility. Deploy in minutes, customize via themes, and let clients manage their own content.',
+    aboutImage: null,
+    ctaText: 'Get Started Free',
+    ctaUrl: 'https://github.com/BlendWitTech/blendwit-cms-saas',
+    metaDescription: null,
+  },
+  menus: [],
+  services: [],
+  testimonials: [],
+  recentPosts: [],
+};
 
 // ─── Fetch Helper ──────────────────────────────────────────────────────────
 
@@ -186,11 +168,9 @@ async function cmsGet<T>(path: string, revalidate = 60): Promise<T> {
     next: { revalidate },
     headers: { 'Content-Type': 'application/json' },
   });
-
   if (!res.ok) {
     throw new Error(`CMS fetch failed: ${url} → ${res.status} ${res.statusText}`);
   }
-
   return res.json() as Promise<T>;
 }
 
@@ -201,7 +181,20 @@ async function cmsGet<T>(path: string, revalidate = 60): Promise<T> {
  * Ideal for layouts and homepages. Revalidates every 60s by default.
  */
 export async function getSiteData(revalidate = 60): Promise<SiteData> {
-  return cmsGet<SiteData>('/public/site-data', revalidate);
+  try {
+    const data = await cmsGet<Partial<SiteData>>('/public/site-data', revalidate);
+    return {
+      ...FALLBACK_SITE_DATA,
+      ...data,
+      settings: { ...FALLBACK_SITE_DATA.settings, ...(data.settings ?? {}) },
+      menus: data.menus ?? [],
+      services: data.services ?? [],
+      testimonials: data.testimonials ?? [],
+      recentPosts: data.recentPosts ?? [],
+    };
+  } catch {
+    return FALLBACK_SITE_DATA;
+  }
 }
 
 /**
@@ -238,7 +231,11 @@ export async function getPublishedPosts(
     status: 'published',
   });
   if (category) params.set('category', category);
-  return cmsGet<PostListResponse>(`/posts/public?${params}`, revalidate);
+  try {
+    return await cmsGet<PostListResponse>(`/posts/public?${params}`, revalidate);
+  } catch {
+    return { data: [], total: 0, page: 1, limit };
+  }
 }
 
 /**
@@ -249,55 +246,6 @@ export async function getPostBySlug(slug: string, revalidate = 60): Promise<Post
     return await cmsGet<Post>(`/posts/public/${slug}`, revalidate);
   } catch {
     return null;
-  }
-}
-
-// ── Projects ────────────────────────────────────────────────────────────
-
-export interface ProjectListResponse {
-  data: Project[];
-  total: number;
-}
-
-/**
- * Fetch all published projects.
- */
-export async function getProjects(
-  options: { category?: string } = {},
-  revalidate = 60
-): Promise<Project[]> {
-  const params = new URLSearchParams({ status: 'published' });
-  if (options.category) params.set('category', options.category);
-  try {
-    const res = await cmsGet<Project[] | ProjectListResponse>(
-      `/projects/public?${params}`,
-      revalidate
-    );
-    return Array.isArray(res) ? res : res.data;
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Fetch a single project by slug.
- */
-export async function getProjectBySlug(slug: string, revalidate = 60): Promise<Project | null> {
-  try {
-    return await cmsGet<Project>(`/projects/public/${slug}`, revalidate);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Fetch all project categories.
- */
-export async function getProjectCategories(revalidate = 300): Promise<ProjectCategory[]> {
-  try {
-    return await cmsGet<ProjectCategory[]>('/project-categories/public', revalidate);
-  } catch {
-    return [];
   }
 }
 
@@ -375,5 +323,17 @@ export async function getSeoMeta(route: string, revalidate = 300): Promise<SeoMe
 export function cmsImageUrl(path: string | null | undefined): string | null {
   if (!path) return null;
   if (path.startsWith('http')) return path;
-  return `${CMS_API_URL}${path}`;
+  return `${CMS_API_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+}
+
+/**
+ * Format a date string to a human-readable format.
+ */
+export function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 }

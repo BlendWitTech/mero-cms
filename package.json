@@ -20,7 +20,8 @@
     "db:seed": "npm run seed -w backend",
     "start": "node ./scripts/start.js",
     "start:prod": "node backend/dist/main",
-    "package-theme": "node scripts/package-theme.js"
+    "package-theme": "node scripts/package-theme.js",
+    "zip-theme": "node scripts/zip-theme.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

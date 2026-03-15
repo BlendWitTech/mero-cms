@@ -1,0 +1,58 @@
+{
+  "name": "Mero Starter",
+  "slug": "mero-starter",
+  "version": "1.0.0",
+  "description": "Official landing page theme for Mero CMS. A marketing site with hero, features, testimonials, blog and team — all editable from the dashboard.",
+  "author": "Blendwit Tech",
+  "requiredModules": ["pages", "menus", "blogs", "services", "testimonials"],
+  "defaultSettings": {
+    "site_title": "Mero CMS",
+    "site_tagline": "The flexible CMS for modern websites",
+    "hero_title": "Build Powerful Websites — Without the Complexity",
+    "hero_subtitle": "Mero CMS gives developers and businesses a clean content management system with a beautiful dashboard, theme switching, and a public REST API.",
+    "cta_text": "Get Started Free",
+    "cta_url": "https://github.com/BlendWitTech/blendwit-cms-saas",
+    "about_title": "Why Mero CMS?",
+    "about_content": "Mero CMS is built for modern teams who need speed without sacrificing flexibility. Deploy in minutes, customize via themes, and let clients manage their own content.",
+    "primary_color": "#4f46e5"
+  },
+  "seedData": {
+    "pages": [
+      { "title": "Home", "slug": "home", "content": "", "status": "PUBLISHED" },
+      { "title": "Features", "slug": "features", "content": "<h1>Everything you need</h1><p>Mero CMS ships with all the modules your project needs.</p>", "status": "PUBLISHED" }
+    ],
+    "menus": [
+      {
+        "name": "Main Nav",
+        "slug": "main-nav",
+        "items": [
+          { "label": "Home", "url": "/", "order": 1 },
+          { "label": "Features", "url": "#features", "order": 2 },
+          { "label": "Blog", "url": "/blog", "order": 3 },
+          { "label": "Dashboard", "url": "/dashboard", "order": 4 }
+        ]
+      },
+      {
+        "name": "Footer",
+        "slug": "footer",
+        "items": [
+          { "label": "Blog", "url": "/blog", "order": 1 },
+          { "label": "Privacy Policy", "url": "/privacy", "order": 2 }
+        ]
+      }
+    ],
+    "services": [
+      { "title": "Theme Management", "description": "Upload ZIP themes, switch with one click, and import demo content instantly.", "icon": "🎨", "order": 1 },
+      { "title": "Blog & Content", "description": "Rich editor with categories, tags, featured images and per-post SEO meta.", "icon": "✍️", "order": 2 },
+      { "title": "Media Library", "description": "Upload, organize and reuse images and files from one clean panel.", "icon": "🖼️", "order": 3 },
+      { "title": "Roles & Permissions", "description": "Invite team members and control exactly who can create, edit or delete.", "icon": "👥", "order": 4 },
+      { "title": "SEO Tools", "description": "Meta title, description, Open Graph and canonical URL on every page and post.", "icon": "🔍", "order": 5 },
+      { "title": "Public REST API", "description": "Every piece of content exposed as clean JSON. Build any frontend with any framework.", "icon": "🔌", "order": 6 }
+    ],
+    "testimonials": [
+      { "clientName": "Rohan Sharma", "clientRole": "Full-stack Developer", "content": "Mero CMS saved us weeks of setup. We deployed a custom theme in a day and the client loved the dashboard simplicity.", "rating": 5 },
+      { "clientName": "Anita Tamrakar", "clientRole": "Marketing Manager", "content": "Finally a CMS where I don't need a developer to update the homepage. I do it all myself now.", "rating": 5 },
+      { "clientName": "Dev Shrestha", "clientRole": "Agency Owner", "content": "We use Mero CMS for all client projects. The theme system gives each client a unique look without extra effort.", "rating": 5 }
+    ]
+  }
+}
