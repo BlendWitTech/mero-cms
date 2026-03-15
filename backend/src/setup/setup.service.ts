@@ -90,13 +90,17 @@ export class SetupService {
         const scriptsDir = process.env.SCRIPTS_DIR || path.join(projectRoot, 'scripts');
         const buildScriptPath = path.join(scriptsDir, 'build-schema.js');
 
-        // 1. Assemble minimal schema for selected modules
-        const moduleList = data.enabledModules.join(',');
-        console.log(`[Setup] Building schema for modules: ${moduleList || '(core only)'}`);
-        execSync(`node "${buildScriptPath}" ${moduleList}`, {
-            cwd: backendRoot,
-            stdio: 'inherit',
-        });
+        // 1. Assemble minimal schema for selected modules (dev only; skipped in Docker/production)
+        if (fs.existsSync(buildScriptPath)) {
+            const moduleList = data.enabledModules.join(',');
+            console.log(`[Setup] Building schema for modules: ${moduleList || '(core only)'}`);
+            execSync(`node "${buildScriptPath}" ${moduleList}`, {
+                cwd: backendRoot,
+                stdio: 'inherit',
+            });
+        } else {
+            console.log('[Setup] build-schema.js not found — using committed schema.prisma as-is');
+        }
 
         // 2. Push schema to DB — creates only the needed tables
         console.log('[Setup] Running prisma db push...');
@@ -163,12 +167,16 @@ export class SetupService {
         const scriptsDir2 = process.env.SCRIPTS_DIR || path.join(projectRoot, 'scripts');
         const buildScriptPath = path.join(scriptsDir2, 'build-schema.js');
 
-        const moduleList = modules.join(',');
-        console.log(`[Setup] Updating schema for modules: ${moduleList}`);
-        execSync(`node "${buildScriptPath}" ${moduleList}`, {
-            cwd: backendRoot,
-            stdio: 'inherit',
-        });
+        if (fs.existsSync(buildScriptPath)) {
+            const moduleList = modules.join(',');
+            console.log(`[Setup] Updating schema for modules: ${moduleList}`);
+            execSync(`node "${buildScriptPath}" ${moduleList}`, {
+                cwd: backendRoot,
+                stdio: 'inherit',
+            });
+        } else {
+            console.log('[Setup] build-schema.js not found — using committed schema.prisma as-is');
+        }
         execSync('npx prisma db push --accept-data-loss', {
             cwd: backendRoot,
             stdio: 'inherit',
