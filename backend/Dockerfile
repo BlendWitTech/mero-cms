@@ -1,5 +1,5 @@
 # Backend Dockerfile
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
@@ -13,6 +13,7 @@ ENV DATABASE_URL=${DATABASE_URL}
 
 RUN npx prisma generate
 RUN npm run build
+RUN test -f dist/main.js || (echo "ERROR: nest build did not produce dist/main.js" && exit 1)
 
 EXPOSE 3001
 
