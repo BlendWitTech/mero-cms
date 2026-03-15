@@ -23,6 +23,8 @@ jobs:
 
             - name: Check Backend Build
               run: npm run build -w backend
+              env:
+                  DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
 
             - name: Check Frontend Build
               run: npm run build -w frontend
