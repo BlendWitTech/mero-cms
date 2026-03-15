@@ -2,8 +2,5 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "npm install",
-  "env": {
-    "CMS_API_URL": "@cms_api_url"
-  }
+  "installCommand": "npm install"
 }
