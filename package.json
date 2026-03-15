@@ -19,6 +19,7 @@
     "db:init": "npx prisma migrate dev -w backend",
     "db:seed": "npm run seed -w backend",
     "start": "node ./scripts/start.js",
+    "start:prod": "node backend/dist/main",
     "package-theme": "node scripts/package-theme.js"
   },
   "devDependencies": {
