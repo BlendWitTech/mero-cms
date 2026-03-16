@@ -58,7 +58,6 @@ async function main() {
                 'blogs', 'categories', 'tags', 'comments',
                 'seo', 'redirects', 'analytics', 'sitemap', 'robots',
                 'menus', 'pages', 'themes',
-                'team', 'services', 'testimonials', 'leads',
             ])
         },
         { key: 'setup_complete', value: 'true' },

@@ -11,11 +11,13 @@ export const CORE_MODULES = [
     'audit-log', 'mail', 'notifications', 'invitations', 'tasks',
 ];
 
+// Modules selectable in the setup wizard — generic CMS features not tied to any theme.
+// Theme-specific modules (team, services, testimonials, leads, plots, etc.) are auto-enabled
+// when a theme that requires them is activated via its theme.json requiredModules list.
 export const OPTIONAL_MODULES = [
     'blogs', 'categories', 'tags', 'comments',
     'seo', 'redirects', 'analytics', 'sitemap', 'robots',
     'menus', 'pages', 'themes',
-    'team', 'services', 'testimonials', 'leads',
 ];
 
 export const MODULE_LABELS: Record<string, { label: string; description: string; group: string }> = {
@@ -23,10 +25,6 @@ export const MODULE_LABELS: Record<string, { label: string; description: string;
     categories: { label: 'Blog Categories', description: 'Categorize blog posts', group: 'Content' },
     tags: { label: 'Blog Tags', description: 'Tag blog posts for filtering', group: 'Content' },
     comments: { label: 'Comments', description: 'Reader comments on blog posts', group: 'Content' },
-    team: { label: 'Team', description: 'Team member profiles', group: 'Content' },
-    services: { label: 'Services', description: 'Service offerings with process steps', group: 'Content' },
-    testimonials: { label: 'Testimonials', description: 'Client reviews and testimonials', group: 'Content' },
-    leads: { label: 'Lead Forms', description: 'Contact form lead capture and CRM', group: 'Marketing' },
     menus: { label: 'Navigation Menus', description: 'Dynamic nested menu management', group: 'Site' },
     pages: { label: 'Static Pages', description: 'Custom page management', group: 'Site' },
     themes: { label: 'Themes', description: 'Upload and manage website themes', group: 'Site' },
