@@ -509,15 +509,16 @@ export class ThemesService {
         return { message: `Theme "${themeName}" activated`, results };
     }
 
-    private async installDependencies(themePath: string) {
-        if (!fs.existsSync(path.join(themePath, 'node_modules'))) {
-            try {
-                await execAsync('npm install', { cwd: themePath });
-            } catch (error) {
-                console.error(`Failed to install dependencies for ${themePath}:`, error);
-                throw new BadRequestException('Failed to install theme dependencies');
-            }
-        }
+    /**
+     * Install theme npm dependencies in the background.
+     * Does not block the HTTP request — the CMS backend doesn't need the theme's
+     * node_modules to function. They're only needed when the theme frontend runs.
+     */
+    private installDependencies(themePath: string): void {
+        if (fs.existsSync(path.join(themePath, 'node_modules'))) return;
+        execAsync('npm install', { cwd: themePath })
+            .then(() => console.log(`[Themes] Dependencies installed for ${themePath}`))
+            .catch(e => console.error(`[Themes] npm install failed (non-fatal): ${e.message}`));
     }
 
     private async purgeDatabase(themeName?: string | null) {

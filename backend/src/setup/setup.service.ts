@@ -147,11 +147,24 @@ export class SetupService {
             SETUP_COMPLETE: 'true',
         });
 
-        console.log('[Setup] Complete. Server will restart in 1.5s...');
-        // 7. Trigger restart — nodemon/Docker/PM2 will bring the server back up
-        setTimeout(() => process.exit(0), 1500);
+        // Restart is only needed if the app was running in selective mode before
+        // (env var SETUP_COMPLETE was already 'true'). On a fresh Railway deploy
+        // SETUP_COMPLETE isn't in env vars, so all modules are already loaded —
+        // no restart needed. On local dev after the FIRST setup the process will
+        // restart so that app.module.ts picks up the new selective-loading state.
+        const wasAlreadySelective =
+            process.env.SETUP_COMPLETE === 'true' &&
+            (process.env.ENABLED_MODULES || '').trim().length > 0;
+        const needsRestart = !wasAlreadySelective;
 
-        return { success: true, enabledModules: allModules, needsRestart: true };
+        if (needsRestart) {
+            console.log('[Setup] Complete. Server will restart in 1.5s...');
+            setTimeout(() => process.exit(0), 1500);
+        } else {
+            console.log('[Setup] Complete. No restart needed (already in selective mode).');
+        }
+
+        return { success: true, enabledModules: allModules, needsRestart };
     }
 
     async updateEnabledModules(modules: string[]) {
@@ -183,9 +196,20 @@ export class SetupService {
             ENABLED_MODULES: modules.join(','),
         });
 
-        setTimeout(() => process.exit(0), 1500);
+        // A process restart is only needed when running in selective-module mode
+        // (SETUP_COMPLETE=true + ENABLED_MODULES set as env vars), because in that
+        // mode app.module.ts bakes the module list at startup and needs a reload.
+        // In non-selective mode (Railway/Docker where those env vars aren't set),
+        // all modules are already loaded — a DB update is enough, no restart needed.
+        const isSelectiveMode =
+            process.env.SETUP_COMPLETE === 'true' &&
+            (process.env.ENABLED_MODULES || '').trim().length > 0;
 
-        return { enabledModules: allModules, needsRestart: true };
+        if (isSelectiveMode) {
+            setTimeout(() => process.exit(0), 1500);
+        }
+
+        return { enabledModules: allModules, needsRestart: isSelectiveMode };
     }
 
     private writeEnvVars(backendRoot: string, vars: Record<string, string>) {
