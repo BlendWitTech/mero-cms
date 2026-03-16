@@ -15,8 +15,7 @@ export const OPTIONAL_MODULES = [
     'blogs', 'categories', 'tags', 'comments',
     'seo', 'redirects', 'analytics', 'sitemap', 'robots',
     'menus', 'pages', 'themes',
-    'plots', 'plot-categories', 'team',
-    'services', 'testimonials', 'leads',
+    'team', 'services', 'testimonials', 'leads',
 ];
 
 export const MODULE_LABELS: Record<string, { label: string; description: string; group: string }> = {
@@ -24,8 +23,6 @@ export const MODULE_LABELS: Record<string, { label: string; description: string;
     categories: { label: 'Blog Categories', description: 'Categorize blog posts', group: 'Content' },
     tags: { label: 'Blog Tags', description: 'Tag blog posts for filtering', group: 'Content' },
     comments: { label: 'Comments', description: 'Reader comments on blog posts', group: 'Content' },
-    plots: { label: 'Plots', description: 'Land plot listings for real-estate themes', group: 'Content' },
-    'plot-categories': { label: 'Plot Categories', description: 'Categorize land plots', group: 'Content' },
     team: { label: 'Team', description: 'Team member profiles', group: 'Content' },
     services: { label: 'Services', description: 'Service offerings with process steps', group: 'Content' },
     testimonials: { label: 'Testimonials', description: 'Client reviews and testimonials', group: 'Content' },

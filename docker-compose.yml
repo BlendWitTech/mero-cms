@@ -14,7 +14,8 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: ${ORG_NAME:-mero}-cms-backend
     restart: always
     ports:
