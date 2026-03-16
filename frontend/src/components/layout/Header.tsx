@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiRequest } from '@/lib/api';
+import { clearAuthToken } from '@/lib/auth';
 import {
     BellIcon,
     MagnifyingGlassIcon,
@@ -47,8 +48,7 @@ export default function Header({ isCollapsed }: HeaderProps) {
                     // Silently handle network errors - backend might not be running
                     // This is expected during development
                     if (e?.status === 401) {
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('user');
+                        clearAuthToken();
                     }
                     console.debug('Backend not available:', e);
                 }
@@ -104,8 +104,7 @@ export default function Header({ isCollapsed }: HeaderProps) {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        clearAuthToken();
         router.push('/');
     };
 

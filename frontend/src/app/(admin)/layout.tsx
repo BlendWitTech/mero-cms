@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { clearAuthToken } from '@/lib/auth';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
@@ -30,7 +31,7 @@ export default function AdminLayout({
     }, []);
 
     const finalizeLogout = () => {
-        localStorage.removeItem('token');
+        clearAuthToken();
         window.location.href = '/';
     };
 
