@@ -1,10 +1,10 @@
 # Backend Dockerfile
 # Build context must be the repo root so themes/ can be copied.
 # In Railway: Root Directory = / (repo root), Dockerfile Path = backend/Dockerfile
-FROM node:20-slim
+FROM node:20-bookworm-slim
 
-# Install OpenSSL — required by Prisma's query engine binary
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+# Install OpenSSL 1.1 + 3 — both required by Prisma's query engine
+RUN apt-get update -y && apt-get install -y openssl libssl-dev && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
