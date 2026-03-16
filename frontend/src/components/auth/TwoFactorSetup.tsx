@@ -5,6 +5,7 @@ import {
     QrCodeIcon,
     ArrowPathIcon
 } from '@heroicons/react/24/outline';
+import { apiRequest } from '@/lib/api';
 
 interface TwoFactorSetupProps {
     isOpen: boolean;
@@ -22,11 +23,7 @@ export default function TwoFactorSetup({ isOpen, onClose, onVerify }: TwoFactorS
     const handleGenerate = async () => {
         setIsLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:3001/auth/2fa/generate', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
+            const data = await apiRequest('/auth/2fa/generate');
             setQrCode(data.qrCode);
             setStep('verify');
         } catch (err) {
