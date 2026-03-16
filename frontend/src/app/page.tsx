@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { LockClosedIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 import { useNotification } from '@/context/NotificationContext';
+import { setAuthToken } from '@/lib/auth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-export default function LoginPage() {
+function LoginPageInner() {
     const { showToast } = useNotification();
+    const searchParams = useSearchParams();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
@@ -26,6 +29,13 @@ export default function LoginPage() {
         cms_subtitle: 'Elevate Your Horizontal Content Strategy',
         cms_login_avatar: '/assets/boy_idea_shock.png'
     });
+
+    useEffect(() => {
+        const alert = searchParams.get('alert');
+        if (alert === 'setup-already-complete') {
+            showToast('Setup is Already Completed. Please log in.', 'info');
+        }
+    }, [searchParams, showToast]);
 
     const handleForgotPassword = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -70,7 +80,7 @@ export default function LoginPage() {
             });
             const data = await res.json();
             if (data.success && data.access_token) {
-                localStorage.setItem('token', data.access_token);
+                setAuthToken(data.access_token);
                 window.location.href = '/dashboard';
             } else {
                 showToast(data.message || 'Invalid 2FA code', 'error');
@@ -104,7 +114,7 @@ export default function LoginPage() {
                     setToken(data.access_token);
                     setShowChangePassword(true);
                 } else {
-                    localStorage.setItem('token', data.access_token);
+                    setAuthToken(data.access_token);
                     window.location.href = '/dashboard';
                 }
             } else {
@@ -134,7 +144,7 @@ export default function LoginPage() {
                 body: JSON.stringify({ newPassword }),
             });
             if (res.ok) {
-                localStorage.setItem('token', token);
+                setAuthToken(token);
                 window.location.href = '/dashboard';
             } else {
                 const err = await res.json();
@@ -348,5 +358,13 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense>
+            <LoginPageInner />
+        </Suspense>
     );
 }

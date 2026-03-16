@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { apiRequest } from '@/lib/api';
+import { clearAuthToken } from '@/lib/auth';
 import {
     BellIcon,
     MagnifyingGlassIcon,
@@ -40,22 +42,14 @@ export default function Header({ isCollapsed }: HeaderProps) {
             const token = localStorage.getItem('token');
             if (token) {
                 try {
-                    const res = await fetch('http://localhost:3001/auth/profile', {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        setUser(data);
-                    } else {
-                        // Token might be invalid, clear it
-                        if (res.status === 401) {
-                            localStorage.removeItem('token');
-                            localStorage.removeItem('user');
-                        }
-                    }
-                } catch (e) {
+                    const data = await apiRequest('/auth/profile');
+                    setUser(data);
+                } catch (e: any) {
                     // Silently handle network errors - backend might not be running
                     // This is expected during development
+                    if (e?.status === 401) {
+                        clearAuthToken();
+                    }
                     console.debug('Backend not available:', e);
                 }
             }
@@ -68,21 +62,11 @@ export default function Header({ isCollapsed }: HeaderProps) {
         const token = localStorage.getItem('token');
         if (token) {
             try {
-                const res = await fetch('http://localhost:3001/notifications', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setNotifications(data);
-                }
+                const data = await apiRequest('/notifications');
+                setNotifications(data);
 
-                const countRes = await fetch('http://localhost:3001/notifications/unread-count', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (countRes.ok) {
-                    const { count } = await countRes.json();
-                    setUnreadCount(count);
-                }
+                const countData = await apiRequest('/notifications/unread-count');
+                setUnreadCount(countData.count);
             } catch (e) {
                 console.debug('Failed to fetch notifications:', e);
             }
@@ -111,19 +95,16 @@ export default function Header({ isCollapsed }: HeaderProps) {
 
     const handleMarkAsRead = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        const token = localStorage.getItem('token');
-        if (token) {
-            await fetch(`http://localhost:3001/notifications/${id}/read`, {
-                method: 'PATCH',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+        try {
+            await apiRequest(`/notifications/${id}/read`, { method: 'PATCH' });
             fetchNotifications();
+        } catch (e) {
+            console.debug('Failed to mark notification as read:', e);
         }
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        clearAuthToken();
         router.push('/');
     };
 

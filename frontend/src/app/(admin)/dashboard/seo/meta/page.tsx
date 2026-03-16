@@ -131,9 +131,7 @@ export default function MetaManagement() {
                                             href={
                                                 item.type === 'post'
                                                     ? `/dashboard/blog?action=edit&id=${item.id}&from=seo`
-                                                    : item.type === 'project'
-                                                        ? `/dashboard/projects?action=edit&id=${item.id}&from=seo`
-                                                        : `/dashboard/pages/${item.id}?from=seo`
+                                                    : `/dashboard/pages/${item.id}?from=seo`
                                             }
                                             className="inline-flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-blue-600 transition-colors"
                                         >

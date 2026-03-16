@@ -19,6 +19,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { apiRequest } from '@/lib/api';
 import AlertDialog from '@/components/ui/AlertDialog';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
 import { useNotification } from '@/context/NotificationContext';
 import PermissionGuard from '@/components/auth/PermissionGuard';
@@ -122,7 +124,7 @@ export default function MediaLibrary({
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:3001/media/upload', {
+            const response = await fetch(`${API_BASE}/media/upload`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
@@ -251,10 +253,10 @@ export default function MediaLibrary({
         const item = media.find(m => m.id === selectedId);
         if (item) {
             setEditAlt(item.altText || '');
-            setSelectedVersion({ url: `http://localhost:3001${item.url}`, size: 'Original' });
+            setSelectedVersion({ url: `${API_BASE}${item.url}`, size: 'Original' });
 
             if (item.mimetype === 'text/plain') {
-                fetch(`http://localhost:3001${item.url}`)
+                fetch(`${API_BASE}${item.url}`)
                     .then(r => r.text())
                     .then(t => setTextContent(t.slice(0, 10000))) // Load first 10KB
                     .catch(() => setTextContent('Error loading preview.'));
@@ -322,7 +324,7 @@ export default function MediaLibrary({
         const isOriginal = selectedVersion.url.includes(item.url);
         const hasBetter = item.metadata?.versions?.medium;
 
-        if (isOriginal && hasBetter && selectedVersion.url !== `http://localhost:3001${hasBetter}`) {
+        if (isOriginal && hasBetter && selectedVersion.url !== `${API_BASE}${hasBetter}`) {
             setAlertConfig({
                 isOpen: true,
                 title: 'Better Version Available',
@@ -331,7 +333,7 @@ export default function MediaLibrary({
                 confirmLabel: 'Use Optimized (Recommended)',
                 cancelLabel: 'Use Original',
                 onConfirm: () => {
-                    onSelect(`http://localhost:3001${hasBetter}`);
+                    onSelect(`${API_BASE}${hasBetter}`);
                     closeAlert();
                 },
                 onCancel: () => {
@@ -544,7 +546,7 @@ export default function MediaLibrary({
                                         {item.mimetype.startsWith('image/') || (item.mimetype.startsWith('video/') && item.metadata?.poster) ? (
                                             <div className="w-full h-full relative">
                                                 <img
-                                                    src={`http://localhost:3001${item.mimetype.startsWith('video/') ? item.metadata.poster : ((item.metadata?.versions?.small) || item.url)}`}
+                                                    src={`${API_BASE}${item.mimetype.startsWith('video/') ? item.metadata.poster : ((item.metadata?.versions?.small) || item.url)}`}
                                                     alt={item.altText || item.filename}
                                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                                 />
@@ -620,22 +622,22 @@ export default function MediaLibrary({
                             <div className="flex-shrink-0 min-h-[200px] w-full bg-slate-100 rounded-2xl overflow-hidden relative group shadow-inner ring-1 ring-black/5 aspect-video">
                                 {selectedMedia.mimetype.startsWith('video/') ? (
                                     <video
-                                        src={`http://localhost:3001${selectedMedia.url}`}
+                                        src={`${API_BASE}${selectedMedia.url}`}
                                         controls
                                         className="w-full h-full object-contain bg-black"
-                                        poster={selectedMedia.metadata?.poster ? `http://localhost:3001${selectedMedia.metadata.poster}` : undefined}
+                                        poster={selectedMedia.metadata?.poster ? `${API_BASE}${selectedMedia.metadata.poster}` : undefined}
                                     />
                                 ) : selectedMedia.mimetype.startsWith('image/') ? (
                                     <div className="w-full h-full relative pattern-grid">
                                         <img
-                                            src={`http://localhost:3001${selectedMedia.url}`}
+                                            src={`${API_BASE}${selectedMedia.url}`}
                                             alt=""
                                             className="w-full h-full object-contain"
                                         />
                                     </div>
                                 ) : selectedMedia.mimetype === 'application/pdf' ? (
                                     <iframe
-                                        src={`http://localhost:3001${selectedMedia.url}#toolbar=0`}
+                                        src={`${API_BASE}${selectedMedia.url}#toolbar=0`}
                                         className="w-full h-full bg-white"
                                         title={selectedMedia.filename}
                                     />
@@ -679,7 +681,7 @@ export default function MediaLibrary({
                             {/* Actions */}
                             <div className="flex-shrink-0 grid grid-cols-2 gap-3">
                                 <a
-                                    href={`http://localhost:3001${selectedMedia.url}`}
+                                    href={`${API_BASE}${selectedMedia.url}`}
                                     target="_blank"
                                     className="flex items-center justify-center gap-2 py-3 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200 transition-all hover:-translate-y-0.5"
                                 >
@@ -711,15 +713,15 @@ export default function MediaLibrary({
                                             label="Original"
                                             size="FULL"
                                             isSelected={selectedVersion.size === 'Original'}
-                                            onClick={() => handleVersionSelect(`http://localhost:3001${selectedMedia.url}`, 'Original')}
+                                            onClick={() => handleVersionSelect(`${API_BASE}${selectedMedia.url}`, 'Original')}
                                         />
                                         {selectedMedia.metadata?.versions && Object.entries(selectedMedia.metadata.versions).map(([size, url]) => (
                                             <VersionRow
                                                 key={size}
                                                 label={`WebP ${size}`}
                                                 size="OPT"
-                                                isSelected={selectedVersion.url === `http://localhost:3001${url}`}
-                                                onClick={() => handleVersionSelect(`http://localhost:3001${url}`, size)}
+                                                isSelected={selectedVersion.url === `${API_BASE}${url}`}
+                                                onClick={() => handleVersionSelect(`${API_BASE}${url}`, size)}
                                             />
                                         ))}
                                     </div>

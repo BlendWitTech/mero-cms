@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "The official starter theme for Mero CMS — a fully editable marketing website that explains your CMS to visitors.",
   "author": "Blendwit Tech",
-  "requiredModules": ["pages", "menus", "blogs", "services", "testimonials", "team"],
+  "requiredModules": ["pages", "menus", "blogs", "services", "testimonials", "team", "leads"],
   "defaultSettings": {
     "site_title": "Mero CMS",
     "site_tagline": "The flexible, open-source CMS for modern websites",

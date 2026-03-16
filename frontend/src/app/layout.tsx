@@ -25,9 +25,11 @@ const outfit = Outfit({
   subsets: ["latin"],
 });
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 async function getGlobalSeo() {
   try {
-    const res = await fetch('http://localhost:3001/seo-meta/GLOBAL', {
+    const res = await fetch(`${API_URL}/seo-meta/GLOBAL`, {
       next: { revalidate: 60 },
       signal: AbortSignal.timeout(3000),
     });
@@ -41,7 +43,7 @@ async function getGlobalSeo() {
 
 async function getAnalyticsConfig() {
   try {
-    const res = await fetch('http://localhost:3001/analytics/config', {
+    const res = await fetch(`${API_URL}/analytics/config`, {
       next: { revalidate: 60 },
       signal: AbortSignal.timeout(3000),
     });

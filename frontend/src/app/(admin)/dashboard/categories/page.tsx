@@ -17,6 +17,7 @@ import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
 import { useNotification } from '@/context/NotificationContext';
 import { useSettings } from '@/context/SettingsContext';
+import { useModules } from '@/context/ModulesContext';
 import { apiRequest } from '@/lib/api';
 
 function classNames(...classes: string[]) {
@@ -28,6 +29,8 @@ type TabType = 'blog' | 'plots';
 export default function CategoriesPage() {
     const { showToast } = useNotification();
     const { settings } = useSettings();
+    const { enabledModules } = useModules();
+    const plotsEnabled = enabledModules.includes('plots');
     const [activeTab, setActiveTab] = useState<TabType>('blog');
     const [categories, setCategories] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -282,18 +285,20 @@ export default function CategoriesPage() {
                     <DocumentTextIcon className="h-4 w-4" />
                     Blog Categories
                 </button>
-                <button
-                    onClick={() => setActiveTab('plots')}
-                    className={classNames(
-                        "px-6 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2",
-                        activeTab === 'plots'
-                            ? "bg-white text-blue-600 shadow-sm"
-                            : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
-                    )}
-                >
-                    <SwatchIcon className="h-4 w-4" />
-                    {plotsAlias} Categories
-                </button>
+                {plotsEnabled && (
+                    <button
+                        onClick={() => setActiveTab('plots')}
+                        className={classNames(
+                            "px-6 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2",
+                            activeTab === 'plots'
+                                ? "bg-white text-blue-600 shadow-sm"
+                                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                        )}
+                    >
+                        <SwatchIcon className="h-4 w-4" />
+                        {plotsAlias} Categories
+                    </button>
+                )}
             </div>
 
             <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden">

@@ -1,0 +1,18 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: Purchase a License
+    url: https://blendwit.com/mero-cms/pricing
+    about: Buy the CMS License or CMS + Custom Theme package.
+
+  - name: Apply as a Contributor
+    url: https://blendwit.com/mero-cms/contribute
+    about: Apply for approved contributor access to this repository.
+
+  - name: General Support
+    url: mailto:hello@blendwit.com
+    about: Contact the Blendwit Tech team directly.
+
+  - name: Try the Demo
+    url: https://blendwit.com/mero-cms/demo
+    about: Explore Mero CMS before purchasing.

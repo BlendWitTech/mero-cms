@@ -10,6 +10,7 @@ import {
     FunnelIcon
 } from '@heroicons/react/24/outline';
 import { useNotification } from '@/context/NotificationContext';
+import { apiRequest } from '@/lib/api';
 
 export default function LeadsPage() {
     const [leads, setLeads] = useState<any[]>([]);
@@ -24,19 +25,12 @@ export default function LeadsPage() {
     }, []);
 
     const fetchInitialData = async () => {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
         try {
-            const [leadsRes, statsRes, profileRes] = await Promise.all([
-                fetch('http://localhost:3001/leads', { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch('http://localhost:3001/leads/stats', { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch('http://localhost:3001/auth/profile', { headers: { 'Authorization': `Bearer ${token}` } })
+            const [leadsData, statsData, profile] = await Promise.all([
+                apiRequest('/leads'),
+                apiRequest('/leads/stats'),
+                apiRequest('/auth/profile'),
             ]);
-
-            const leadsData = await leadsRes.json();
-            const statsData = await statsRes.json();
-            const profile = await profileRes.json();
 
             setLeads(Array.isArray(leadsData) ? leadsData : []);
             setStats(statsData || { total: 0, newLeads: 0, contacted: 0, converted: 0 });
@@ -52,46 +46,29 @@ export default function LeadsPage() {
     };
 
     const handleStatusChange = async (id: string, newStatus: string) => {
-        const token = localStorage.getItem('token');
         try {
-            const res = await fetch(`http://localhost:3001/leads/${id}/status`, {
+            await apiRequest(`/leads/${id}/status`, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ status: newStatus })
+                body: { status: newStatus },
             });
-
-            if (res.ok) {
-                showToast('Lead status updated!', 'success');
-                fetchInitialData();
-            } else {
-                showToast('Failed to update status.', 'error');
-            }
-        } catch (error) {
+            showToast('Lead status updated!', 'success');
+            fetchInitialData();
+        } catch (error: any) {
             console.error(error);
+            showToast(error.message || 'Failed to update status.', 'error');
         }
     };
 
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure you want to delete this lead?')) return;
 
-        const token = localStorage.getItem('token');
         try {
-            const res = await fetch(`http://localhost:3001/leads/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (res.ok) {
-                showToast('Lead deleted successfully!', 'success');
-                fetchInitialData();
-            } else {
-                showToast('Failed to delete lead.', 'error');
-            }
-        } catch (error) {
+            await apiRequest(`/leads/${id}`, { method: 'DELETE' });
+            showToast('Lead deleted successfully!', 'success');
+            fetchInitialData();
+        } catch (error: any) {
             console.error(error);
+            showToast(error.message || 'Failed to delete lead.', 'error');
         }
     };
 

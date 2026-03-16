@@ -11,12 +11,13 @@ export const CORE_MODULES = [
     'audit-log', 'mail', 'notifications', 'invitations', 'tasks',
 ];
 
+// Modules selectable in the setup wizard — generic CMS features not tied to any theme.
+// Theme-specific modules (team, services, testimonials, leads, plots, etc.) are auto-enabled
+// when a theme that requires them is activated via its theme.json requiredModules list.
 export const OPTIONAL_MODULES = [
     'blogs', 'categories', 'tags', 'comments',
     'seo', 'redirects', 'analytics', 'sitemap', 'robots',
     'menus', 'pages', 'themes',
-    'plots', 'plot-categories', 'team',
-    'services', 'testimonials', 'leads',
 ];
 
 export const MODULE_LABELS: Record<string, { label: string; description: string; group: string }> = {
@@ -24,12 +25,6 @@ export const MODULE_LABELS: Record<string, { label: string; description: string;
     categories: { label: 'Blog Categories', description: 'Categorize blog posts', group: 'Content' },
     tags: { label: 'Blog Tags', description: 'Tag blog posts for filtering', group: 'Content' },
     comments: { label: 'Comments', description: 'Reader comments on blog posts', group: 'Content' },
-    plots: { label: 'Plots', description: 'Land plot listings for real-estate themes', group: 'Content' },
-    'plot-categories': { label: 'Plot Categories', description: 'Categorize land plots', group: 'Content' },
-    team: { label: 'Team', description: 'Team member profiles', group: 'Content' },
-    services: { label: 'Services', description: 'Service offerings with process steps', group: 'Content' },
-    testimonials: { label: 'Testimonials', description: 'Client reviews and testimonials', group: 'Content' },
-    leads: { label: 'Lead Forms', description: 'Contact form lead capture and CRM', group: 'Marketing' },
     menus: { label: 'Navigation Menus', description: 'Dynamic nested menu management', group: 'Site' },
     pages: { label: 'Static Pages', description: 'Custom page management', group: 'Site' },
     themes: { label: 'Themes', description: 'Upload and manage website themes', group: 'Site' },
@@ -152,11 +147,24 @@ export class SetupService {
             SETUP_COMPLETE: 'true',
         });
 
-        console.log('[Setup] Complete. Server will restart in 1.5s...');
-        // 7. Trigger restart — nodemon/Docker/PM2 will bring the server back up
-        setTimeout(() => process.exit(0), 1500);
+        // Restart is only needed if the app was running in selective mode before
+        // (env var SETUP_COMPLETE was already 'true'). On a fresh Railway deploy
+        // SETUP_COMPLETE isn't in env vars, so all modules are already loaded —
+        // no restart needed. On local dev after the FIRST setup the process will
+        // restart so that app.module.ts picks up the new selective-loading state.
+        const wasAlreadySelective =
+            process.env.SETUP_COMPLETE === 'true' &&
+            (process.env.ENABLED_MODULES || '').trim().length > 0;
+        const needsRestart = !wasAlreadySelective;
 
-        return { success: true, enabledModules: allModules, needsRestart: true };
+        if (needsRestart) {
+            console.log('[Setup] Complete. Server will restart in 1.5s...');
+            setTimeout(() => process.exit(0), 1500);
+        } else {
+            console.log('[Setup] Complete. No restart needed (already in selective mode).');
+        }
+
+        return { success: true, enabledModules: allModules, needsRestart };
     }
 
     async updateEnabledModules(modules: string[]) {
@@ -188,9 +196,20 @@ export class SetupService {
             ENABLED_MODULES: modules.join(','),
         });
 
-        setTimeout(() => process.exit(0), 1500);
+        // A process restart is only needed when running in selective-module mode
+        // (SETUP_COMPLETE=true + ENABLED_MODULES set as env vars), because in that
+        // mode app.module.ts bakes the module list at startup and needs a reload.
+        // In non-selective mode (Railway/Docker where those env vars aren't set),
+        // all modules are already loaded — a DB update is enough, no restart needed.
+        const isSelectiveMode =
+            process.env.SETUP_COMPLETE === 'true' &&
+            (process.env.ENABLED_MODULES || '').trim().length > 0;
 
-        return { enabledModules: allModules, needsRestart: true };
+        if (isSelectiveMode) {
+            setTimeout(() => process.exit(0), 1500);
+        }
+
+        return { enabledModules: allModules, needsRestart: isSelectiveMode };
     }
 
     private writeEnvVars(backendRoot: string, vars: Record<string, string>) {

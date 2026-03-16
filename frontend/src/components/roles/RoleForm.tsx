@@ -270,10 +270,10 @@ export default function RoleForm({ initialData, onSave, isLoading: externalLoadi
             title: 'Content & Media',
             desc: 'Manage the core website data.',
             permissions: [
-                { key: 'content_view', label: 'View Content', icon: DocumentTextIcon, desc: 'Access blogs and projects.' },
-                { key: 'content_create', label: 'Create Content', icon: PlusIcon, desc: 'Write new blog posts or projects.' },
+                { key: 'content_view', label: 'View Content', icon: DocumentTextIcon, desc: 'Access blogs and content modules.' },
+                { key: 'content_create', label: 'Create Content', icon: PlusIcon, desc: 'Write new blog posts and content.' },
                 { key: 'content_edit', label: 'Edit Content', icon: PencilSquareIcon, desc: 'Modify existing content.' },
-                { key: 'content_delete', label: 'Delete Content', icon: TrashIcon, desc: 'Remove blogs or projects.' },
+                { key: 'content_delete', label: 'Delete Content', icon: TrashIcon, desc: 'Remove blogs and content entries.' },
                 { key: 'media_view', label: 'View Media', icon: PhotoIcon, desc: 'Access the media library.' },
                 { key: 'media_upload', label: 'Upload Media', icon: RocketLaunchIcon, desc: 'Add new files to the system.' },
                 { key: 'media_delete', label: 'Delete Media', icon: TrashIcon, desc: 'Remove files from storage.' },

@@ -17,13 +17,32 @@ npm install
 # 2. Environment Setup
 Write-Host "[2/5] Setting up environment files..." -ForegroundColor Gray
 if (-not (Test-Path "backend/.env")) {
-    if (Test-Path "backend/.env.example") {
+    if (Test-Path "backend/.env.development.example") {
+        Copy-Item "backend/.env.development.example" "backend/.env"
+        Write-Host "Created backend/.env from development example." -ForegroundColor Green
+    } elseif (Test-Path "backend/.env.example") {
         Copy-Item "backend/.env.example" "backend/.env"
         Write-Host "Created backend/.env from example." -ForegroundColor Green
     } else {
-        Write-Host "DATABASE_URL=`"postgresql://admin:password123@127.0.0.1:5432/blendwit_cms?schema=public`"`nJWT_SECRET=`"supersercretkey123`"`nPORT=3001" | Out-File -FilePath "backend/.env" -Encoding utf8
-        Write-Host "Generated default backend/.env (Infrastructure credentials: admin/password123)." -ForegroundColor Yellow
-        Write-Host "NOTE: These are system-level credentials for database connection, NOT for CMS login." -ForegroundColor Gray
+        @"
+NODE_ENV=development
+DATABASE_URL=postgresql://admin:password123@localhost:5432/mero_cms?schema=public
+JWT_SECRET=dev-jwt-secret-change-in-production
+PORT=3001
+CORS_ORIGINS=http://localhost:3000
+ENABLED_MODULES=
+SETUP_COMPLETE=false
+"@ | Out-File -FilePath "backend/.env" -Encoding utf8
+        Write-Host "Generated default backend/.env." -ForegroundColor Yellow
+    }
+}
+if (-not (Test-Path "frontend/.env.local")) {
+    if (Test-Path "frontend/.env.development.example") {
+        Copy-Item "frontend/.env.development.example" "frontend/.env.local"
+        Write-Host "Created frontend/.env.local from development example." -ForegroundColor Green
+    } else {
+        "NEXT_PUBLIC_API_URL=http://localhost:3001" | Out-File -FilePath "frontend/.env.local" -Encoding utf8
+        Write-Host "Created frontend/.env.local with default API URL." -ForegroundColor Green
     }
 }
 
@@ -74,7 +93,7 @@ Write-Host "[4/5] Initializing database..." -ForegroundColor Gray
 node scripts/build-schema.js all
 Set-Location backend
 npx prisma generate
-npx prisma migrate dev --name init
+npx prisma db push
 npm run seed
 Set-Location ..
 

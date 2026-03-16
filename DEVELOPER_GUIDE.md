@@ -459,8 +459,6 @@ The public API requires no authentication. It is the sole data source for theme 
 | `GET /public/services`    | All published services                   |
 | `GET /public/team`        | All team members                         |
 | `GET /public/testimonials`| All testimonials                         |
-| `GET /public/plots`       | Published plot listings (paginated)      |
-| `GET /public/plots/:slug` | Single plot by slug                      |
 | `GET /public/menus/:slug` | Navigation menu with items               |
 | `GET /public/settings`    | Public site settings (name, logo, etc.)  |
 
@@ -468,7 +466,7 @@ The public API requires no authentication. It is the sole data source for theme 
 
 ## Adding a New Feature Module
 
-Follow these steps to add a complete new module (example: `projects`):
+Follow these steps to add a complete new module (example: `portfolio`):
 
 ### 1. Create the Prisma schema fragment
 

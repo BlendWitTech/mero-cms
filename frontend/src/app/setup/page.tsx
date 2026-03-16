@@ -88,9 +88,15 @@ export default function SetupPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Setup failed');
 
-            // Server will restart — switch to polling step
-            setStep('restarting');
-            pollForRestart();
+            if (data.needsRestart) {
+                // Server will restart — switch to polling step
+                setStep('restarting');
+                pollForRestart();
+            } else {
+                // No restart needed (e.g. Railway/Docker non-selective mode)
+                setStep('complete');
+                setTimeout(() => router.push('/'), 1500);
+            }
         } catch (err: any) {
             setError(err.message || 'Setup failed. Please try again.');
             setIsLoading(false);

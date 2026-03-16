@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-const API_URL = 'http://localhost:3001';
+import { apiRequest } from '@/lib/api';
 
 export default function SettingsPage() {
     const [settings, setSettings] = useState({
@@ -17,8 +16,7 @@ export default function SettingsPage() {
         const fetchSettings = async () => {
             setIsLoading(true);
             try {
-                const res = await fetch(`${API_URL}/settings`);
-                const data = await res.json();
+                const data = await apiRequest('/settings');
                 setSettings(data);
             } catch (error) {
                 console.error('Failed to fetch settings:', error);
@@ -32,23 +30,15 @@ export default function SettingsPage() {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
-        const token = localStorage.getItem('token');
         try {
-            const res = await fetch(`${API_URL}/settings`, {
+            await apiRequest('/settings', {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(settings),
+                body: settings,
             });
-            if (res.ok) {
-                alert('Settings saved successfully!');
-            } else {
-                alert('Error saving settings');
-            }
+            alert('Settings saved successfully!');
         } catch (error) {
             console.error('Save failed:', error);
+            alert('Error saving settings');
         } finally {
             setIsSaving(false);
         }

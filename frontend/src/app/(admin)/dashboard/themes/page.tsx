@@ -122,13 +122,8 @@ export default function ThemesPage() {
 
     const checkAndInstallModules = async (slug: string): Promise<boolean> => {
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_URL}/themes/${slug}/install-modules`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Failed to check modules');
+            const data = await apiRequest(`/themes/${slug}/install-modules`, { method: 'POST' });
+            if (!data) throw new Error('Failed to check modules');
             
             if (data.needsRestart) {
                 showToast(`Installing missing modules: ${data.missingModules.join(', ')}. CMS restarting...`, 'info');
@@ -161,17 +156,10 @@ export default function ThemesPage() {
             const proceed = await checkAndInstallModules(slug);
             if (!proceed) return;
 
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_URL}/themes/${slug}/setup`, {
+            await apiRequest(`/themes/${slug}/setup`, {
                 method: 'POST',
-                headers: { 
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ clearPrevious: fresh })
+                body: { clearPrevious: fresh },
             });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Setup failed');
             showToast(`Theme setup complete! ${fresh ? 'Old theme data purged.' : 'Existing data kept.'}`, 'success');
             fetchThemes();
         } catch (error: any) {
@@ -190,20 +178,11 @@ export default function ThemesPage() {
             const proceed = await checkAndInstallModules(slug);
             if (!proceed) return;
 
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_URL}/themes/${slug}/activate`, {
+            const data = await apiRequest(`/themes/${slug}/activate`, {
                 method: 'POST',
-                headers: { 
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ 
-                    importDemoContent: importDemoContent 
-                })
+                body: { importDemoContent: importDemoContent },
             });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Activation failed');
-            
+
             const r = data.results || {};
             const summary = Object.entries(r)
                 .filter(([, v]) => (v as number) > 0)
@@ -561,7 +540,7 @@ export default function ThemesPage() {
                                 <ExclamationTriangleIcon className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                                 <div>
                                     <p className="text-xs font-bold text-red-800">This action cannot be undone</p>
-                                    <p className="text-xs text-red-600 mt-0.5">All content, pages, menus, projects, team, testimonials, services, and theme settings will be permanently deleted.</p>
+                                    <p className="text-xs text-red-600 mt-0.5">All content, pages, menus, team, testimonials, services, and theme settings will be permanently deleted.</p>
                                 </div>
                             </div>
                             <p className="text-sm text-slate-600">

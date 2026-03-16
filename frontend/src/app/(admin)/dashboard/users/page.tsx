@@ -16,6 +16,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import React, { useState, useEffect, Suspense } from 'react';
 // ... (rest of imports unchanged, making sure Suspense is added)
+import { apiRequest } from '@/lib/api';
 import InviteUserModal from '@/components/users/InviteUserModal';
 import ReactivationModal from '@/components/users/ReactivationModal';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
@@ -59,32 +60,18 @@ function UsersPageContent() {
     const [userToDeactivate, setUserToDeactivate] = useState<any>(null);
 
     const fetchCurrentUser = async () => {
-        const token = localStorage.getItem('token');
-        if (!token) return;
         try {
-            const response = await fetch('http://localhost:3001/users/profile', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setCurrentUser(data);
-            }
+            const data = await apiRequest('/users/profile');
+            setCurrentUser(data);
         } catch (error) {
             console.error('Failed to fetch profile:', error);
         }
     };
 
     const fetchRoles = async () => {
-        const token = localStorage.getItem('token');
-        if (!token) return;
         try {
-            const response = await fetch('http://localhost:3001/roles', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setRoles(Array.isArray(data) ? data : []);
-            }
+            const data = await apiRequest('/roles');
+            setRoles(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to fetch roles:', error);
             setRoles([]);
@@ -92,16 +79,9 @@ function UsersPageContent() {
     };
 
     const fetchStats = async () => {
-        const token = localStorage.getItem('token');
-        if (!token) return;
         try {
-            const response = await fetch('http://localhost:3001/users/stats', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setStats(data);
-            }
+            const data = await apiRequest('/users/stats');
+            setStats(data);
         } catch (error) {
             console.error('Failed to fetch stats:', error);
         }
@@ -109,31 +89,20 @@ function UsersPageContent() {
 
     const fetchUsers = async () => {
         setIsLoading(true);
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = '/';
-            return;
-        }
         try {
             const query = new URLSearchParams({
                 ...filters,
                 skip: pagination.skip.toString(),
                 take: pagination.take.toString(),
             }).toString();
-            const response = await fetch(`http://localhost:3001/users?${query}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!response.ok) {
-                if (response.status === 401) {
-                    window.location.href = '/';
-                    return;
-                }
-                throw new Error('Failed to fetch');
-            }
-            const data = await response.json();
+            const data = await apiRequest(`/users?${query}`);
             setUsers(Array.isArray(data.users) ? data.users : []);
             setTotalUsers(data.total || 0);
-        } catch (error) {
+        } catch (error: any) {
+            if (error?.status === 401) {
+                window.location.href = '/';
+                return;
+            }
             console.error('Failed to fetch users:', error);
             setUsers([]);
         } finally {
@@ -159,48 +128,26 @@ function UsersPageContent() {
     const performDeactivate = async () => {
         if (!userToDeactivate) return;
         const id = userToDeactivate.id;
-        const token = localStorage.getItem('token');
         try {
-            const response = await fetch(`http://localhost:3001/users/${id}/deactivate`, {
-                method: 'PATCH',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (response.ok) {
-                showToast('User deactivated successfully', 'success');
-                setIsDeactivateModalOpen(false);
-                fetchUsers();
-                fetchStats();
-            } else {
-                const err = await response.json();
-                showToast(err.message || 'Failed to deactivate user', 'error');
-            }
-        } catch (error) {
-            showToast('Connection error occurred', 'error');
+            await apiRequest(`/users/${id}/deactivate`, { method: 'PATCH' });
+            showToast('User deactivated successfully', 'success');
+            setIsDeactivateModalOpen(false);
+            fetchUsers();
+            fetchStats();
+        } catch (error: any) {
+            showToast(error.message || 'Failed to deactivate user', 'error');
         }
     };
 
     const handleReactivate = async (id: string, data: { newEmail?: string }) => {
-        const token = localStorage.getItem('token');
         try {
-            const response = await fetch(`http://localhost:3001/users/${id}/reactivate`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(data)
-            });
-            if (response.ok) {
-                showToast('User reactivated successfully', 'success');
-                setIsReactivateModalOpen(false);
-                fetchUsers();
-                fetchStats();
-            } else {
-                const err = await response.json();
-                showToast(err.message || 'Failed to reactivate user', 'error');
-            }
-        } catch (error) {
-            showToast('Connection error occurred', 'error');
+            await apiRequest(`/users/${id}/reactivate`, { method: 'PATCH', body: data });
+            showToast('User reactivated successfully', 'success');
+            setIsReactivateModalOpen(false);
+            fetchUsers();
+            fetchStats();
+        } catch (error: any) {
+            showToast(error.message || 'Failed to reactivate user', 'error');
         }
     };
 
@@ -221,90 +168,46 @@ function UsersPageContent() {
     };
 
     const handleInvite = async (data: any) => {
-        const token = localStorage.getItem('token');
         try {
-            const response = await fetch('http://localhost:3001/invitations', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(data),
-            });
-
-            if (response.ok) {
-                showToast('Invitation sent successfully', 'success');
-                setIsInviteModalOpen(false);
-                fetchUsers();
-                fetchStats();
-            } else {
-                const err = await response.json();
-                showToast(err.message || 'Failed to send invitation', 'error');
-            }
-        } catch (error) {
+            await apiRequest('/invitations', { method: 'POST', body: data });
+            showToast('Invitation sent successfully', 'success');
+            setIsInviteModalOpen(false);
+            fetchUsers();
+            fetchStats();
+        } catch (error: any) {
             console.error('Failed to send invite:', error);
-            showToast('Different error occurred', 'error');
+            showToast(error.message || 'Failed to send invitation', 'error');
         }
     };
 
     const handleResend = async (id: string) => {
-        const token = localStorage.getItem('token');
         try {
-            const response = await fetch(`http://localhost:3001/invitations/${id}/resend`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.ok) {
-                showToast('Invitation resent successfully', 'success');
-            } else {
-                const err = await response.json();
-                showToast(err.message || 'Failed to resend invitation', 'error');
-            }
-        } catch (error) {
+            await apiRequest(`/invitations/${id}/resend`, { method: 'POST' });
+            showToast('Invitation resent successfully', 'success');
+        } catch (error: any) {
             console.error('Failed to resend invite:', error);
-            showToast('Connection error occurred', 'error');
+            showToast(error.message || 'Failed to resend invitation', 'error');
         }
     };
 
     const handleRevoke = async (id: string) => {
-        const token = localStorage.getItem('token');
         try {
-            const response = await fetch(`http://localhost:3001/invitations/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.ok) {
-                showToast('Invitation revoked successfully', 'success');
-                fetchUsers();
-                fetchStats();
-            } else {
-                const err = await response.json();
-                showToast(err.message || 'Failed to revoke invitation', 'error');
-            }
-        } catch (error) {
+            await apiRequest(`/invitations/${id}`, { method: 'DELETE' });
+            showToast('Invitation revoked successfully', 'success');
+            fetchUsers();
+            fetchStats();
+        } catch (error: any) {
             console.error('Failed to revoke invite:', error);
-            showToast('Connection error occurred', 'error');
+            showToast(error.message || 'Failed to revoke invitation', 'error');
         }
     };
 
     const handle2faVerify = async (tokenInput: string) => {
-        const token = localStorage.getItem('token');
         try {
-            const response = await fetch('http://localhost:3001/auth/2fa/verify', {
+            const data = await apiRequest('/auth/2fa/verify', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ token: tokenInput }),
+                body: { token: tokenInput },
             });
-            const data = await response.json();
             if (data.success) {
                 fetchUsers();
                 fetchStats();
