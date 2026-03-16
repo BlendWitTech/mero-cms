@@ -36,7 +36,7 @@ export default function ThemeCompatibilityBanner({ moduleName, displayName }: Th
 
     if (isLoading || !themeConfig) return null;
 
-    const supportedModules = themeConfig.modules || [];
+    const supportedModules = themeConfig.requiredModules || themeConfig.modules || [];
     const isSupported = supportedModules.includes(moduleName);
 
     if (isSupported) return null;
@@ -75,7 +75,7 @@ export function useThemeCompatibility(moduleName: string) {
             }
             try {
                 const config = await apiRequest('/themes/active/config', { skipNotification: true });
-                const modules = config?.modules || [];
+                const modules = config?.requiredModules || config?.modules || [];
                 setIsSupported(modules.includes(moduleName));
             } catch (error) {
                 console.error('Failed to check theme compatibility:', error);
