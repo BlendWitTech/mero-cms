@@ -12,7 +12,8 @@ import {
     UserIcon,
     Cog8ToothIcon,
     ArrowRightOnRectangleIcon,
-    ShieldCheckIcon
+    ShieldCheckIcon,
+    Bars3Icon,
 } from '@heroicons/react/24/outline';
 import { useSettings } from '@/context/SettingsContext';
 
@@ -22,9 +23,10 @@ function classNames(...classes: string[]) {
 
 interface HeaderProps {
     isCollapsed: boolean;
+    onMobileMenuToggle?: () => void;
 }
 
-export default function Header({ isCollapsed }: HeaderProps) {
+export default function Header({ isCollapsed, onMobileMenuToggle }: HeaderProps) {
     const pathname = usePathname();
     const router = useRouter();
     const segments = pathname.split('/').filter(Boolean);
@@ -116,6 +118,15 @@ export default function Header({ isCollapsed }: HeaderProps) {
             isCollapsed ? "h-14 px-8" : "h-16 px-6"
         )}>
             <div className="flex flex-1 items-center gap-x-6">
+                {/* Mobile hamburger */}
+                <button
+                    type="button"
+                    onClick={onMobileMenuToggle}
+                    className="lg:hidden p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl transition-all"
+                >
+                    <Bars3Icon className="h-5 w-5" />
+                </button>
+
                 {/* Dynamic Breadcrumbs */}
                 <nav className="hidden md:flex items-center space-x-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 font-display">
                     <Link href="/dashboard" className="hover:text-blue-600 transition-colors flex items-center gap-1.5 shrink-0">

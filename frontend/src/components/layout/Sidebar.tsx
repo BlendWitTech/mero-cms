@@ -15,7 +15,9 @@ import {
     SwatchIcon,
     RectangleStackIcon,
     UsersIcon,
-    InboxArrowDownIcon
+    InboxArrowDownIcon,
+    PencilSquareIcon,
+    ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
 import { apiRequest } from '@/lib/api';
 import { useSettings } from '@/context/SettingsContext';
@@ -41,7 +43,17 @@ const initialNavigation = [
         children: [
             { name: 'Menus', href: '/dashboard/menus', icon: Bars3Icon, requiredPermission: 'content_edit', requiresModule: 'menus' },
             { name: 'Services', href: '/dashboard/services', requiredPermission: ['content_view', 'content_create'], requiresModule: 'services' },
-            { name: 'Blogs', href: '/dashboard/blog', requiredPermission: ['content_view', 'content_create'], requiresModule: 'blogs' },
+            {
+                name: 'Blog',
+                icon: DocumentTextIcon,
+                requiresModule: 'blogs',
+                requiredPermission: ['content_view', 'content_create'],
+                children: [
+                    { name: 'All Posts', href: '/dashboard/blog', icon: DocumentTextIcon, requiredPermission: ['content_view', 'content_create'] },
+                    { name: 'New Post', href: '/dashboard/blog?action=new', icon: PencilSquareIcon, requiredPermission: 'content_create' },
+                    { name: 'Comments', href: '/dashboard/comments', icon: ChatBubbleLeftRightIcon, requiredPermission: ['content_view', 'content_edit'], requiresModule: 'comments' },
+                ],
+            },
             { name: 'Categories', href: '/dashboard/categories', requiredPermission: ['content_view', 'content_create'], requiresModule: 'categories' },
         ]
     },
