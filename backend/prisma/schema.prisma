@@ -201,17 +201,20 @@ model Tag {
 
 // Depends on: blogs (Post model), _core (User model)
 model Comment {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   content     String
   authorName  String
   authorEmail String
-  status      String   @default("PENDING")
+  status      String    @default("PENDING")
   postId      String
   userId      String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user        User?    @relation(fields: [userId], references: [id])
+  parentId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  post        Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id])
+  parent      Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     Comment[] @relation("CommentReplies")
 }
 
 model Lead {
@@ -292,6 +295,7 @@ model Plot {
   roadAccess  String?
   theme       String?
   attributes  Json?
+  seo         Json?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -338,6 +342,7 @@ model SeoMeta {
   ogTitle            String?
   ogDescription      String?
   ogImage            String?
+  ogImages           String[]
   twitterCard        String?  @default("summary_large_image")
   twitterTitle       String?
   twitterDescription String?
@@ -386,7 +391,7 @@ model Testimonial {
   clientCompany String?
   clientPhoto   String?
   content       String   @db.Text
-  rating        Int      @default(5)
+  rating        Float    @default(5)
   theme         String?
   attributes    Json?
   createdAt     DateTime @default(now())

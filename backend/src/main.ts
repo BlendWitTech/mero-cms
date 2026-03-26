@@ -17,9 +17,9 @@ async function bootstrap() {
     console.error('Failed to prepare uploads directory:', e.message);
   }
 
-  const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3002')
+  const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001,http://localhost:3002')
     .split(',')
-    .map(o => o.trim())
+    .map(o => o.trim().replace(/\/$/, ''))  // strip trailing slashes
     .filter(Boolean);
 
   // Set CORS_VERCEL_PROJECT in Railway to allow all Vercel preview deployments.
@@ -33,7 +33,7 @@ async function bootstrap() {
       if (vercelProject && origin.endsWith('.vercel.app') && origin.includes(vercelProject)) {
         return callback(null, true);
       }
-      callback(new Error(`CORS: origin not allowed — ${origin}`));
+      callback(null, false); // 403 Forbidden — not allowed
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
