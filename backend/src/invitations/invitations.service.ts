@@ -35,7 +35,8 @@ export class InvitationsService {
             },
         });
 
-        const inviteLink = `http://localhost:3000/register?token=${token}`;
+        const frontendUrl = (process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+        const inviteLink = `${frontendUrl}/register?token=${token}`;
         const html = `
             <h3>You have been invited to Blendwit CMS</h3>
             <p>Click the link below to accept your invitation and set up your account:</p>
@@ -96,7 +97,8 @@ export class InvitationsService {
             data: { token, expiresAt },
         });
 
-        const inviteLink = `http://localhost:3000/register?token=${token}`;
+        const frontendUrl = (process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+        const inviteLink = `${frontendUrl}/register?token=${token}`;
         const html = `
             <h3>Invitation Resent: Join Blendwit CMS</h3>
             <p>Your invitation to join the Blendwit team has been updated. Please click the link below to set up your account:</p>

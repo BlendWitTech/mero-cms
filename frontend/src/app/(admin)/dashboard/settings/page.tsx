@@ -44,6 +44,104 @@ interface ModuleMeta {
     group: string;
 }
 
+function TestEmailCard() {
+    const { showToast } = useNotification();
+    const [sending, setSending] = React.useState(false);
+    const [testTo, setTestTo] = React.useState('');
+
+    const handleSend = async () => {
+        if (!testTo) { showToast('Enter a recipient email address.', 'error'); return; }
+        setSending(true);
+        try {
+            await apiRequest('/settings/test-email', { method: 'POST', body: { to: testTo } });
+            showToast(`Test email sent to ${testTo}`, 'success');
+        } catch (err: any) {
+            showToast(err.message || 'Failed to send test email.', 'error');
+        } finally {
+            setSending(false);
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-200/40 border border-slate-200/60 space-y-6">
+            <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/20 text-white">
+                    <EnvelopeIcon className="h-6 w-6" />
+                </div>
+                <div>
+                    <h3 className="text-xl font-bold text-slate-900 font-display">Test Email Delivery</h3>
+                    <p className="text-xs text-slate-400 font-semibold mt-0.5">Verify your email configuration is working</p>
+                </div>
+            </div>
+            <div className="flex gap-3">
+                <input
+                    type="email"
+                    value={testTo}
+                    onChange={(e) => setTestTo(e.target.value)}
+                    placeholder="you@example.com"
+                    className="flex-1 bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-blue-500/5 focus:bg-white focus:border-blue-500/20 transition-all"
+                />
+                <button
+                    onClick={handleSend}
+                    disabled={sending}
+                    className="flex items-center gap-2 bg-blue-600 text-white px-6 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+                >
+                    {sending ? 'Sending…' : 'Send Test'}
+                </button>
+            </div>
+        </div>
+    );
+}
+
+function ClearThemeCacheCard() {
+    const { showToast } = useNotification();
+    const [clearing, setClearing] = React.useState(false);
+    const [lastCleared, setLastCleared] = React.useState<string | null>(null);
+
+    const handleClear = async () => {
+        setClearing(true);
+        try {
+            await apiRequest('/settings/clear-theme-cache', { method: 'POST' });
+            setLastCleared(new Date().toLocaleTimeString());
+            showToast('Theme cache cleared. Visitors will see the latest content.', 'success');
+        } catch (err: any) {
+            showToast(err.message || 'Failed to clear theme cache.', 'error');
+        } finally {
+            setClearing(false);
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-200/40 border border-slate-200/60 flex flex-col space-y-6">
+            <div className="flex items-center gap-4">
+                <div className="p-3 bg-emerald-500 rounded-2xl shadow-xl shadow-emerald-500/20 text-white">
+                    <ArrowPathIcon className="h-6 w-6" />
+                </div>
+                <div>
+                    <h3 className="text-xl font-bold text-slate-900 font-display">Theme Cache</h3>
+                    <p className="text-xs text-slate-400 font-semibold mt-0.5">Force visitors to see your latest changes immediately</p>
+                </div>
+            </div>
+            <div className="p-6 bg-amber-50 rounded-2xl border border-amber-100">
+                <p className="text-xs text-amber-700 font-semibold leading-relaxed">
+                    The theme caches pages for performance. After updating content, colors, or settings, click below to clear the cache so visitors see your latest changes without waiting.
+                </p>
+            </div>
+            {lastCleared && (
+                <p className="text-xs text-emerald-600 font-bold">Last cleared at {lastCleared}</p>
+            )}
+            <button
+                onClick={handleClear}
+                disabled={clearing}
+                className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+                <ArrowPathIcon className={`h-4 w-4 ${clearing ? 'animate-spin' : ''}`} />
+                {clearing ? 'Clearing Cache…' : 'Clear Theme Cache'}
+            </button>
+        </div>
+    );
+}
+
 export default function SettingsPage() {
     const [settings, setSettings] = useState<any>({});
     const [isLoading, setIsLoading] = useState(true);
@@ -66,6 +164,8 @@ export default function SettingsPage() {
         isOpen: false,
         section: null
     });
+    const [showSmtpPass, setShowSmtpPass] = useState(false);
+    const [showResendKey, setShowResendKey] = useState(false);
 
     const isSectionEditing = (section: string, keys: string[]) => {
         if (editModes[section]) return true;
@@ -521,115 +621,196 @@ export default function SettingsPage() {
 
                 {/* Email Services Tab */}
                 {activeTab === 'email' && (
-                    <div className="bg-white rounded-[3rem] p-10 lg:p-12 shadow-2xl shadow-slate-200/40 border border-slate-200/60 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
+                    <div className="space-y-8">
+                        {/* Config card */}
+                        <div className="bg-white rounded-[3rem] p-10 lg:p-12 shadow-2xl shadow-slate-200/40 border border-slate-200/60 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
-                        <div className="flex items-center justify-between mb-8 relative z-10">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-emerald-500 rounded-2xl shadow-xl shadow-emerald-500/20 text-white">
-                                    <EnvelopeIcon className="h-6 w-6" />
+                            <div className="flex items-center justify-between mb-8 relative z-10">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-emerald-500 rounded-2xl shadow-xl shadow-emerald-500/20 text-white">
+                                        <EnvelopeIcon className="h-6 w-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-900 font-display">Email Configuration</h3>
+                                        <p className="text-sm font-medium text-slate-400">Choose your email delivery provider.</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-slate-900 font-display">SMTP Configuration</h3>
-                                    <p className="text-sm font-medium text-slate-400">Manage transactional email delivery.</p>
-                                </div>
-                            </div>
-                            {!isSectionEditing('email', ['smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from']) && (
-                                <button
-                                    onClick={() => toggleEdit('email')}
-                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
-                                >
-                                    Edit SMTP
-                                </button>
-                            )}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">SMTP Host</label>
-                                <input
-                                    type="text"
-                                    disabled={!isSectionEditing('email', ['smtp_host', 'smtp_user', 'smtp_pass'])}
-                                    value={settings.smtp_host || ''}
-                                    onChange={(e) => setSettings({ ...settings, smtp_host: e.target.value })}
-                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
-                                    placeholder="smtp.example.com"
-                                />
-                            </div>
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Sender Email (From)</label>
-                                <input
-                                    type="email"
-                                    disabled={!isSectionEditing('email', ['smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
-                                    value={settings.smtp_from || ''}
-                                    onChange={(e) => setSettings({ ...settings, smtp_from: e.target.value })}
-                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
-                                    placeholder="noreply@yourdomain.com"
-                                />
-                            </div>
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">SMTP Port</label>
-                                <input
-                                    type="text"
-                                    disabled={!isSectionEditing('email', ['smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
-                                    value={settings.smtp_port || ''}
-                                    onChange={(e) => setSettings({ ...settings, smtp_port: e.target.value })}
-                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
-                                    placeholder="587"
-                                />
-                            </div>
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Username</label>
-                                <input
-                                    type="text"
-                                    disabled={!isSectionEditing('email', ['smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
-                                    value={settings.smtp_user || ''}
-                                    onChange={(e) => setSettings({ ...settings, smtp_user: e.target.value })}
-                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
-                                />
-                            </div>
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Password</label>
-                                <input
-                                    type="password"
-                                    disabled={!isSectionEditing('email', ['smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
-                                    value={settings.smtp_pass || ''}
-                                    onChange={(e) => setSettings({ ...settings, smtp_pass: e.target.value })}
-                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
-                                />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer hover:bg-white transition-colors">
-                                    <input
-                                        type="checkbox"
-                                        disabled={!isSectionEditing('email', ['smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
-                                        checked={settings.smtp_secure === 'true'}
-                                        onChange={(e) => setSettings({ ...settings, smtp_secure: String(e.target.checked) })}
-                                        className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                                    />
-                                    <span className="text-sm font-bold text-slate-700">Use Secure Connection (TLS/SSL)</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        {isSectionEditing('email', ['smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from']) && (
-                            <div className="mt-8 flex justify-end gap-4 relative z-10">
-                                <button
-                                    onClick={() => handleSave('email')}
-                                    className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 hover:scale-105 active:scale-95 transition-all"
-                                >
-                                    Save Email Settings
-                                </button>
-                                {editModes['email'] && (
+                                {!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from']) && (
                                     <button
-                                        onClick={() => handleCancel('email')}
-                                        className="bg-slate-100 text-slate-500 px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all font-bold"
+                                        onClick={() => toggleEdit('email')}
+                                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
                                     >
-                                        Cancel
+                                        Edit Email
                                     </button>
                                 )}
                             </div>
-                        )}
+
+                            {/* Provider toggle */}
+                            <div className="mb-8 relative z-10">
+                                <p className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em] mb-3">Email Provider</p>
+                                <div className="grid grid-cols-2 gap-3 max-w-md">
+                                    {(['resend', 'smtp'] as const).map(p => (
+                                        <button
+                                            key={p}
+                                            disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                            onClick={() => setSettings({ ...settings, email_provider: p })}
+                                            className={`py-4 px-5 rounded-2xl border-2 text-left transition-all disabled:cursor-default ${(settings.email_provider || 'smtp') === p ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100 bg-slate-50 hover:border-slate-200'}`}
+                                        >
+                                            <p className={`text-sm font-bold ${(settings.email_provider || 'smtp') === p ? 'text-emerald-700' : 'text-slate-500'}`}>
+                                                {p === 'resend' ? 'Resend' : 'SMTP / Gmail'}
+                                            </p>
+                                            <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">
+                                                {p === 'resend' ? 'HTTP API — works on all hosts' : 'Traditional SMTP server'}
+                                            </p>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Resend fields */}
+                            {(settings.email_provider || 'smtp') === 'resend' && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 mb-8">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Resend API Key</label>
+                                        <div className="relative">
+                                            <input
+                                                type={showResendKey ? 'text' : 'password'}
+                                                disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                                value={settings.resend_api_key || ''}
+                                                onChange={(e) => setSettings({ ...settings, resend_api_key: e.target.value })}
+                                                className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 pl-6 pr-14 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
+                                                placeholder="re_xxxxxxxxxxxxxxxxxxxx"
+                                            />
+                                            <button type="button" onClick={() => setShowResendKey(v => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors" tabIndex={-1}>
+                                                {showResendKey
+                                                    ? <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                                                    : <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                }
+                                            </button>
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 ml-2">Get your API key from resend.com → API Keys</p>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Sender Email (From)</label>
+                                        <input
+                                            type="email"
+                                            disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                            value={settings.smtp_from || ''}
+                                            onChange={(e) => setSettings({ ...settings, smtp_from: e.target.value })}
+                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
+                                            placeholder="noreply@yourdomain.com"
+                                        />
+                                        <p className="text-[10px] text-slate-400 ml-2">Must be a verified domain in your Resend account</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* SMTP fields */}
+                            {(settings.email_provider || 'smtp') === 'smtp' && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">SMTP Host</label>
+                                        <input
+                                            type="text"
+                                            disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                            value={settings.smtp_host || ''}
+                                            onChange={(e) => setSettings({ ...settings, smtp_host: e.target.value })}
+                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
+                                            placeholder="smtp.example.com"
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Sender Email (From)</label>
+                                        <input
+                                            type="email"
+                                            disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                            value={settings.smtp_from || ''}
+                                            onChange={(e) => setSettings({ ...settings, smtp_from: e.target.value })}
+                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
+                                            placeholder="noreply@yourdomain.com"
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">SMTP Port</label>
+                                        <input
+                                            type="text"
+                                            disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                            value={settings.smtp_port || ''}
+                                            onChange={(e) => setSettings({ ...settings, smtp_port: e.target.value })}
+                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
+                                            placeholder="587"
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Username</label>
+                                        <input
+                                            type="text"
+                                            disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                            value={settings.smtp_user || ''}
+                                            onChange={(e) => setSettings({ ...settings, smtp_user: e.target.value })}
+                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between ml-2">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Password</label>
+                                            <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 border border-amber-100 rounded-full px-2 py-0.5">Gmail App Password: paste without spaces</span>
+                                        </div>
+                                        <div className="relative">
+                                            <input
+                                                type={showSmtpPass ? 'text' : 'password'}
+                                                disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                                value={settings.smtp_pass || ''}
+                                                onChange={(e) => setSettings({ ...settings, smtp_pass: e.target.value.replace(/\s/g, '') })}
+                                                className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 pl-6 pr-14 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
+                                                placeholder="Paste App Password (spaces auto-removed)"
+                                            />
+                                            <button type="button" onClick={() => setShowSmtpPass(v => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors" tabIndex={-1}>
+                                                {showSmtpPass
+                                                    ? <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                                                    : <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                }
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer hover:bg-white transition-colors">
+                                            <input
+                                                type="checkbox"
+                                                disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                                checked={settings.smtp_secure === 'true'}
+                                                onChange={(e) => setSettings({ ...settings, smtp_secure: String(e.target.checked) })}
+                                                className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                            />
+                                            <span className="text-sm font-bold text-slate-700">Use Secure Connection (TLS/SSL)</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
+
+                            {isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from']) && (
+                                <div className="mt-8 flex justify-end gap-4 relative z-10">
+                                    <button
+                                        onClick={() => handleSave('email')}
+                                        className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 hover:scale-105 active:scale-95 transition-all"
+                                    >
+                                        Save Email Settings
+                                    </button>
+                                    {editModes['email'] && (
+                                        <button
+                                            onClick={() => handleCancel('email')}
+                                            className="bg-slate-100 text-slate-500 px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
+                                        >
+                                            Cancel
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Test Email card */}
+                        <TestEmailCard />
                     </div>
                 )}
 
@@ -993,13 +1174,7 @@ export default function SettingsPage() {
                             )}
                         </div>
 
-                        <div className="bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-200/40 border border-slate-200/60 p-10 flex flex-col items-center justify-center text-center space-y-4">
-                            <div className="h-24 w-24 bg-blue-50 rounded-full flex items-center justify-center">
-                                <AdjustmentsHorizontalIcon className="h-10 w-10 text-blue-600 animate-spin" style={{ animationDuration: '4s' }} />
-                            </div>
-                            <h4 className="text-sm font-bold text-slate-900 font-display">Under Development</h4>
-                            <p className="text-xs font-bold text-slate-400 leading-relaxed max-w-xs">Additional performance metrics and cluster controls are being calibrated.</p>
-                        </div>
+                        <ClearThemeCacheCard />
                     </div>
                 )}
 

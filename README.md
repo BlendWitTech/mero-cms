@@ -99,7 +99,9 @@ blendwit-cms/
 │       ├── ci.yml                  # Build validation on every push/PR
 │       ├── deploy-staging.yml      # Staging status on develop push
 │       └── deploy-production.yml   # Production approval gate on main push
+├── .env.example                    # Global environment example
 ├── railway.json                    # Railway DOCKERFILE builder config
+├── vercel.json                     # Vercel deployment config for Admin
 ├── LICENSE                         # Commercial proprietary license
 ├── README.md                       # This file
 ├── SETUP.md                        # Full deployment guide
@@ -162,7 +164,7 @@ node scripts/zip-theme.js cms-starter
 
 | Environment | Branch | Backend | Frontend |
 |---|---|---|---|
-| Local Development | any | localhost:3001 | localhost:3000 |
+| Local Development | `main` | localhost:3001 | localhost:3000 |
 | Staging | `develop` | Railway (staging service) | Vercel preview URL |
 | Production | `main` | Railway (production service) | Vercel production domain |
 
@@ -171,17 +173,16 @@ node scripts/zip-theme.js cms-starter
 ## Quick Start (Local)
 
 ```bash
-# 1. Clone (requires license or contributor access)
+# 1. Clone
 git clone https://github.com/BlendWitTech/blendwit-cms.git
 cd blendwit-cms
 
-# 2. Backend
-cd backend
-cp .env.development.example .env
-# Edit .env: fill in DATABASE_URL and JWT_SECRET
+# 2. Database & Backend
+# Make sure Docker is running if you want to use dev:db
+npm run dev:db      # Starts a local PostgreSQL container
 npm install
-npx prisma migrate dev
-npm run start:dev
+npm run db:init     # Runs Prisma migrations
+npm run dev:backend # Starts NestJS at http://localhost:3001
 
 # 3. Frontend (new terminal)
 cd frontend

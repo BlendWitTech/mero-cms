@@ -5,7 +5,7 @@ model Testimonial {
   clientCompany String?
   clientPhoto   String?
   content       String   @db.Text
-  rating        Int      @default(5)
+  rating        Float    @default(5)
   theme         String?
   attributes    Json?
   createdAt     DateTime @default(now())

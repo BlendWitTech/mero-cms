@@ -27,4 +27,23 @@ export class SettingsService {
         );
         return Promise.all(updates);
     }
+
+    async clearThemeCache() {
+        const themeUrl = process.env.THEME_URL || 'http://localhost:3002';
+        const secret = process.env.REVALIDATE_SECRET || '';
+        const url = `${themeUrl}/api/revalidate`;
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: secret ? { 'x-revalidate-secret': secret } : {},
+            });
+            if (!res.ok) {
+                const body = await res.text();
+                throw new Error(`Theme responded with ${res.status}: ${body}`);
+            }
+            return { success: true, message: 'Theme cache cleared successfully.' };
+        } catch (err: any) {
+            throw new Error(`Failed to clear theme cache: ${err.message}`);
+        }
+    }
 }
