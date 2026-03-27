@@ -573,12 +573,15 @@ export class ThemesService {
 
     async deleteTheme(themeName: string) {
         const builtInPath = path.join(this.builtInThemesPath, themeName);
-        if (fs.existsSync(builtInPath)) {
-            throw new BadRequestException(`"${themeName}" is a built-in theme and cannot be deleted.`);
-        }
-
         const uploadedPath = path.join(this.uploadPath, themeName);
-        if (!fs.existsSync(uploadedPath)) {
+
+        const themePath = fs.existsSync(builtInPath)
+            ? builtInPath
+            : fs.existsSync(uploadedPath)
+                ? uploadedPath
+                : null;
+
+        if (!themePath) {
             throw new BadRequestException(`Theme "${themeName}" not found.`);
         }
 
@@ -588,7 +591,7 @@ export class ThemesService {
             await this.prisma.setting.deleteMany({ where: { key: 'active_theme' } });
         }
 
-        fs.rmSync(uploadedPath, { recursive: true, force: true });
+        fs.rmSync(themePath, { recursive: true, force: true });
         return { deleted: themeName };
     }
 

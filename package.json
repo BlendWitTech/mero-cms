@@ -4,13 +4,11 @@
   "private": true,
   "workspaces": [
     "backend",
-    "frontend",
-    "demo"
+    "frontend"
   ],
   "scripts": {
     "dev:backend": "npm run start:dev -w backend",
     "dev:frontend": "npm run dev -w frontend",
-    "dev:demo": "npm run dev -w demo",
     "dev:theme": "node scripts/dev-theme.js",
     "dev:db": "docker compose up db -d",
     "dev": "concurrently --restart-tries 5 --restart-after 1500 \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:theme\"",

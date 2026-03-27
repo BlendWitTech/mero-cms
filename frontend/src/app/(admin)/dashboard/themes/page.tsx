@@ -432,7 +432,7 @@ export default function ThemesPage() {
                                                 )}
                                                 {isActive ? 'Active' : isActivating === theme.slug ? (isRestarting ? 'Restarting...' : 'Activating...') : 'Activate'}
                                             </button>
-                                            {!theme.builtIn && !isActive && (
+                                            {!isActive && (
                                                 <button
                                                     onClick={() => setDeleteModalTheme(theme.slug)}
                                                     disabled={isBusy}
