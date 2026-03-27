@@ -571,6 +571,27 @@ export class ThemesService {
         return setting ? setting.value : null;
     }
 
+    async deleteTheme(themeName: string) {
+        const builtInPath = path.join(this.builtInThemesPath, themeName);
+        if (fs.existsSync(builtInPath)) {
+            throw new BadRequestException(`"${themeName}" is a built-in theme and cannot be deleted.`);
+        }
+
+        const uploadedPath = path.join(this.uploadPath, themeName);
+        if (!fs.existsSync(uploadedPath)) {
+            throw new BadRequestException(`Theme "${themeName}" not found.`);
+        }
+
+        // If this theme is currently active, clear the active_theme setting
+        const active = await this.getActiveTheme();
+        if (active === themeName) {
+            await this.prisma.setting.deleteMany({ where: { key: 'active_theme' } });
+        }
+
+        fs.rmSync(uploadedPath, { recursive: true, force: true });
+        return { deleted: themeName };
+    }
+
     /**
      * Reset the CMS to its base state:
      * - Wipes ALL content (pages, menus, plots, team, testimonials, services, posts, leads, media records)

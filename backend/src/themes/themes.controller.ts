@@ -1,4 +1,4 @@
-import { Controller, Post, UseInterceptors, UploadedFile, Get, BadRequestException, Param, Patch, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, Get, Param, Patch, Delete, Body, UseGuards } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ThemesService } from './themes.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -97,6 +97,12 @@ export class ThemesController {
     @Get('active/config')
     async getActiveConfig() {
         return this.themesService.getActiveThemeConfig();
+    }
+
+    @Delete(':name')
+    @RequirePermissions(Permission.SETTINGS_EDIT)
+    async deleteTheme(@Param('name') name: string) {
+        return this.themesService.deleteTheme(name);
     }
 
 }
