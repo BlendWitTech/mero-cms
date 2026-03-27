@@ -183,16 +183,18 @@ export default function ProfilePage() {
 
     const handleVerify2FA = async () => {
         try {
-            const data = await apiRequest('/auth/2fa/verify', {
+            const data = await apiRequest('/auth/2fa/enable', {
                 method: 'POST',
                 body: { token: twoFactorToken }
             });
             if (data.success) {
                 setIs2FAModalOpen(false);
                 setUser({ ...user, twoFactorEnabled: true });
+            } else {
+                console.error('2FA enable failed:', data.message);
             }
         } catch (error) {
-            console.error('Failed to verify 2FA', error);
+            console.error('Failed to enable 2FA', error);
         }
     };
 

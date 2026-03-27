@@ -13,7 +13,7 @@ import {
     Cog8ToothIcon,
     ArrowRightOnRectangleIcon,
     ShieldCheckIcon,
-    Bars3Icon,
+    Bars3Icon
 } from '@heroicons/react/24/outline';
 import { useSettings } from '@/context/SettingsContext';
 
@@ -114,7 +114,7 @@ export default function Header({ isCollapsed, onMobileMenuToggle }: HeaderProps)
 
     return (
         <header className={classNames(
-            "sticky top-0 z-40 flex shrink-0 items-center border-b border-slate-200/60 bg-white/90 backdrop-blur-3xl transition-all duration-500 ease-out shadow-sm shadow-slate-200/20",
+            "sticky top-0 z-40 flex shrink-0 items-center border-b border-slate-200 bg-white/90 backdrop-blur-3xl transition-all duration-500 ease-out shadow-sm shadow-slate-200",
             isCollapsed ? "h-14 px-8" : "h-16 px-6"
         )}>
             <div className="flex flex-1 items-center gap-x-6">
@@ -183,7 +183,7 @@ export default function Header({ isCollapsed, onMobileMenuToggle }: HeaderProps)
                         </button>
 
                         {isNotificationsOpen && (
-                            <div className="absolute right-0 mt-3 w-80 origin-top-right rounded-3xl bg-white p-2 shadow-2xl shadow-slate-900/10 border border-slate-100 ring-1 ring-black/5 animate-in zoom-in-95 slide-in-from-top-2 duration-300 overflow-hidden">
+                            <div className="absolute right-0 mt-3 w-80 max-w-[calc(100vw-1rem)] origin-top-right rounded-3xl bg-white p-2 shadow-2xl shadow-slate-900/10 border border-slate-100 ring-1 ring-black/5 animate-in zoom-in-95 slide-in-from-top-2 duration-300 overflow-hidden">
                                 <div className="px-4 py-3 border-b border-slate-50 mb-1 flex justify-between items-center">
                                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Notifications</h3>
                                     {unreadCount > 0 && <span className="text-[9px] font-bold bg-blue-600 text-white px-1.5 py-0.5 rounded-full">{unreadCount} New</span>}
@@ -262,7 +262,7 @@ export default function Header({ isCollapsed, onMobileMenuToggle }: HeaderProps)
 
                         {/* Dropdown Menu */}
                         {isUserMenuOpen && (
-                            <div className="absolute right-0 mt-3 w-56 origin-top-right rounded-3xl bg-white p-2 shadow-2xl shadow-slate-900/10 border border-slate-100 ring-1 ring-black/5 animate-in zoom-in-95 slide-in-from-top-2 duration-300">
+                            <div className="absolute right-0 mt-3 w-56 max-w-[calc(100vw-1rem)] origin-top-right rounded-3xl bg-white p-2 shadow-2xl shadow-slate-900/10 border border-slate-100 ring-1 ring-black/5 animate-in zoom-in-95 slide-in-from-top-2 duration-300">
                                 <div className="px-4 py-3 border-b border-slate-50 mb-1">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Signed in as</p>
                                     <p className="text-xs font-bold text-slate-900 mt-1 truncate">{user?.email || 'user@example.com'}</p>

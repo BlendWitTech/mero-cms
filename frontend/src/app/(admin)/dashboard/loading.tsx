@@ -4,7 +4,7 @@ import Skeleton from '@/components/ui/Skeleton';
 function StatCardSkeleton({ delay }: { delay: number }) {
     return (
         <div
-            className="relative overflow-hidden rounded-[2.5rem] p-8 bg-white border border-slate-200/60 shadow-sm"
+            className="relative overflow-hidden rounded-[2.5rem] p-8 bg-white border border-slate-200 shadow-sm"
             style={{ animationDelay: `${delay}ms` }}
         >
             {/* icon + badge row */}
@@ -81,7 +81,7 @@ export default function DashboardLoading() {
                         <Skeleton className="w-40 h-6 rounded-xl" />
                         <Skeleton className="w-16 h-4 rounded-full" />
                     </div>
-                    <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/50 shadow-2xl shadow-slate-200/40 p-2">
+                    <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-2xl shadow-slate-200 p-2">
                         <ActivityRowSkeleton delay={0} />
                         <ActivityRowSkeleton delay={60} />
                         <ActivityRowSkeleton delay={120} />
@@ -95,7 +95,7 @@ export default function DashboardLoading() {
                     <Skeleton className="w-36 h-6 rounded-xl ml-4" />
                     <div className="space-y-5">
                         {/* Dark "Create Content" button */}
-                        <div className="overflow-hidden rounded-[2.5rem] bg-slate-900/8 border border-slate-200/60 p-7">
+                        <div className="overflow-hidden rounded-[2.5rem] bg-slate-900/8 border border-slate-200 p-7">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <Skeleton className="w-12 h-12 rounded-2xl" />
@@ -106,7 +106,7 @@ export default function DashboardLoading() {
                         </div>
 
                         {/* Media Library button */}
-                        <div className="overflow-hidden rounded-[2.5rem] bg-white/80 border border-slate-200/60 shadow-sm p-7">
+                        <div className="overflow-hidden rounded-[2.5rem] bg-white border border-slate-200 shadow-sm p-7">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <Skeleton className="w-12 h-12 rounded-2xl" />

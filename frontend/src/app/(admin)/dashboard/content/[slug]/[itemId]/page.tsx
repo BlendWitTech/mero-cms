@@ -152,7 +152,7 @@ function ContentEditorContent({ params }: { params: Promise<{ slug: string, item
             />
 
             {/* Header */}
-            <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200/50 shadow-sm sticky top-4 z-20">
+            <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm sticky top-0 z-20">
                 <div className="flex items-center gap-4">
                     <button onClick={handleBack} className="p-2 hover:bg-slate-50 rounded-xl text-slate-500 transition-colors">
                         <ArrowLeftIcon className="h-5 w-5" />
@@ -185,7 +185,7 @@ function ContentEditorContent({ params }: { params: Promise<{ slug: string, item
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Form */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white rounded-2xl p-8 border border-slate-200/50 shadow-sm space-y-8">
+                    <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm space-y-8">
                         {collection.fields.filter((f: any) => ['text', 'rich-text', 'number', 'date', 'url', 'email', 'tel', 'color'].includes(f.type)).map((field: any) => (
                             <div key={field.id} className="space-y-2">
                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
@@ -284,7 +284,7 @@ function ContentEditorContent({ params }: { params: Promise<{ slug: string, item
                 {/* Sidebar: Images & Switches */}
                 <div className="space-y-6">
                     {collection.fields.filter((f: any) => ['image', 'file', 'boolean'].includes(f.type)).map((field: any) => (
-                        <div key={field.id} className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
+                        <div key={field.id} className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
                                 {field.label}
                             </label>
@@ -333,7 +333,7 @@ function ContentEditorContent({ params }: { params: Promise<{ slug: string, item
                     ))}
 
                     {/* Default Slug Field */}
-                    <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
+                    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
                             SEO Friendly Slug
                         </label>

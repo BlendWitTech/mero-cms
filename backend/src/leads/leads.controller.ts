@@ -1,10 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, SetMetadata } from '@nestjs/common';
 import { LeadsService } from './leads.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Permission } from '../auth/permissions.enum';
-import { RequireModule } from '../setup/require-module.decorator';
+import { RequireModule, REQUIRE_MODULE_KEY } from '../setup/require-module.decorator';
 
 @RequireModule('leads')
 @Controller('leads')
@@ -12,6 +12,7 @@ export class LeadsController {
     constructor(private readonly leadsService: LeadsService) { }
 
     @Post('public/submit')
+    @SetMetadata(REQUIRE_MODULE_KEY, null) // bypass class-level @RequireModule so public submissions always work
     createPublic(@Body() createLeadDto: any) {
         return this.leadsService.create(createLeadDto);
     }

@@ -99,7 +99,7 @@ export default function RobotsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white rounded-3xl border border-slate-200/50 shadow-xl shadow-slate-200/20 overflow-hidden">
+                    <div className="bg-white rounded-3xl border border-slate-200 shadow-xl shadow-slate-200 overflow-hidden">
                         <div className="bg-slate-900 px-6 py-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="flex gap-1.5">
@@ -136,7 +136,7 @@ export default function RobotsPage() {
                 </div>
 
                 <div className="space-y-6">
-                    <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-6">
+                    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
                         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Quick Actions</h3>
 
                         <div className="space-y-3">
@@ -194,7 +194,7 @@ export default function RobotsPage() {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl p-8 border border-slate-200/50 shadow-sm text-center">
+                    <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm text-center">
                         <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
                             <DocumentMagnifyingGlassIcon className="h-8 w-8 text-blue-500" />
                         </div>

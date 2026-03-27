@@ -95,7 +95,7 @@ export default function DynamicForm({ form, apiUrl = process.env.NEXT_PUBLIC_API
     return (
         <div className="space-y-8">
             {form.settings?.featuredImage && (
-                <div className="w-full h-48 rounded-[2rem] overflow-hidden shadow-2xl shadow-slate-200/50 border border-slate-100 animate-in fade-in duration-1000">
+                <div className="w-full h-48 rounded-[2rem] overflow-hidden shadow-2xl shadow-slate-200 border border-slate-100 animate-in fade-in duration-1000">
                     <img src={form.settings.featuredImage} alt={form.name} className="w-full h-full object-cover" />
                 </div>
             )}

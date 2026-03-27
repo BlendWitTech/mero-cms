@@ -43,11 +43,11 @@ export class SettingsController {
         try {
             await this.mailService.sendTemplatedMail(
                 body.to,
-                'SMTP Test — Blendwit CMS',
-                `<h2 style="margin:0 0 8px;font-size:22px;font-weight:900;color:#1E1E1E;">Email Delivery Working!</h2>
+                'SMTP Test — KTM Plots CMS',
+                `<h2 style="margin:0 0 8px;font-size:22px;font-weight:900;color:#1E1E1E;">SMTP Working!</h2>
                  <p style="margin:0 0 16px;font-size:14px;color:#6B7280;line-height:1.6;">Your email configuration is correctly set up. Emails from the system will be delivered to your recipients.</p>
-                 <p style="margin:0;font-size:12px;color:#9CA3AF;">Sent from Blendwit CMS · System Settings</p>`,
-                'Your email configuration is working correctly.',
+                 <p style="margin:0;font-size:12px;color:#9CA3AF;">Sent from KTM Plots CMS · System Settings</p>`,
+                'Your SMTP configuration is working correctly.',
             );
             return { success: true, message: `Test email sent to ${body.to}` };
         } catch (error: any) {

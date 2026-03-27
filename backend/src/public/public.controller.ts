@@ -91,6 +91,12 @@ export class PublicController {
                 // SEO defaults
                 metaDescription: settingsMap['meta_description'] || null,
                 googleAnalyticsId: settingsMap['google_analytics_id'] || null,
+                // Design system
+                headingFont: settingsMap['heading_font'] || null,
+                bodyFont: settingsMap['body_font'] || null,
+                secondaryColor: settingsMap['secondary_color'] || null,
+                accentColor: settingsMap['accent_color'] || null,
+                listingMode: settingsMap['listing_mode'] || 'load-more',
             },
             enabledModules,
         };

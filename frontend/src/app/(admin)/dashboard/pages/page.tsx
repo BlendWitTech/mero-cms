@@ -21,7 +21,7 @@ interface PageItem {
     id: string;
     title: string;
     slug: string;
-    type: 'theme' | 'content' | 'category' | 'tag';
+    type: 'theme' | 'content' | 'category' | 'tag' | 'plot-category';
     lastUpdated?: string;
     seo?: any;
     editableContent?: boolean; // content pages (privacy, terms etc.) can be fully edited
@@ -46,11 +46,12 @@ export default function PagesIndex() {
     const fetchPages = async () => {
         setIsLoading(true);
         try {
-            const [pageSchema, dynamicPages, categories, tags, themeConfig] = await Promise.all([
+            const [pageSchema, dynamicPages, categories, tags, plotCategories, themeConfig] = await Promise.all([
                 apiRequest('/themes/active/page-schema', { skipNotification: true }).catch(() => []),
                 apiRequest('/pages', { skipNotification: true }).catch(() => []),
                 apiRequest('/categories', { skipNotification: true }).catch(() => []),
                 apiRequest('/tags', { skipNotification: true }).catch(() => []),
+                apiRequest('/plot-categories', { skipNotification: true }).catch(() => []),
                 apiRequest('/themes/active/config', { skipNotification: true }).catch(() => ({})),
             ]);
             setThemeBaseUrl(themeConfig?.deployedUrl || 'http://localhost:3002');
@@ -98,6 +99,13 @@ export default function PagesIndex() {
                     type: 'tag' as const,
                     lastUpdated: t.updatedAt,
                 })) : []),
+                ...(Array.isArray(plotCategories) ? plotCategories.map((c: any) => ({
+                    id: c.id,
+                    title: `Plot Category: ${c.name}`,
+                    slug: `/plots/category/${c.slug}`,
+                    type: 'plot-category' as const,
+                    lastUpdated: c.updatedAt,
+                })) : []),
             ];
 
             setPages(allPages);
@@ -117,7 +125,7 @@ export default function PagesIndex() {
         try {
             const pageType = page.type === 'theme' ? 'static'
                 : page.type === 'content' ? 'page'
-                : page.type === 'category' ? 'category'
+                : page.type === 'category' || page.type === 'plot-category' ? 'category'
                 : 'tag';
 
             const seo = await apiRequest(`/seo-meta/${pageType}/${page.id}`, { skipNotification: true });
@@ -137,7 +145,7 @@ export default function PagesIndex() {
         try {
             const pageType = editingPage.type === 'theme' ? 'static'
                 : editingPage.type === 'content' ? 'page'
-                : editingPage.type === 'category' ? 'category'
+                : editingPage.type === 'category' || editingPage.type === 'plot-category' ? 'category'
                 : 'tag';
 
             await apiRequest('/seo-meta', {
@@ -177,10 +185,11 @@ export default function PagesIndex() {
     );
 
     const typeConfig: Record<string, { label: string; bg: string; text: string; icon: React.ReactNode }> = {
-        theme:   { label: 'Theme Page',    bg: 'bg-blue-50',   text: 'text-blue-600',   icon: <Squares2X2Icon className="h-5 w-5" /> },
-        content: { label: 'Content Page',  bg: 'bg-emerald-50', text: 'text-emerald-600', icon: <DocumentTextIcon className="h-5 w-5" /> },
-        category:{ label: 'Category',      bg: 'bg-amber-50',  text: 'text-amber-600',  icon: <Square3Stack3DIcon className="h-5 w-5" /> },
-        tag:     { label: 'Tag',           bg: 'bg-purple-50', text: 'text-purple-600', icon: <HashtagIcon className="h-5 w-5" /> },
+        theme:          { label: 'Theme Page',      bg: 'bg-blue-50',   text: 'text-blue-600',   icon: <Squares2X2Icon className="h-5 w-5" /> },
+        content:        { label: 'Content Page',    bg: 'bg-emerald-50', text: 'text-emerald-600', icon: <DocumentTextIcon className="h-5 w-5" /> },
+        category:       { label: 'Blog Category',   bg: 'bg-amber-50',  text: 'text-amber-600',  icon: <Square3Stack3DIcon className="h-5 w-5" /> },
+        tag:            { label: 'Tag',             bg: 'bg-purple-50', text: 'text-purple-600', icon: <HashtagIcon className="h-5 w-5" /> },
+        'plot-category':{ label: 'Plot Category',   bg: 'bg-orange-50', text: 'text-orange-600', icon: <Square3Stack3DIcon className="h-5 w-5" /> },
     };
 
     return (
@@ -218,7 +227,7 @@ export default function PagesIndex() {
                 ))}
             </div>
 
-            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden">
+            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="p-6 border-b border-slate-100 bg-slate-50/10">
                     <div className="relative group max-w-md">
                         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
@@ -233,7 +242,7 @@ export default function PagesIndex() {
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full min-w-[700px] text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-100 bg-slate-50/30">
                                 <th className="pl-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center w-16">Type</th>
@@ -269,7 +278,7 @@ export default function PagesIndex() {
                                             </td>
                                             <td className="px-4 py-5 font-mono text-[10px] text-blue-500 font-bold">{page.slug}</td>
                                             <td className="pr-8 py-5 text-right">
-                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="flex items-center justify-end gap-2">
                                                     <a
                                                         href={`${themeBaseUrl}${page.slug}`}
                                                         target="_blank"

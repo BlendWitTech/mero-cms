@@ -7,7 +7,7 @@ export default function ThemeNotDetected() {
 
     return (
         <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 animate-in fade-in zoom-in duration-500">
-            <div className="bg-white rounded-3xl p-10 max-w-lg w-full text-center shadow-2xl shadow-slate-200/50 border border-slate-100">
+            <div className="bg-white rounded-3xl p-10 max-w-lg w-full text-center shadow-2xl shadow-slate-200 border border-slate-100">
                 <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-6">
                     <ExclamationTriangleIcon className="w-10 h-10 text-orange-500" />
                 </div>

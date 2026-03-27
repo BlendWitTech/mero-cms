@@ -6,10 +6,12 @@ import { useState } from 'react';
 export interface SchemaField {
     key: string;
     label: string;
-    type: 'text' | 'textarea' | 'image' | 'number' | 'button' | 'buttons' | 'stats';
+    type: 'text' | 'textarea' | 'image' | 'number' | 'button' | 'buttons' | 'stats' | 'select';
     placeholder?: string;
     max?: number;
     description?: string;
+    options?: string[];
+    showWhen?: { field: string; hasValue: boolean };
 }
 
 export interface SchemaSection {
@@ -188,6 +190,19 @@ export default function SectionEditor({ schema, sections, onChange }: SectionEdi
                 );
             }
 
+            case 'select': {
+                const options = field.options ?? [];
+                return (
+                    <select
+                        value={val ?? options[0] ?? ''}
+                        onChange={e => updateField(sectionId, field.key, e.target.value)}
+                        className={inputClass}
+                    >
+                        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                );
+            }
+
             default:
                 return null;
         }
@@ -202,7 +217,7 @@ export default function SectionEditor({ schema, sections, onChange }: SectionEdi
                 const isExpanded = expanded.has(schemaSection.id);
 
                 return (
-                    <div key={schemaSection.id} className="bg-white rounded-2xl border border-slate-200/50 shadow-sm overflow-hidden">
+                    <div key={schemaSection.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                         <div className="flex items-center gap-3 p-4 cursor-pointer select-none"
                             onClick={() => toggleExpand(schemaSection.id)}>
                             <button
@@ -224,17 +239,38 @@ export default function SectionEditor({ schema, sections, onChange }: SectionEdi
 
                         {isExpanded && schemaSection.fields.length > 0 && (
                             <div className="border-t border-slate-100 p-4 space-y-4">
-                                {schemaSection.fields.map(field => (
-                                    <div key={field.key}>
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">
-                                            {field.label}
-                                        </label>
-                                        {field.description && (
-                                            <p className="text-xs text-slate-400 mb-1.5">{field.description}</p>
-                                        )}
-                                        {renderField(schemaSection.id, field)}
-                                    </div>
-                                ))}
+                                {schemaSection.fields.map(field => {
+                                    // Conditional visibility: showWhen
+                                    if (field.showWhen) {
+                                        const watchedVal = getSectionData(schemaSection.id).data[field.showWhen.field];
+                                        const hasValue = watchedVal !== undefined && watchedVal !== null && watchedVal !== '';
+                                        if (field.showWhen.hasValue !== hasValue) {
+                                            return (
+                                                <div key={field.key} className="opacity-40 pointer-events-none select-none">
+                                                    <label className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-1 block">
+                                                        {field.label}
+                                                    </label>
+                                                    <p className="text-xs text-slate-300 italic">
+                                                        {field.showWhen.hasValue
+                                                            ? `Set a background image above to enable this field`
+                                                            : `Remove the background image to enable this field`}
+                                                    </p>
+                                                </div>
+                                            );
+                                        }
+                                    }
+                                    return (
+                                        <div key={field.key}>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">
+                                                {field.label}
+                                            </label>
+                                            {field.description && (
+                                                <p className="text-xs text-slate-400 mb-1.5">{field.description}</p>
+                                            )}
+                                            {renderField(schemaSection.id, field)}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

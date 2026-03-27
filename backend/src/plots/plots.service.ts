@@ -14,10 +14,21 @@ export class PlotsService {
         return s?.value ?? null;
     }
 
+    private buildPlotData(dto: any) {
+        const { categoryId, ...rest } = dto;
+        const data: any = { ...rest };
+        if (categoryId) {
+            data.category = { connect: { id: categoryId } };
+        } else if ('categoryId' in dto) {
+            data.category = { disconnect: true };
+        }
+        return data;
+    }
+
     async create(dto: any) {
         const activeTheme = await this.getActiveTheme();
         const plot = await (this.prisma as any).plot.create({
-            data: { ...dto, theme: activeTheme },
+            data: { ...this.buildPlotData(dto), theme: activeTheme },
             include: { category: true },
         });
         await this.notificationsService.create({
@@ -61,7 +72,7 @@ export class PlotsService {
     async update(id: string, dto: any) {
         const plot = await (this.prisma as any).plot.update({
             where: { id },
-            data: dto,
+            data: this.buildPlotData(dto),
             include: { category: true },
         });
         await this.notificationsService.create({
@@ -88,12 +99,15 @@ export class PlotsService {
     }
 
     // Public methods
-    async findPublished(page = 1, limit = 10, category?: string) {
-        const activeTheme = await this.getActiveTheme();
+    async findPublished(page = 1, limit = 10, category?: string, status?: string, search?: string) {
         const skip = (page - 1) * limit;
         const where: any = { NOT: { status: 'hidden' } };
-        if (activeTheme) where.theme = activeTheme;
         if (category) where.category = { slug: category };
+        if (status) where.status = status;
+        if (search) where.OR = [
+            { title: { contains: search, mode: 'insensitive' } },
+            { location: { contains: search, mode: 'insensitive' } },
+        ];
         const [plots, total] = await Promise.all([
             (this.prisma as any).plot.findMany({
                 where,

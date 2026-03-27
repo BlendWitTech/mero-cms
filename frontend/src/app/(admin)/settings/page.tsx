@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { apiRequest } from '@/lib/api';
+import { GlobeAltIcon } from '@heroicons/react/24/outline';
+import { useNotification } from '@/context/NotificationContext';
 
 export default function SettingsPage() {
     const [settings, setSettings] = useState({
@@ -11,6 +13,7 @@ export default function SettingsPage() {
     });
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const { showToast } = useNotification();
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -35,67 +38,105 @@ export default function SettingsPage() {
                 method: 'PATCH',
                 body: settings,
             });
-            alert('Settings saved successfully!');
-        } catch (error) {
+            showToast('CMS Global Settings synchronized successfully.', 'success');
+        } catch (error: any) {
             console.error('Save failed:', error);
-            alert('Error saving settings');
+            showToast(error.message || 'Failed to save settings', 'error');
         } finally {
             setIsSaving(false);
         }
     };
 
-    if (isLoading) return <div className="p-8">Loading settings...</div>;
+    if (isLoading) return <div className="space-y-6 animate-pulse p-10"><div className="h-12 w-48 bg-slate-100 rounded-xl" /><div className="h-96 bg-slate-100 rounded-[3rem]" /></div>;
 
     return (
-        <div className="max-w-4xl mx-auto p-8">
-            <h1 className="text-3xl font-bold text-slate-900 mb-8">CMS Global Settings</h1>
+        <div className="max-w-6xl mx-auto space-y-10 pb-20">
+            {/* Header */}
+            <div className="px-2">
+                <h1 className="text-2xl font-bold text-slate-900 tracking-tight font-display">
+                    CMS Global <span className="text-blue-600 font-bold">Settings</span>
+                </h1>
+                <p className="mt-1 text-xs text-slate-500 font-semibold tracking-tight">Configure the administrative interface and login experience.</p>
+            </div>
 
-            <form onSubmit={handleSave} className="space-y-8 bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-8">
-                    <div className="sm:col-span-2">
-                        <label className="block text-sm font-bold text-slate-700 mb-2">CMS Title</label>
-                        <input
-                            type="text"
-                            className="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
-                            value={settings.cms_title}
-                            onChange={(e) => setSettings({ ...settings, cms_title: e.target.value })}
-                        />
-                        <p className="mt-2 text-xs text-slate-500">The main title displayed on the login page.</p>
+            <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                    <div className="lg:col-span-2">
+                        <form onSubmit={handleSave} className="bg-white rounded-[3rem] p-5 sm:p-8 lg:p-12 shadow-2xl shadow-slate-200 border border-slate-200 space-y-10 relative group">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/20 text-white">
+                                    <GlobeAltIcon className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-900 font-display">Interface Branding</h3>
+                                    <p className="text-sm font-medium text-slate-400">Manage titles and visuals for the CMS login and dashboard.</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-8">
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">CMS Master Title</label>
+                                    <input
+                                        type="text"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all"
+                                        value={settings.cms_title}
+                                        onChange={(e) => setSettings({ ...settings, cms_title: e.target.value })}
+                                        placeholder="BLENDWIT CMS"
+                                    />
+                                    <p className="text-[10px] text-slate-400 ml-2">Appears on the login screen and sidebar.</p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">CMS Subtitle</label>
+                                    <input
+                                        type="text"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all"
+                                        value={settings.cms_subtitle}
+                                        onChange={(e) => setSettings({ ...settings, cms_subtitle: e.target.value })}
+                                        placeholder="Premium Management Console"
+                                    />
+                                    <p className="text-[10px] text-slate-400 ml-2">Secondary title shown below the main title on login.</p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Login Avatar Path</label>
+                                    <input
+                                        type="text"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all"
+                                        value={settings.cms_login_avatar}
+                                        onChange={(e) => setSettings({ ...settings, cms_login_avatar: e.target.value })}
+                                        placeholder="/assets/logo.png"
+                                    />
+                                    <p className="text-[10px] text-slate-400 ml-2">Public path to the illustration/logo shown on the login page.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end pt-4">
+                                <button
+                                    type="submit"
+                                    disabled={isSaving}
+                                    className="bg-slate-900 text-white px-10 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-blue-600 transition-all active:scale-[0.98] disabled:opacity-50 shadow-xl shadow-slate-900/10"
+                                >
+                                    {isSaving ? 'Synchronizing…' : 'Save Global Settings'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
 
-                    <div className="sm:col-span-2">
-                        <label className="block text-sm font-bold text-slate-700 mb-2">CMS Subtitle</label>
-                        <input
-                            type="text"
-                            className="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
-                            value={settings.cms_subtitle}
-                            onChange={(e) => setSettings({ ...settings, cms_subtitle: e.target.value })}
-                        />
-                        <p className="mt-2 text-xs text-slate-500">Subtext displayed under the title.</p>
-                    </div>
-
-                    <div className="sm:col-span-2">
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Login Avatar Path</label>
-                        <input
-                            type="text"
-                            className="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
-                            value={settings.cms_login_avatar}
-                            onChange={(e) => setSettings({ ...settings, cms_login_avatar: e.target.value })}
-                        />
-                        <p className="mt-2 text-xs text-slate-500">Public URL or path to the avatar image (e.g., /assets/boy_idea_shock.png).</p>
+                    <div className="space-y-8">
+                        <div className="bg-slate-900 rounded-[3rem] p-10 text-white relative shadow-2xl shadow-slate-900/40 group">
+                            <h3 className="text-xl font-bold font-display relative z-10">System Status</h3>
+                            <p className="text-xs font-semibold text-slate-400 mt-2 relative z-10 leading-relaxed mb-8">Global settings control the master identity of this administrative instance.</p>
+                            <div className="space-y-4 relative z-10">
+                                <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
+                                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Environment</span>
+                                    <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">Production</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <div className="flex justify-end pt-4">
-                    <button
-                        type="submit"
-                        disabled={isSaving}
-                        className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50"
-                    >
-                        {isSaving ? 'Saving Changes...' : 'Save All Settings'}
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     );
 }

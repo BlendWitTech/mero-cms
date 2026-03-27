@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { LockClosedIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
+import { LockClosedIcon, EnvelopeIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useNotification } from '@/context/NotificationContext';
 import { setAuthToken } from '@/lib/auth';
 
@@ -14,6 +14,7 @@ function LoginPageInner() {
     const searchParams = useSearchParams();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -26,7 +27,7 @@ function LoginPageInner() {
     const [token, setToken] = useState('');
     const [settings, setSettings] = useState({
         cms_title: 'Blendwit CMS',
-        cms_subtitle: 'Elevate Your Horizontal Content Strategy',
+        cms_subtitle: 'Elevate Your Content Strategy',
         cms_login_avatar: '/assets/boy_idea_shock.png'
     });
 
@@ -36,6 +37,17 @@ function LoginPageInner() {
             showToast('Setup is Already Completed. Please log in.', 'info');
         }
     }, [searchParams, showToast]);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await fetch(`${API_URL}/settings`);
+                const data = await res.json();
+                if (data.cms_title) setSettings(data);
+            } catch { }
+        };
+        fetchSettings();
+    }, []);
 
     const handleForgotPassword = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -49,25 +61,12 @@ function LoginPageInner() {
             const data = await res.json();
             showToast(data.message || 'If an account exists, an email has been sent.', 'success');
             setShowForgotPassword(false);
-        } catch (error) {
+        } catch {
             showToast('Failed to send request', 'error');
         } finally {
             setIsLoading(false);
         }
     };
-
-    useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const res = await fetch(`${API_URL}/settings`);
-                const data = await res.json();
-                if (data.cms_title) setSettings(data);
-            } catch (error) {
-                console.error('Failed to fetch settings:', error);
-            }
-        };
-        fetchSettings();
-    }, []);
 
     const handleTwoFactorSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -85,7 +84,7 @@ function LoginPageInner() {
             } else {
                 showToast(data.message || 'Invalid 2FA code', 'error');
             }
-        } catch (error) {
+        } catch {
             showToast('Verification failed', 'error');
         } finally {
             setIsLoading(false);
@@ -118,10 +117,10 @@ function LoginPageInner() {
                     window.location.href = '/dashboard';
                 }
             } else {
-                showToast(data.message || 'Login failed: Invalid credentials', 'error');
+                showToast(data.message || 'Invalid credentials. Please try again.', 'error');
             }
-        } catch (error) {
-            showToast('Login failed: Server unreachable', 'error');
+        } catch {
+            showToast('Unable to connect. Please check your connection.', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -150,212 +149,231 @@ function LoginPageInner() {
                 const err = await res.json();
                 showToast(err.message || 'Failed to change password', 'error');
             }
-        } catch (error) {
+        } catch {
             showToast('Error changing password', 'error');
         } finally {
             setIsLoading(false);
         }
     };
 
+    const inputClass = "block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium";
+
     return (
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white px-4 font-sans selection:bg-blue-600 selection:text-white">
+        <div className="min-h-screen flex font-sans">
+            {/* ── Left brand panel ──────────────────────────────── */}
+            <div className="hidden lg:flex lg:w-[45%] xl:w-[42%] flex-col items-center justify-center relative overflow-hidden bg-slate-900 text-white p-12">
+                {/* Decorative grid */}
+                <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+                {/* Gradient orbs */}
+                <div className="absolute top-[-80px] left-[-80px] w-[360px] h-[360px] rounded-full bg-blue-600/20 blur-[80px] pointer-events-none" />
+                <div className="absolute bottom-[-60px] right-[-60px] w-[280px] h-[280px] rounded-full bg-indigo-600/15 blur-[60px] pointer-events-none" />
 
-            {/* Cinematic Background Elements */}
+                <div className="relative z-10 flex flex-col items-center text-center max-w-sm">
+                    {/* Avatar */}
+                    <div className="w-28 h-28 rounded-2xl overflow-hidden mb-8 ring-4 ring-white/10 shadow-2xl">
+                        <Image
+                            src={settings.cms_login_avatar}
+                            alt="CMS"
+                            width={112}
+                            height={112}
+                            className="object-cover w-full h-full"
+                            priority
+                        />
+                    </div>
 
-            <div className="relative w-full max-w-md">
-                {/* Avatar Section */}
-                <div className="flex justify-center -mb-20 relative z-10">
-                    <div className="relative p-1 rounded-full bg-white shadow-2xl border border-slate-100">
-                        <div className="w-32 h-32 rounded-full overflow-hidden grayscale hover:grayscale-0 transition-all duration-1000 border-4 border-white">
-                            <Image
-                                src={settings.cms_login_avatar}
-                                alt="CMS Avatar"
-                                width={128}
-                                height={128}
-                                className="object-cover"
-                                priority
-                            />
-                        </div>
+                    <h1 className="text-3xl font-black tracking-tight mb-3 leading-tight">
+                        {settings.cms_title}
+                    </h1>
+                    <p className="text-sm text-slate-400 font-medium leading-relaxed mb-12">
+                        {settings.cms_subtitle}
+                    </p>
+
+                    {/* Feature bullets */}
+                    <div className="space-y-3 w-full text-left">
+                        {[
+                            { icon: '🔒', text: 'Role-based access control' },
+                            { icon: '⚡', text: 'Real-time content management' },
+                            { icon: '🎨', text: 'Multi-theme support' },
+                        ].map((f) => (
+                            <div key={f.text} className="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3 border border-white/5">
+                                <span className="text-lg">{f.icon}</span>
+                                <span className="text-xs font-semibold text-slate-300">{f.text}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
+            </div>
 
-                <div className="bg-white/80 backdrop-blur-3xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-white rounded-[3rem] p-10 pt-28 space-y-8 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
-
-                    <div className="text-center relative z-10">
-                        <span className="section-label mb-4">Secure Access</span>
-                        <h2 className="premium-heading text-4xl text-slate-900 leading-none mb-2">
-                            {settings.cms_title.split(' ')[0]} <span className="low-opacity">{settings.cms_title.split(' ')[1] || 'CMS'}</span>
-                        </h2>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{settings.cms_subtitle}</p>
+            {/* ── Right form panel ───────────────────────────────── */}
+            <div className="flex-1 flex flex-col items-center justify-center bg-white px-6 py-12">
+                {/* Mobile logo */}
+                <div className="flex lg:hidden items-center gap-3 mb-10">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden">
+                        <Image src={settings.cms_login_avatar} alt="CMS" width={40} height={40} className="object-cover w-full h-full" />
                     </div>
+                    <span className="text-lg font-black text-slate-900">{settings.cms_title}</span>
+                </div>
 
+                <div className="w-full max-w-sm">
                     {!showChangePassword && !showForgotPassword && !showTwoFactor ? (
-                        <form className="mt-8 space-y-6 relative z-10" onSubmit={handleSubmit}>
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-4">Identifier</label>
+                        <>
+                            <div className="mb-8">
+                                <h2 className="text-2xl font-black text-slate-900 mb-1">Welcome back</h2>
+                                <p className="text-sm text-slate-500 font-medium">Sign in to your admin account</p>
+                            </div>
+
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Email</label>
                                     <div className="relative group">
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <EnvelopeIcon className="h-4 w-4 text-slate-300 group-focus-within:text-blue-600 transition-colors" />
-                                        </div>
+                                        <EnvelopeIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                                         <input
                                             type="email"
                                             required
-                                            className="block w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-none text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-0 focus:border-blue-600 transition-all sm:text-xs font-bold"
-                                            placeholder="ADMIN@CORE.SYSTEM"
+                                            autoComplete="email"
+                                            className={inputClass}
+                                            placeholder="admin@example.com"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-4">Credential</label>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Password</label>
                                     <div className="relative group">
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <LockClosedIcon className="h-4 w-4 text-slate-300 group-focus-within:text-blue-600 transition-colors" />
-                                        </div>
+                                        <LockClosedIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                                         <input
-                                            type="password"
+                                            type={showPassword ? 'text' : 'password'}
                                             required
-                                            className="block w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-none text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-0 focus:border-blue-600 transition-all sm:text-xs font-bold"
+                                            autoComplete="current-password"
+                                            className={`${inputClass} pr-11`}
                                             placeholder="••••••••"
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                         />
+                                        <button
+                                            type="button"
+                                            tabIndex={-1}
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                        >
+                                            {showPassword ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                                        </button>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest px-2">
-                                <label className="flex items-center text-slate-400 cursor-pointer hover:text-slate-900 transition-colors">
-                                    <input
-                                        type="checkbox"
-                                        className="h-3 w-3 rounded-none border-slate-300 bg-white text-blue-600 focus:ring-0"
-                                        checked={rememberMe}
-                                        onChange={(e) => setRememberMe(e.target.checked)}
-                                    />
-                                    <span className="ml-2">Initialize Session</span>
-                                </label>
-                                <button type="button" onClick={() => setShowForgotPassword(true)} className="text-blue-600 hover:text-blue-700 underline underline-offset-4 decoration-blue-500/20">Recovery</button>
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="relative flex w-full justify-center bg-slate-900 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-2xl transition-all hover:bg-blue-600 focus:outline-none active:scale-[0.98]"
-                            >
-                                {isLoading ? 'Processing...' : 'Authenticate Access'}
-                            </button>
-                        </form>
-                    ) : showForgotPassword ? (
-                        <form className="mt-8 space-y-6 relative z-10" onSubmit={handleForgotPassword}>
-                            <div className="text-center mb-6">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900">Credential Recovery</h3>
-                                <p className="text-[11px] text-slate-400 mt-2">Enter parameters for system override.</p>
-                            </div>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <EnvelopeIcon className="h-4 w-4 text-slate-300" />
+                                <div className="flex items-center justify-between pt-1">
+                                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 cursor-pointer hover:text-slate-700 transition-colors">
+                                        <input
+                                            type="checkbox"
+                                            className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                                            checked={rememberMe}
+                                            onChange={(e) => setRememberMe(e.target.checked)}
+                                        />
+                                        Remember me
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowForgotPassword(true)}
+                                        className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                                    >
+                                        Forgot password?
+                                    </button>
                                 </div>
-                                <input
-                                    type="email"
-                                    required
-                                    className="block w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-none text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-0 focus:border-blue-600 sm:text-xs font-bold uppercase"
-                                    placeholder="Enter account identifier"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
-                            </div>
-                            <div className="space-y-3">
+
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="w-full bg-blue-600 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-white hover:bg-blue-700 transition-all"
+                                    className="w-full mt-2 bg-slate-900 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-slate-900/20 hover:bg-blue-600 hover:shadow-blue-600/20 transition-all active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none"
                                 >
-                                    {isLoading ? 'Requesting...' : 'Initiate Recovery'}
+                                    {isLoading ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Signing in…
+                                        </span>
+                                    ) : 'Sign In'}
                                 </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowForgotPassword(false)}
-                                    className="w-full py-5 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-all border border-slate-100"
-                                >
-                                    Cancel Request
-                                </button>
+                            </form>
+                        </>
+                    ) : showForgotPassword ? (
+                        <>
+                            <div className="mb-8">
+                                <h2 className="text-2xl font-black text-slate-900 mb-1">Reset Password</h2>
+                                <p className="text-sm text-slate-500 font-medium">Enter your email and we&apos;ll send a reset link</p>
                             </div>
-                        </form>
-                    ) : showTwoFactor ? (
-                        <form className="mt-8 space-y-6 relative z-10" onSubmit={handleTwoFactorSubmit}>
-                            <div className="text-center mb-6">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900">Second Layer Verification</h3>
-                                <p className="text-[11px] text-slate-400 mt-2">Submit 6-digit syncronized token.</p>
-                            </div>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <LockClosedIcon className="h-4 w-4 text-slate-300" />
+                            <form onSubmit={handleForgotPassword} className="space-y-4">
+                                <div className="relative group">
+                                    <EnvelopeIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                                    <input
+                                        type="email"
+                                        required
+                                        className={inputClass}
+                                        placeholder="Your email address"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                    />
                                 </div>
+                                <button type="submit" disabled={isLoading}
+                                    className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all active:scale-[0.98] disabled:opacity-60">
+                                    {isLoading ? 'Sending…' : 'Send Reset Link'}
+                                </button>
+                                <button type="button" onClick={() => setShowForgotPassword(false)}
+                                    className="w-full py-3 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors">
+                                    ← Back to sign in
+                                </button>
+                            </form>
+                        </>
+                    ) : showTwoFactor ? (
+                        <>
+                            <div className="mb-8">
+                                <h2 className="text-2xl font-black text-slate-900 mb-1">Two-Factor Auth</h2>
+                                <p className="text-sm text-slate-500 font-medium">Enter the 6-digit code from your authenticator app</p>
+                            </div>
+                            <form onSubmit={handleTwoFactorSubmit} className="space-y-4">
                                 <input
                                     type="text"
                                     required
-                                    className="block w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-none text-slate-900 text-center tracking-[1em] text-xl font-bold placeholder-slate-200 focus:outline-none focus:ring-0 focus:border-blue-600 sm:text-lg"
+                                    className="block w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-center tracking-[0.5em] text-2xl font-black placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                                     placeholder="000000"
                                     value={twoFactorCode}
                                     onChange={(e) => setTwoFactorCode(e.target.value)}
                                     maxLength={6}
                                 />
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full bg-slate-900 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-white hover:bg-blue-600 transition-all shadow-xl"
-                            >
-                                {isLoading ? 'Verifying...' : 'Finalize Auth'}
-                            </button>
-                        </form>
+                                <button type="submit" disabled={isLoading}
+                                    className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold text-sm hover:bg-blue-600 transition-all active:scale-[0.98] disabled:opacity-60">
+                                    {isLoading ? 'Verifying…' : 'Verify Code'}
+                                </button>
+                            </form>
+                        </>
                     ) : (
-                        <form className="mt-8 space-y-6 relative z-10" onSubmit={handleChangePassword}>
-                            <div className="p-4 bg-blue-50/50 border border-blue-100/50 text-blue-800 text-[10px] font-bold uppercase tracking-widest leading-loose text-center">
-                                Initial entry detected. <br /> Define primary administrative credential.
+                        <>
+                            <div className="mb-8">
+                                <h2 className="text-2xl font-black text-slate-900 mb-1">Set New Password</h2>
+                                <p className="text-sm text-slate-500 font-medium">Please choose a secure password to continue</p>
                             </div>
-                            <div className="space-y-4">
-                                <input
-                                    type="password"
-                                    required
-                                    className="block w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-none text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-0 focus:border-blue-600 sm:text-xs font-bold"
-                                    placeholder="NEW CIPHER"
-                                    value={newPassword}
+                            <form onSubmit={handleChangePassword} className="space-y-4">
+                                <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-xs font-semibold text-blue-700">
+                                    This is your first sign-in. Please set a new password to secure your account.
+                                </div>
+                                <input type="password" required placeholder="New password" value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                />
-                                <input
-                                    type="password"
-                                    required
-                                    className="block w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-none text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-0 focus:border-blue-600 sm:text-xs font-bold"
-                                    placeholder="CONFIRM CIPHER"
-                                    value={confirmPassword}
+                                    className={inputClass.replace('pl-11', 'px-4')} />
+                                <input type="password" required placeholder="Confirm new password" value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                />
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full bg-blue-600 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-white hover:bg-blue-700 transition-all shadow-xl"
-                            >
-                                {isLoading ? 'Encrypting...' : 'Secure Account & Initiate'}
-                            </button>
-                        </form>
+                                    className={inputClass.replace('pl-11', 'px-4')} />
+                                <button type="submit" disabled={isLoading}
+                                    className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all active:scale-[0.98] disabled:opacity-60">
+                                    {isLoading ? 'Saving…' : 'Save Password & Continue'}
+                                </button>
+                            </form>
+                        </>
                     )}
-
-                    <div className="pt-8 border-t border-slate-50 relative z-10 flex flex-col items-center gap-4">
-                        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">
-                            System Gateway v1.4.2
-                        </p>
-                        <div className="flex gap-6 opacity-30 hover:opacity-100 transition-opacity">
-                            <div className="w-1 h-1 bg-blue-600 rounded-full"></div>
-                            <div className="w-1 h-1 bg-slate-900 rounded-full"></div>
-                            <div className="w-1 h-1 bg-blue-600 rounded-full"></div>
-                        </div>
-                    </div>
                 </div>
+
+                <p className="mt-12 text-[10px] font-semibold text-slate-300 tracking-widest uppercase">
+                    {settings.cms_title} · Admin Portal
+                </p>
             </div>
         </div>
     );

@@ -32,6 +32,19 @@ export class AuthController {
         return { qrCode, secret };
     }
 
+    @UseGuards(JwtAuthGuard)
+    @Post('2fa/enable')
+    async enable2fa(@Body() body: { token: string }, @Request() req) {
+        const userDetails = await this.usersService.findOne(req.user.email);
+        if (!userDetails || !userDetails.twoFactorSecret) {
+            return { success: false, message: '2FA not initialized. Generate QR code first.' };
+        }
+        const isValid = this.securityService.verifyToken(body.token, userDetails.twoFactorSecret);
+        if (!isValid) return { success: false, message: 'Invalid token' };
+        await (this.usersService as any).enableTwoFactor(req.user.id);
+        return { success: true };
+    }
+
     @Post('2fa/verify')
     async verify2fa(@Body() body: { token: string; tempToken?: string }, @Request() req) {
         let userEmail = '';

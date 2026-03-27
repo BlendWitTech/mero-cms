@@ -51,27 +51,35 @@ export class MenusService {
 
     async update(id: string, data: any) {
         const { items, ...menuData } = data;
+        // Only keep safe fields for menu update
+        const safeMenuData: any = {};
+        if (menuData.name !== undefined) safeMenuData.name = menuData.name;
+        if (menuData.slug !== undefined) safeMenuData.slug = menuData.slug;
 
-        // Simplified update: delete current items and recreate
-        // In a production app, we'd do a more sophisticated sync (upsert/delete)
-        if (items) {
+        if (items && Array.isArray(items)) {
+            // Strip DB-managed / relation fields so Prisma nested create doesn't fail
+            const cleanItems = items.map((item: any, idx: number) => ({
+                label: item.label || '',
+                url: item.url || '',
+                target: item.target || '_self',
+                order: item.order ?? idx,
+                parentId: item.parentId ?? null,
+            }));
             await this.prisma.menuItem.deleteMany({ where: { menuId: id } });
             return this.prisma.menu.update({
                 where: { id },
                 data: {
-                    ...menuData,
-                    items: {
-                        create: items
-                    }
+                    ...safeMenuData,
+                    items: { create: cleanItems }
                 },
-                include: { items: true }
+                include: { items: { orderBy: { order: 'asc' } } }
             });
         }
 
         return this.prisma.menu.update({
             where: { id },
-            data: menuData,
-            include: { items: true }
+            data: safeMenuData,
+            include: { items: { orderBy: { order: 'asc' } } }
         });
     }
 

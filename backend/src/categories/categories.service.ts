@@ -7,15 +7,11 @@ export class CategoriesService {
 
     async create(data: any) {
         const { name, slug, description } = data;
-        const insertData: any = { name, description };
 
         // Auto-generate slug if not provided
-        insertData.slug = slug || name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+        const generatedSlug = slug || name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
 
-        const activeThemeSetting = await this.prisma.setting.findUnique({ where: { key: 'active_theme' } });
-        insertData.theme = activeThemeSetting?.value || null;
-
-        return this.prisma.category.create({ data: insertData });
+        return this.prisma.category.create({ data: { name, description, slug: generatedSlug } });
     }
 
     findAll() {

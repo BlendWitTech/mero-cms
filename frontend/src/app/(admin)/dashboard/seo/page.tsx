@@ -20,45 +20,74 @@ export default function SEODashboard() {
         redirects: 0,
         sitemapLastGenerated: null as Date | null,
     });
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         fetchStats();
     }, []);
 
     const fetchStats = async () => {
+        setIsLoading(true);
         try {
             const data = await apiRequest('/seo-meta/stats');
             setStats(data);
         } catch (error) {
             console.error('Failed to fetch SEO stats', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const seoScore = Math.round((stats.postsWithSeo / stats.totalPosts) * 100) || 0;
+    const seoScore = stats.totalPosts > 0
+        ? Math.round((stats.postsWithSeo / stats.totalPosts) * 100)
+        : 0;
+    const scoreGradient = seoScore >= 80
+        ? 'from-emerald-500 to-emerald-600'
+        : seoScore >= 50
+            ? 'from-blue-600 to-blue-700'
+            : 'from-amber-500 to-amber-600';
 
     return (
         <div className="p-8">
-            <div className="mb-8">
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-                    SEO <span className="text-blue-600">Dashboard</span>
-                </h1>
-                <p className="mt-2 text-sm text-slate-600 font-medium">
-                    Manage your site's search engine optimization and visibility
-                </p>
+            <div className="flex items-center justify-between mb-8">
+                <div>
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+                        SEO <span className="text-blue-600">Dashboard</span>
+                    </h1>
+                    <p className="mt-2 text-sm text-slate-600 font-medium">
+                        Manage your site's search engine optimization and visibility
+                    </p>
+                </div>
+                <button onClick={fetchStats} disabled={isLoading}
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-bold text-slate-600 transition-all disabled:opacity-50">
+                    <ArrowPathIcon className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                </button>
             </div>
 
             {/* SEO Score Card */}
-            <div className="mb-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl p-8 text-white shadow-2xl shadow-blue-600/20">
+            <div className={`mb-8 bg-gradient-to-br ${scoreGradient} rounded-3xl p-8 text-white shadow-2xl`}>
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-sm font-bold uppercase tracking-widest opacity-90 mb-2">Overall SEO Score</p>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-6xl font-black">{seoScore}</span>
-                            <span className="text-2xl font-bold opacity-75">/100</span>
-                        </div>
-                        <p className="mt-3 text-sm opacity-90">
-                            {stats.postsWithSeo} of {stats.totalPosts} posts have SEO metadata
-                        </p>
+                        <p className="text-sm font-bold uppercase tracking-widest opacity-90 mb-2">SEO Coverage</p>
+                        {isLoading ? (
+                            <div className="h-16 w-40 bg-white/20 rounded-xl animate-pulse mt-1" />
+                        ) : stats.totalPosts === 0 ? (
+                            <div>
+                                <p className="text-2xl font-black opacity-80">No content yet</p>
+                                <p className="mt-2 text-sm opacity-75">Add blog posts, plots, or pages to start tracking SEO</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-6xl font-black">{seoScore}</span>
+                                    <span className="text-2xl font-bold opacity-75">%</span>
+                                </div>
+                                <p className="mt-3 text-sm opacity-90">
+                                    {stats.postsWithSeo} of {stats.totalPosts} content items have SEO metadata
+                                </p>
+                            </>
+                        )}
                     </div>
                     <div className="h-32 w-32 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
                         <ChartBarIcon className="h-16 w-16" />

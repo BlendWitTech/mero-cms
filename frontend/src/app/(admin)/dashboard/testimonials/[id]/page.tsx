@@ -23,7 +23,7 @@ interface TestimonialFormData {
     clientRole: string;
     content: string;
     rating: number;
-    image: string;
+    clientPhoto: string;
 }
 
 export default function EditTestimonialPage({ params }: { params: Promise<{ id: string }> }) {
@@ -70,7 +70,7 @@ export default function EditTestimonialPage({ params }: { params: Promise<{ id: 
                     clientRole: data.clientRole || '',
                     content: data.content,
                     rating: data.rating || 5,
-                    image: data.image || ''
+                    clientPhoto: data.clientPhoto || ''
                 });
             }
         } catch (error) {
@@ -95,10 +95,10 @@ export default function EditTestimonialPage({ params }: { params: Promise<{ id: 
         try {
             await apiRequest(`/testimonials/${id}`, {
                 method: 'PATCH',
-                body: JSON.stringify({
+                body: {
                     ...data,
                     rating: Number(data.rating)
-                })
+                }
             });
             showToast('Testimonial updated successfully', 'success');
             // Reset to prevent unsaved alert
@@ -171,7 +171,7 @@ export default function EditTestimonialPage({ params }: { params: Promise<{ id: 
             </div>
 
             {/* Form */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 shadow-xl shadow-slate-200/20 p-8">
+            <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200 p-8">
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     <div className="space-y-5">
                         <div className="grid grid-cols-2 gap-6">
@@ -265,8 +265,8 @@ export default function EditTestimonialPage({ params }: { params: Promise<{ id: 
                                 onClick={() => { if (!isReadOnly) setIsMediaOpen(true); }}
                                 className={`aspect-square bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 ${!isReadOnly ? 'hover:bg-slate-100/50 hover:border-blue-400 hover:text-blue-500 cursor-pointer' : 'opacity-50 cursor-not-allowed'} transition-all group overflow-hidden relative`}
                             >
-                                {watch('image') ? (
-                                    <img src={watch('image')} className="w-full h-full object-cover" alt="" />
+                                {watch('clientPhoto') ? (
+                                    <img src={watch('clientPhoto')} className="w-full h-full object-cover" alt="" />
                                 ) : (
                                     <>
                                         <ArrowUpTrayIcon className="h-6 w-6 mb-1 group-hover:scale-110 transition-transform" />
@@ -274,16 +274,16 @@ export default function EditTestimonialPage({ params }: { params: Promise<{ id: 
                                     </>
                                 )}
                             </div>
-                            {watch('image') && !isReadOnly && (
-                                <button type="button" onClick={() => setValue('image', '', { shouldDirty: true })} className="text-[10px] font-bold text-red-500 hover:text-red-600 uppercase tracking-widest transition-colors">
+                            {watch('clientPhoto') && !isReadOnly && (
+                                <button type="button" onClick={() => setValue('clientPhoto', '', { shouldDirty: true })} className="text-[10px] font-bold text-red-500 hover:text-red-600 uppercase tracking-widest transition-colors">
                                     Remove
                                 </button>
                             )}
                             <MediaPickerModal
                                 isOpen={isMediaOpen}
                                 onClose={() => setIsMediaOpen(false)}
-                                onSelect={(url) => { setValue('image', url, { shouldDirty: true }); setIsMediaOpen(false); }}
-                                current={watch('image')}
+                                onSelect={(url) => { setValue('clientPhoto', url, { shouldDirty: true }); setIsMediaOpen(false); }}
+                                current={watch('clientPhoto')}
                             />
                         </div>
                     </div>

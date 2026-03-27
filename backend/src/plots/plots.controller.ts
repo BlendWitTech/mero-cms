@@ -29,6 +29,34 @@ export class PlotsController {
         return this.plotsService.findAll(status, category, featured !== undefined ? featured === 'true' : undefined);
     }
 
+    // Public routes — must be declared before @Get(':id') to avoid NestJS route shadowing
+    @Get('public/list')
+    getPublished(
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+        @Query('category') category?: string,
+        @Query('status') status?: string,
+        @Query('search') search?: string,
+    ) {
+        return this.plotsService.findPublished(
+            page ? parseInt(page) : 1,
+            limit ? parseInt(limit) : 10,
+            category,
+            status,
+            search,
+        );
+    }
+
+    @Get('public/featured')
+    getFeatured() {
+        return this.plotsService.findFeatured();
+    }
+
+    @Get('public/:slug')
+    getBySlug(@Param('slug') slug: string) {
+        return this.plotsService.findOne(slug);
+    }
+
     @UseGuards(JwtAuthGuard, PermissionsGuard)
     @RequirePermissions(Permission.CONTENT_VIEW)
     @Get(':id')
@@ -48,29 +76,5 @@ export class PlotsController {
     @Delete(':id')
     remove(@Param('id') id: string) {
         return this.plotsService.remove(id);
-    }
-
-    // Public routes
-    @Get('public/list')
-    getPublished(
-        @Query('page') page?: string,
-        @Query('limit') limit?: string,
-        @Query('category') category?: string,
-    ) {
-        return this.plotsService.findPublished(
-            page ? parseInt(page) : 1,
-            limit ? parseInt(limit) : 10,
-            category,
-        );
-    }
-
-    @Get('public/featured')
-    getFeatured() {
-        return this.plotsService.findFeatured();
-    }
-
-    @Get('public/:slug')
-    getBySlug(@Param('slug') slug: string) {
-        return this.plotsService.findOne(slug);
     }
 }

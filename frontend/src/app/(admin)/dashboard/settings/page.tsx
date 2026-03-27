@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Cog6ToothIcon,
     GlobeAltIcon,
@@ -44,55 +44,6 @@ interface ModuleMeta {
     group: string;
 }
 
-function TestEmailCard() {
-    const { showToast } = useNotification();
-    const [sending, setSending] = React.useState(false);
-    const [testTo, setTestTo] = React.useState('');
-
-    const handleSend = async () => {
-        if (!testTo) { showToast('Enter a recipient email address.', 'error'); return; }
-        setSending(true);
-        try {
-            await apiRequest('/settings/test-email', { method: 'POST', body: { to: testTo } });
-            showToast(`Test email sent to ${testTo}`, 'success');
-        } catch (err: any) {
-            showToast(err.message || 'Failed to send test email.', 'error');
-        } finally {
-            setSending(false);
-        }
-    };
-
-    return (
-        <div className="bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-200/40 border border-slate-200/60 space-y-6">
-            <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/20 text-white">
-                    <EnvelopeIcon className="h-6 w-6" />
-                </div>
-                <div>
-                    <h3 className="text-xl font-bold text-slate-900 font-display">Test Email Delivery</h3>
-                    <p className="text-xs text-slate-400 font-semibold mt-0.5">Verify your email configuration is working</p>
-                </div>
-            </div>
-            <div className="flex gap-3">
-                <input
-                    type="email"
-                    value={testTo}
-                    onChange={(e) => setTestTo(e.target.value)}
-                    placeholder="you@example.com"
-                    className="flex-1 bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-blue-500/5 focus:bg-white focus:border-blue-500/20 transition-all"
-                />
-                <button
-                    onClick={handleSend}
-                    disabled={sending}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-6 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
-                >
-                    {sending ? 'Sending…' : 'Send Test'}
-                </button>
-            </div>
-        </div>
-    );
-}
-
 function ClearThemeCacheCard() {
     const { showToast } = useNotification();
     const [clearing, setClearing] = React.useState(false);
@@ -102,7 +53,8 @@ function ClearThemeCacheCard() {
         setClearing(true);
         try {
             await apiRequest('/settings/clear-theme-cache', { method: 'POST' });
-            setLastCleared(new Date().toLocaleTimeString());
+            const now = new Date().toLocaleTimeString();
+            setLastCleared(now);
             showToast('Theme cache cleared. Visitors will see the latest content.', 'success');
         } catch (err: any) {
             showToast(err.message || 'Failed to clear theme cache.', 'error');
@@ -112,7 +64,7 @@ function ClearThemeCacheCard() {
     };
 
     return (
-        <div className="bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-200/40 border border-slate-200/60 flex flex-col space-y-6">
+        <div className="bg-white rounded-[3rem] p-5 sm:p-8 shadow-2xl shadow-slate-200 border border-slate-200 space-y-6">
             <div className="flex items-center gap-4">
                 <div className="p-3 bg-emerald-500 rounded-2xl shadow-xl shadow-emerald-500/20 text-white">
                     <ArrowPathIcon className="h-6 w-6" />
@@ -142,6 +94,8 @@ function ClearThemeCacheCard() {
     );
 }
 
+
+
 export default function SettingsPage() {
     const [settings, setSettings] = useState<any>({});
     const [isLoading, setIsLoading] = useState(true);
@@ -159,18 +113,26 @@ export default function SettingsPage() {
     const [isLogsLoading, setIsLogsLoading] = useState(false);
     const [logsPagination, setLogsPagination] = useState({ skip: 0, take: 10 });
     const [editModes, setEditModes] = useState<Record<string, boolean>>({});
+    const [showSmtpPass, setShowSmtpPass] = useState(false);
+    const [showResendKey, setShowResendKey] = useState(false);
+    // Track sections that auto-entered edit mode from being all-empty, so they stay editable while typing
+    const autoEditSections = useRef<Set<string>>(new Set());
     const [mediaPickerTarget, setMediaPickerTarget] = useState<'logo' | 'favicon' | null>(null);
     const [cancelModal, setCancelModal] = useState<{ isOpen: boolean, section: string | null }>({
         isOpen: false,
         section: null
     });
-    const [showSmtpPass, setShowSmtpPass] = useState(false);
-    const [showResendKey, setShowResendKey] = useState(false);
 
     const isSectionEditing = (section: string, keys: string[]) => {
         if (editModes[section]) return true;
-        // If all keys in this section are empty, assume we are in "add" mode
-        return keys.every(key => !settings[key]);
+        const allEmpty = keys.every(key => !settings[key]);
+        if (allEmpty) {
+            // Auto-enter edit mode when all fields are empty — and remember this section
+            autoEditSections.current.add(section);
+            return true;
+        }
+        // Stay editable if user started typing from an all-empty state this session
+        return autoEditSections.current.has(section);
     };
 
     const toggleEdit = (section: string) => {
@@ -184,6 +146,7 @@ export default function SettingsPage() {
     const confirmCancel = () => {
         if (cancelModal.section) {
             toggleEdit(cancelModal.section);
+            autoEditSections.current.delete(cancelModal.section);
             // Reload settings to revert local state
             apiRequest('/settings').then(setSettings);
         }
@@ -242,6 +205,7 @@ export default function SettingsPage() {
             });
             showToast('Settings successfully synchronized cross-platform.', 'success');
             setEditModes(prev => ({ ...prev, [section]: false }));
+            autoEditSections.current.delete(section);
         } catch (error: any) {
             console.error(error);
             showToast(error.message || 'Failed to update system configurations.', 'error');
@@ -272,36 +236,47 @@ export default function SettingsPage() {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-slate-100/50 rounded-[2rem] border border-slate-200/50 backdrop-blur-sm sticky top-4 z-50">
-                {tabs.map(tab => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={classNames(
-                            "flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-[1.75rem] text-[11px] font-bold uppercase tracking-widest transition-all",
-                            activeTab === tab.id ? "bg-white text-blue-600 shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/50" : "text-slate-500 hover:text-slate-900"
-                        )}
-                    >
-                        <tab.icon className="h-4 w-4" />
-                        <span className="hidden sm:inline">{tab.label}</span>
-                    </button>
-                ))}
+            <div className="overflow-x-auto custom-scrollbar-hidden -mx-2 px-2 sticky top-0 z-50">
+                <div className="flex items-center gap-1 p-1 bg-white shadow-lg shadow-slate-200/50 rounded-[2rem] border border-slate-200 w-max min-w-full">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={classNames(
+                                "flex-shrink-0 sm:flex-1 flex items-center justify-center gap-2 px-3 sm:px-6 py-3 sm:py-4 rounded-[1.75rem] text-[10px] sm:text-[11px] font-bold uppercase tracking-widest transition-all whitespace-nowrap",
+                                activeTab === tab.id ? "bg-white text-blue-600 shadow-xl shadow-slate-200 ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-900"
+                            )}
+                        >
+                            <tab.icon className="h-4 w-4 shrink-0" />
+                            <span className="hidden sm:inline">{tab.label}</span>
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+            <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 relative">
+                {/* Global Ambient Background - Ensures consistency across all tabs */}
+                <div className="absolute top-[10%] left-[-5%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none -z-10" />
+                <div className="absolute bottom-[10%] right-[-5%] w-[40%] h-[40%] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none -z-10" />
+                <div className="absolute inset-0 bg-grid opacity-[0.02] pointer-events-none -z-10" />
                 {/* Branding Tab */}
                 {activeTab === 'branding' && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                         <div className="lg:col-span-2 space-y-8">
-                            <div className="bg-white rounded-[3rem] p-10 lg:p-12 shadow-2xl shadow-slate-200/40 border border-slate-200/60 space-y-10 relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-colors"></div>
+                            <div className="bg-white rounded-[3rem] p-5 sm:p-8 lg:p-12 shadow-2xl shadow-slate-200 border border-slate-200 space-y-10 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-colors pointer-events-none"></div>
 
                                 <div className="flex items-center justify-between">
-                                    <div className="space-y-2">
-                                        <h3 className="text-xl font-bold text-slate-900 font-display">Identity & SEO</h3>
-                                        <p className="text-sm font-medium text-slate-400">Configure how your site appears to engines and users.</p>
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-indigo-600 rounded-2xl shadow-xl shadow-indigo-500/20 text-white">
+                                            <GlobeAltIcon className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-bold text-slate-900 font-display">Identity & SEO</h3>
+                                            <p className="text-sm font-medium text-slate-400">Configure how your site appears to engines and users.</p>
+                                        </div>
                                     </div>
-                                    {!isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && (
+                                    {!isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && (
                                         <button
                                             onClick={() => toggleEdit('branding')}
                                             className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
@@ -311,47 +286,59 @@ export default function SettingsPage() {
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Master Site Title</label>
-                                        <input
-                                            type="text"
-                                            disabled={!isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text'])}
-                                            value={settings.site_title || ''}
-                                            onChange={(e) => setSettings({ ...settings, site_title: e.target.value })}
-                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-blue-600/5 focus:bg-white focus:border-blue-600/20 transition-all disabled:opacity-60"
-                                        />
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">App Tagline</label>
-                                        <input
-                                            type="text"
-                                            disabled={!isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text'])}
-                                            value={settings.site_tagline || ''}
-                                            onChange={(e) => setSettings({ ...settings, site_tagline: e.target.value })}
-                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-blue-600/5 focus:bg-white focus:border-blue-600/20 transition-all disabled:opacity-60"
-                                        />
-                                    </div>
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Master Site Title</label>
+                                    <input
+                                        type="text"
+                                        disabled={!isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text'])}
+                                        value={settings.site_title || ''}
+                                        onChange={(e) => setSettings({ ...settings, site_title: e.target.value })}
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
+                                    />
                                 </div>
 
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Copyright Disclaimer</label>
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Site Tagline <span className="normal-case text-slate-300">(default meta description — overridden per-page in SEO Management)</span></label>
+                                    <textarea
+                                        rows={2}
+                                        disabled={!isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text'])}
+                                        value={settings.site_tagline || ''}
+                                        onChange={(e) => setSettings({ ...settings, site_tagline: e.target.value })}
+                                        placeholder="Kathmandu Valley's Trusted Land Partner"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50 disabled:cursor-default resize-none"
+                                    />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Footer Text / Tagline <span className="normal-case text-slate-300">(shown in footer)</span></label>
+                                    <textarea
+                                        rows={3}
+                                        disabled={!isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text'])}
+                                        value={settings.footer_text || ''}
+                                        onChange={(e) => setSettings({ ...settings, footer_text: e.target.value })}
+                                        placeholder="Kathmandu Valley's Trusted Land Partner"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50 disabled:cursor-default resize-none"
+                                    />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Copyright Disclaimer</label>
                                     <input
                                         type="text"
-                                        disabled={!isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text'])}
+                                        disabled={!isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text'])}
                                         value={settings.copyright_text || ''}
                                         onChange={(e) => setSettings({ ...settings, copyright_text: e.target.value })}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:ring-[12px] focus:ring-blue-600/5 transition-all disabled:opacity-60"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-blue-500/10 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
                                     />
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {/* Logo */}
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Logo</label>
+                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Logo</label>
                                         <div
-                                            onClick={() => isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && setMediaPickerTarget('logo')}
-                                            className={`relative flex items-center gap-4 p-4 bg-slate-50/50 border border-slate-100 rounded-2xl transition-all ${isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) ? 'cursor-pointer hover:border-blue-400 hover:bg-blue-50/30' : 'opacity-60'}`}
+                                            onClick={() => isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && setMediaPickerTarget('logo')}
+                                            className={`relative flex items-center gap-4 p-4 bg-white border-2 border-slate-200 rounded-2xl shadow-sm transition-all ${isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) ? 'cursor-pointer hover:border-blue-400 hover:bg-blue-50/30' : 'opacity-60'}`}
                                         >
                                             <div className="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
                                                 {settings.logo_url
@@ -362,11 +349,11 @@ export default function SettingsPage() {
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-xs font-bold text-slate-700 mb-1">{settings.logo_url ? 'Logo set' : 'No logo'}</p>
                                                 {settings.logo_url && <p className="text-[10px] text-slate-400 truncate">{settings.logo_url}</p>}
-                                                {isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && (
+                                                {isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && (
                                                     <span className="text-[10px] font-bold text-blue-600 mt-1 block">Click to choose from media library</span>
                                                 )}
                                             </div>
-                                            {settings.logo_url && isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && (
+                                            {settings.logo_url && isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && (
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); setSettings({ ...settings, logo_url: '' }); }}
                                                     className="absolute top-2 right-2 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center text-red-500 hover:bg-red-200"
@@ -378,10 +365,10 @@ export default function SettingsPage() {
                                     </div>
                                     {/* Favicon */}
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Favicon</label>
+                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Favicon</label>
                                         <div
-                                            onClick={() => isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && setMediaPickerTarget('favicon')}
-                                            className={`relative flex items-center gap-4 p-4 bg-slate-50/50 border border-slate-100 rounded-2xl transition-all ${isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) ? 'cursor-pointer hover:border-blue-400 hover:bg-blue-50/30' : 'opacity-60'}`}
+                                            onClick={() => isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && setMediaPickerTarget('favicon')}
+                                            className={`relative flex items-center gap-4 p-4 bg-white border-2 border-slate-200 rounded-2xl shadow-sm transition-all ${isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) ? 'cursor-pointer hover:border-blue-400 hover:bg-blue-50/30' : 'opacity-60'}`}
                                         >
                                             <div className="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
                                                 {settings.favicon_url
@@ -392,11 +379,11 @@ export default function SettingsPage() {
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-xs font-bold text-slate-700 mb-1">{settings.favicon_url ? 'Favicon set' : 'No favicon'}</p>
                                                 {settings.favicon_url && <p className="text-[10px] text-slate-400 truncate">{settings.favicon_url}</p>}
-                                                {isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && (
+                                                {isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && (
                                                     <span className="text-[10px] font-bold text-blue-600 mt-1 block">Click to choose from media library</span>
                                                 )}
                                             </div>
-                                            {settings.favicon_url && isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && (
+                                            {settings.favicon_url && isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && (
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); setSettings({ ...settings, favicon_url: '' }); }}
                                                     className="absolute top-2 right-2 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center text-red-500 hover:bg-red-200"
@@ -421,8 +408,8 @@ export default function SettingsPage() {
                                     />
                                 )}
 
-                                {isSectionEditing('branding', ['site_title', 'site_tagline', 'copyright_text']) && editModes['branding'] && (
-                                    <div className="flex gap-4 pt-4">
+                                {isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && (
+                                    <div className="flex flex-wrap gap-3 pt-4">
                                         <button
                                             onClick={() => handleSave('branding')}
                                             className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all"
@@ -438,11 +425,165 @@ export default function SettingsPage() {
                                     </div>
                                 )}
                             </div>
+
+                            {/* Design System Card */}
+                            <div className="bg-white rounded-[3rem] p-5 sm:p-8 lg:p-12 shadow-2xl shadow-slate-200 border border-slate-200 space-y-10 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl pointer-events-none" />
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-violet-600 rounded-2xl shadow-xl shadow-violet-500/20 text-white">
+                                            <AdjustmentsHorizontalIcon className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-bold text-slate-900">Design System</h3>
+                                            <p className="text-sm font-medium text-slate-400">Global brand color and typography applied to the public website.</p>
+                                        </div>
+                                    </div>
+                                    {!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font']) && (
+                                        <button onClick={() => toggleEdit('design')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">Edit</button>
+                                    )}
+                                </div>
+
+                                {/* Primary Color */}
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Brand Primary Color</label>
+                                    <div className="flex items-center gap-4">
+                                        <input
+                                            type="color"
+                                            disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
+                                            value={settings.primary_color || '#CC1414'}
+                                            onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })}
+                                            className="w-14 h-14 rounded-2xl border-2 border-slate-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed p-1"
+                                        />
+                                        <div className="flex-1">
+                                            <input
+                                                type="text"
+                                                disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
+                                                value={settings.primary_color || '#CC1414'}
+                                                onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })}
+                                                placeholder="#CC1414"
+                                                className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50 disabled:cursor-default font-mono"
+                                            />
+                                            <p className="text-[10px] text-slate-400 mt-1.5 ml-2">Applied to buttons, links, accents, and headings across the website.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Secondary & Accent Colors */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Secondary Color <span className="text-slate-300 normal-case tracking-normal font-medium">(dark/charcoal)</span></label>
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="color"
+                                                disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
+                                                value={settings.secondary_color || '#1E1E1E'}
+                                                onChange={(e) => setSettings({ ...settings, secondary_color: e.target.value })}
+                                                className="w-12 h-12 rounded-xl border-2 border-slate-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed p-1"
+                                            />
+                                            <input
+                                                type="text"
+                                                disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
+                                                value={settings.secondary_color || '#1E1E1E'}
+                                                onChange={(e) => setSettings({ ...settings, secondary_color: e.target.value })}
+                                                placeholder="#1E1E1E"
+                                                className="flex-1 bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-3 px-4 text-sm font-bold text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600/20 transition-all disabled:opacity-60 disabled:bg-slate-50 disabled:cursor-default font-mono"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Accent / Background Color</label>
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="color"
+                                                disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
+                                                value={settings.accent_color || '#F4F4F4'}
+                                                onChange={(e) => setSettings({ ...settings, accent_color: e.target.value })}
+                                                className="w-12 h-12 rounded-xl border-2 border-slate-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed p-1"
+                                            />
+                                            <input
+                                                type="text"
+                                                disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
+                                                value={settings.accent_color || '#F4F4F4'}
+                                                onChange={(e) => setSettings({ ...settings, accent_color: e.target.value })}
+                                                placeholder="#F4F4F4"
+                                                className="flex-1 bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-3 px-4 text-sm font-bold text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600/20 transition-all disabled:opacity-60 disabled:bg-slate-50 disabled:cursor-default font-mono"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Font pickers */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Heading Font</label>
+                                        <select
+                                            disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
+                                            value={settings.heading_font || ''}
+                                            onChange={(e) => setSettings({ ...settings, heading_font: e.target.value })}
+                                            className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
+                                        >
+                                            <option value="">Inter (default)</option>
+                                            <option value="Poppins">Poppins — Modern &amp; Clean</option>
+                                            <option value="Montserrat">Montserrat — Bold &amp; Strong</option>
+                                            <option value="Raleway">Raleway — Elegant</option>
+                                            <option value="Playfair Display">Playfair Display — Serif</option>
+                                            <option value="Nunito">Nunito — Friendly &amp; Rounded</option>
+                                            <option value="Lato">Lato — Light &amp; Clean</option>
+                                            <option value="Roboto">Roboto — Standard</option>
+                                            <option value="Open Sans">Open Sans — Readable</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Body Font</label>
+                                        <select
+                                            disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
+                                            value={settings.body_font || ''}
+                                            onChange={(e) => setSettings({ ...settings, body_font: e.target.value })}
+                                            className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
+                                        >
+                                            <option value="">Inter (default)</option>
+                                            <option value="Poppins">Poppins — Modern &amp; Clean</option>
+                                            <option value="Montserrat">Montserrat — Bold &amp; Strong</option>
+                                            <option value="Raleway">Raleway — Elegant</option>
+                                            <option value="Nunito">Nunito — Friendly &amp; Rounded</option>
+                                            <option value="Lato">Lato — Light &amp; Clean</option>
+                                            <option value="Roboto">Roboto — Standard</option>
+                                            <option value="Open Sans">Open Sans — Readable</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Preview swatch */}
+                                {isSectionEditing('design', ['primary_color', 'heading_font', 'body_font']) && (
+                                    <div className="p-5 rounded-2xl border-2 border-dashed border-slate-200 space-y-2">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Live Preview</p>
+                                        <div className="flex items-center gap-3 flex-wrap">
+                                            <div className="w-8 h-8 rounded-lg" style={{ background: settings.primary_color || '#CC1414' }} title="Primary" />
+                                            <div className="w-8 h-8 rounded-lg border border-slate-200" style={{ background: settings.secondary_color || '#1E1E1E' }} title="Secondary" />
+                                            <div className="w-8 h-8 rounded-lg border border-slate-200" style={{ background: settings.accent_color || '#F4F4F4' }} title="Accent" />
+                                            <span className="text-sm font-bold" style={{ color: settings.primary_color || '#CC1414', fontFamily: settings.heading_font || 'inherit' }}>
+                                                Heading: {settings.heading_font || 'Inter (default)'}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm" style={{ color: settings.secondary_color || '#1E1E1E', fontFamily: settings.body_font || 'inherit' }}>
+                                            Body: {settings.body_font || 'Inter (default)'} — The quick brown fox jumps over the lazy dog.
+                                        </p>
+                                    </div>
+                                )}
+
+                                {isSectionEditing('design', ['primary_color', 'heading_font', 'body_font']) && (
+                                    <div className="flex flex-wrap gap-3 pt-2">
+                                        <button onClick={() => handleSave('design')} className="bg-violet-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-violet-500/20 hover:bg-violet-700 transition-all">Save Design</button>
+                                        <button onClick={() => handleCancel('design')} className="bg-slate-100 text-slate-500 px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="space-y-8">
                             <div className="bg-slate-900 rounded-[3rem] p-10 text-white relative overflow-hidden shadow-2xl shadow-slate-900/40 group">
-                                <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-blue-500/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+                                <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-blue-500/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000 pointer-events-none" />
                                 <h3 className="text-xl font-bold font-display relative z-10">Sync Configuration</h3>
                                 <p className="text-xs font-semibold text-slate-400 mt-2 relative z-10 leading-relaxed mb-8">Updates are broadcasted instantly to all active frontend instances via the core hub.</p>
                                 <button onClick={() => handleSave('global')} className="w-full bg-white text-slate-900 hover:bg-blue-600 hover:text-white py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all active:scale-95 shadow-xl relative z-10">
@@ -457,7 +598,7 @@ export default function SettingsPage() {
                 {activeTab === 'website' && (
                     <div className="space-y-10">
                         {/* Contact Info */}
-                        <div className="bg-white rounded-[3rem] p-10 lg:p-12 shadow-2xl shadow-slate-200/40 border border-slate-200/60 space-y-8">
+                        <div className="bg-white rounded-[3rem] p-5 sm:p-8 lg:p-12 shadow-2xl shadow-slate-200 border border-slate-200 space-y-8">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/20 text-white">
@@ -478,43 +619,81 @@ export default function SettingsPage() {
                                 {[
                                     { key: 'contact_email', label: 'Contact Email', placeholder: 'info@yourcompany.com', type: 'email' },
                                     { key: 'contact_phone', label: 'Phone Number', placeholder: '+977 9800000000', type: 'text' },
-                                    { key: 'footer_text', label: 'Footer Text / Tagline', placeholder: 'Your tagline here', type: 'text' },
-                                    { key: 'primary_color', label: 'Brand Primary Color', placeholder: '#1B4332', type: 'text' },
                                 ].map(f => (
                                     <div key={f.key} className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">{f.label}</label>
+                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">{f.label}</label>
                                         <input
                                             type={f.type}
                                             disabled={!isSectionEditing('contact', ['contact_email', 'contact_phone', 'address'])}
                                             value={settings[f.key] || ''}
                                             onChange={(e) => setSettings({ ...settings, [f.key]: e.target.value })}
                                             placeholder={f.placeholder}
-                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-blue-600/5 focus:bg-white focus:border-blue-600/20 transition-all disabled:opacity-60"
+                                            className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
                                         />
                                     </div>
                                 ))}
                                 <div className="md:col-span-2 space-y-2">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Address</label>
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Address</label>
                                     <textarea
                                         rows={2}
                                         disabled={!isSectionEditing('contact', ['contact_email', 'contact_phone', 'address'])}
                                         value={settings.address || ''}
                                         onChange={(e) => setSettings({ ...settings, address: e.target.value })}
                                         placeholder="123 Main Street, Kathmandu, Nepal"
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-blue-600/5 focus:bg-white focus:border-blue-600/20 transition-all disabled:opacity-60 resize-none"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50 disabled:cursor-default resize-none"
                                     />
                                 </div>
                             </div>
-                            {isSectionEditing('contact', ['contact_email', 'contact_phone', 'address']) && editModes['contact'] && (
-                                <div className="flex gap-4 pt-4">
+                            {isSectionEditing('contact', ['contact_email', 'contact_phone', 'address']) && (
+                                <div className="flex flex-wrap gap-3 pt-4">
                                     <button onClick={() => handleSave('contact')} className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all">Save</button>
                                     <button onClick={() => handleCancel('contact')} className="bg-slate-100 text-slate-500 px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
                                 </div>
                             )}
                         </div>
 
+                        {/* Listing Display Mode */}
+                        <div className="bg-white rounded-[3rem] p-5 sm:p-8 lg:p-12 shadow-2xl shadow-slate-200 border border-slate-200 space-y-8">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-teal-600 rounded-2xl shadow-xl shadow-teal-500/20 text-white">
+                                        <AdjustmentsHorizontalIcon className="h-6 w-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-900">Listing Display Mode</h3>
+                                        <p className="text-sm text-slate-400">Controls how plots and blog posts are paginated on public listing pages.</p>
+                                    </div>
+                                </div>
+                                {!isSectionEditing('listing', ['listing_mode']) && (
+                                    <button onClick={() => toggleEdit('listing')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">
+                                        Edit
+                                    </button>
+                                )}
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Listing Mode</label>
+                                <select
+                                    disabled={!isSectionEditing('listing', ['listing_mode'])}
+                                    value={settings.listing_mode || 'load-more'}
+                                    onChange={(e) => setSettings({ ...settings, listing_mode: e.target.value })}
+                                    className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
+                                >
+                                    <option value="load-more">Load More — Show a button to append the next page</option>
+                                    <option value="pagination">Pagination — Classic numbered page links</option>
+                                    <option value="infinite">Infinite Scroll — Auto-load as the user scrolls down</option>
+                                </select>
+                                <p className="text-[10px] text-slate-400 ml-2">Applies to both the Plots and Blog listing pages.</p>
+                            </div>
+                            {isSectionEditing('listing', ['listing_mode']) && (
+                                <div className="flex flex-wrap gap-3 pt-4">
+                                    <button onClick={() => handleSave('listing')} className="bg-teal-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-teal-500/20 hover:bg-teal-700 transition-all">Save</button>
+                                    <button onClick={() => handleCancel('listing')} className="bg-slate-100 text-slate-500 px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                                </div>
+                            )}
+                        </div>
+
                         {/* Social Media Links */}
-                        <div className="bg-white rounded-[3rem] p-10 lg:p-12 shadow-2xl shadow-slate-200/40 border border-slate-200/60 space-y-8">
+                        <div className="bg-white rounded-[3rem] p-5 sm:p-8 lg:p-12 shadow-2xl shadow-slate-200 border border-slate-200 space-y-8">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-violet-600 rounded-2xl shadow-xl shadow-violet-500/20 text-white">
@@ -542,7 +721,7 @@ export default function SettingsPage() {
                                     { key: 'social_tiktok', label: 'TikTok', placeholder: 'https://tiktok.com/@yourhandle', color: '#000000' },
                                 ].map(f => (
                                     <div key={f.key} className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2" style={{ color: f.color }}>
+                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]" style={{ color: f.color }}>
                                             {f.label}
                                         </label>
                                         <input
@@ -551,13 +730,13 @@ export default function SettingsPage() {
                                             value={settings[f.key] || ''}
                                             onChange={(e) => setSettings({ ...settings, [f.key]: e.target.value })}
                                             placeholder={f.placeholder}
-                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-violet-500/5 focus:bg-white focus:border-violet-500/20 transition-all disabled:opacity-60"
+                                            className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
                                         />
                                     </div>
                                 ))}
                             </div>
-                            {isSectionEditing('social', ['social_facebook', 'social_instagram']) && editModes['social'] && (
-                                <div className="flex gap-4 pt-4">
+                            {isSectionEditing('social', ['social_facebook', 'social_instagram']) && (
+                                <div className="flex flex-wrap gap-3 pt-4">
                                     <button onClick={() => handleSave('social')} className="bg-violet-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-violet-500/20 hover:bg-violet-700 transition-all">Save Social Links</button>
                                     <button onClick={() => handleCancel('social')} className="bg-slate-100 text-slate-500 px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
                                 </div>
@@ -570,7 +749,7 @@ export default function SettingsPage() {
                 {/* Modules Tab */}
                 {activeTab === 'modules' && (
                     <div className="space-y-8">
-                        <div className="bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-200/40 border border-slate-200/60">
+                        <div className="bg-white rounded-[3rem] p-5 sm:p-8 shadow-2xl shadow-slate-200 border border-slate-200">
                             <div className="flex items-center justify-between mb-8">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/20 text-white">
@@ -621,196 +800,202 @@ export default function SettingsPage() {
 
                 {/* Email Services Tab */}
                 {activeTab === 'email' && (
-                    <div className="space-y-8">
-                        {/* Config card */}
-                        <div className="bg-white rounded-[3rem] p-10 lg:p-12 shadow-2xl shadow-slate-200/40 border border-slate-200/60 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                    <div className="bg-white rounded-[3rem] p-5 sm:p-8 lg:p-12 shadow-2xl shadow-slate-200 border border-slate-200 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
-                            <div className="flex items-center justify-between mb-8 relative z-10">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-emerald-500 rounded-2xl shadow-xl shadow-emerald-500/20 text-white">
-                                        <EnvelopeIcon className="h-6 w-6" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-slate-900 font-display">Email Configuration</h3>
-                                        <p className="text-sm font-medium text-slate-400">Choose your email delivery provider.</p>
-                                    </div>
+                        <div className="flex items-center justify-between mb-8 relative z-10">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-emerald-500 rounded-2xl shadow-xl shadow-emerald-500/20 text-white">
+                                    <EnvelopeIcon className="h-6 w-6" />
                                 </div>
-                                {!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from']) && (
-                                    <button
-                                        onClick={() => toggleEdit('email')}
-                                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
-                                    >
-                                        Edit Email
-                                    </button>
-                                )}
-                            </div>
-
-                            {/* Provider toggle */}
-                            <div className="mb-8 relative z-10">
-                                <p className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em] mb-3">Email Provider</p>
-                                <div className="grid grid-cols-2 gap-3 max-w-md">
-                                    {(['resend', 'smtp'] as const).map(p => (
-                                        <button
-                                            key={p}
-                                            disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
-                                            onClick={() => setSettings({ ...settings, email_provider: p })}
-                                            className={`py-4 px-5 rounded-2xl border-2 text-left transition-all disabled:cursor-default ${(settings.email_provider || 'smtp') === p ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100 bg-slate-50 hover:border-slate-200'}`}
-                                        >
-                                            <p className={`text-sm font-bold ${(settings.email_provider || 'smtp') === p ? 'text-emerald-700' : 'text-slate-500'}`}>
-                                                {p === 'resend' ? 'Resend' : 'SMTP / Gmail'}
-                                            </p>
-                                            <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">
-                                                {p === 'resend' ? 'HTTP API — works on all hosts' : 'Traditional SMTP server'}
-                                            </p>
-                                        </button>
-                                    ))}
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-900 font-display">Email Configuration</h3>
+                                    <p className="text-sm font-medium text-slate-400">Choose your email delivery provider.</p>
                                 </div>
                             </div>
-
-                            {/* Resend fields */}
-                            {(settings.email_provider || 'smtp') === 'resend' && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 mb-8">
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Resend API Key</label>
-                                        <div className="relative">
-                                            <input
-                                                type={showResendKey ? 'text' : 'password'}
-                                                disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
-                                                value={settings.resend_api_key || ''}
-                                                onChange={(e) => setSettings({ ...settings, resend_api_key: e.target.value })}
-                                                className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 pl-6 pr-14 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
-                                                placeholder="re_xxxxxxxxxxxxxxxxxxxx"
-                                            />
-                                            <button type="button" onClick={() => setShowResendKey(v => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors" tabIndex={-1}>
-                                                {showResendKey
-                                                    ? <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                                                    : <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                                }
-                                            </button>
-                                        </div>
-                                        <p className="text-[10px] text-slate-400 ml-2">Get your API key from resend.com → API Keys</p>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Sender Email (From)</label>
-                                        <input
-                                            type="email"
-                                            disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
-                                            value={settings.smtp_from || ''}
-                                            onChange={(e) => setSettings({ ...settings, smtp_from: e.target.value })}
-                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
-                                            placeholder="noreply@yourdomain.com"
-                                        />
-                                        <p className="text-[10px] text-slate-400 ml-2">Must be a verified domain in your Resend account</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* SMTP fields */}
-                            {(settings.email_provider || 'smtp') === 'smtp' && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">SMTP Host</label>
-                                        <input
-                                            type="text"
-                                            disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
-                                            value={settings.smtp_host || ''}
-                                            onChange={(e) => setSettings({ ...settings, smtp_host: e.target.value })}
-                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
-                                            placeholder="smtp.example.com"
-                                        />
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Sender Email (From)</label>
-                                        <input
-                                            type="email"
-                                            disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
-                                            value={settings.smtp_from || ''}
-                                            onChange={(e) => setSettings({ ...settings, smtp_from: e.target.value })}
-                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
-                                            placeholder="noreply@yourdomain.com"
-                                        />
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">SMTP Port</label>
-                                        <input
-                                            type="text"
-                                            disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
-                                            value={settings.smtp_port || ''}
-                                            onChange={(e) => setSettings({ ...settings, smtp_port: e.target.value })}
-                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
-                                            placeholder="587"
-                                        />
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Username</label>
-                                        <input
-                                            type="text"
-                                            disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
-                                            value={settings.smtp_user || ''}
-                                            onChange={(e) => setSettings({ ...settings, smtp_user: e.target.value })}
-                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
-                                        />
-                                    </div>
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between ml-2">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Password</label>
-                                            <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 border border-amber-100 rounded-full px-2 py-0.5">Gmail App Password: paste without spaces</span>
-                                        </div>
-                                        <div className="relative">
-                                            <input
-                                                type={showSmtpPass ? 'text' : 'password'}
-                                                disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
-                                                value={settings.smtp_pass || ''}
-                                                onChange={(e) => setSettings({ ...settings, smtp_pass: e.target.value.replace(/\s/g, '') })}
-                                                className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 pl-6 pr-14 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-emerald-500/5 focus:bg-white focus:border-emerald-500/20 transition-all disabled:opacity-60"
-                                                placeholder="Paste App Password (spaces auto-removed)"
-                                            />
-                                            <button type="button" onClick={() => setShowSmtpPass(v => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors" tabIndex={-1}>
-                                                {showSmtpPass
-                                                    ? <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                                                    : <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                                }
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer hover:bg-white transition-colors">
-                                            <input
-                                                type="checkbox"
-                                                disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
-                                                checked={settings.smtp_secure === 'true'}
-                                                onChange={(e) => setSettings({ ...settings, smtp_secure: String(e.target.checked) })}
-                                                className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                                            />
-                                            <span className="text-sm font-bold text-slate-700">Use Secure Connection (TLS/SSL)</span>
-                                        </label>
-                                    </div>
-                                </div>
-                            )}
-
-                            {isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from']) && (
-                                <div className="mt-8 flex justify-end gap-4 relative z-10">
-                                    <button
-                                        onClick={() => handleSave('email')}
-                                        className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 hover:scale-105 active:scale-95 transition-all"
-                                    >
-                                        Save Email Settings
-                                    </button>
-                                    {editModes['email'] && (
-                                        <button
-                                            onClick={() => handleCancel('email')}
-                                            className="bg-slate-100 text-slate-500 px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
-                                        >
-                                            Cancel
-                                        </button>
-                                    )}
-                                </div>
+                            {!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from']) && (
+                                <button
+                                    onClick={() => toggleEdit('email')}
+                                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
+                                >
+                                    Edit Email
+                                </button>
                             )}
                         </div>
 
-                        {/* Test Email card */}
-                        <TestEmailCard />
+                        {/* Provider toggle */}
+                        <div className="mb-8 relative z-10">
+                            <p className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em] mb-3">Email Provider</p>
+                            <div className="grid grid-cols-2 gap-3 max-w-md">
+                                {(['resend', 'smtp'] as const).map(p => (
+                                    <button
+                                        key={p}
+                                        disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                        onClick={() => setSettings({ ...settings, email_provider: p })}
+                                        className={`py-4 px-5 rounded-2xl border-2 text-left transition-all disabled:cursor-default ${(settings.email_provider || 'smtp') === p
+                                            ? 'border-emerald-500 bg-emerald-50'
+                                            : 'border-slate-100 bg-slate-50 hover:border-slate-200'}`}
+                                    >
+                                        <p className={`text-sm font-bold ${(settings.email_provider || 'smtp') === p ? 'text-emerald-700' : 'text-slate-500'}`}>
+                                            {p === 'resend' ? 'Resend' : 'SMTP / Gmail'}
+                                        </p>
+                                        <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">
+                                            {p === 'resend' ? 'HTTP API — works on all hosts' : 'Traditional SMTP server'}
+                                        </p>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Resend fields */}
+                        {(settings.email_provider || 'smtp') === 'resend' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 mb-8">
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Resend API Key</label>
+                                    <div className="relative">
+                                        <input
+                                            type={showResendKey ? 'text' : 'password'}
+                                            disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                            value={settings.resend_api_key || ''}
+                                            onChange={(e) => setSettings({ ...settings, resend_api_key: e.target.value })}
+                                            className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 pl-6 pr-14 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
+                                            placeholder="re_xxxxxxxxxxxxxxxxxxxx"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowResendKey(v => !v)}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
+                                            tabIndex={-1}
+                                        >
+                                            {showResendKey
+                                                ? <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                                                : <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                            }
+                                        </button>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 ml-2">Get your API key from resend.com → API Keys</p>
+                                </div>
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Sender Email (From)</label>
+                                    <input
+                                        type="email"
+                                        disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                        value={settings.smtp_from || ''}
+                                        onChange={(e) => setSettings({ ...settings, smtp_from: e.target.value })}
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
+                                        placeholder="noreply@yourdomain.com"
+                                    />
+                                    <p className="text-[10px] text-slate-400 ml-2">Must be a verified domain in your Resend account</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* SMTP fields */}
+                        {(settings.email_provider || 'smtp') === 'smtp' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                            <div className="space-y-3">
+                                <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">SMTP Host</label>
+                                <input
+                                    type="text"
+                                    disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                    value={settings.smtp_host || ''}
+                                    onChange={(e) => setSettings({ ...settings, smtp_host: e.target.value })}
+                                    className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
+                                    placeholder="smtp.example.com"
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Sender Email (From)</label>
+                                <input
+                                    type="email"
+                                    disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                    value={settings.smtp_from || ''}
+                                    onChange={(e) => setSettings({ ...settings, smtp_from: e.target.value })}
+                                    className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
+                                    placeholder="noreply@yourdomain.com"
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">SMTP Port</label>
+                                <input
+                                    type="text"
+                                    disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                    value={settings.smtp_port || ''}
+                                    onChange={(e) => setSettings({ ...settings, smtp_port: e.target.value })}
+                                    className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
+                                    placeholder="587"
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Username</label>
+                                <input
+                                    type="text"
+                                    disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                    value={settings.smtp_user || ''}
+                                    onChange={(e) => setSettings({ ...settings, smtp_user: e.target.value })}
+                                    className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between ml-2">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Password</label>
+                                    <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 border border-amber-100 rounded-full px-2 py-0.5">Gmail App Password: paste without spaces</span>
+                                </div>
+                                <div className="relative">
+                                    <input
+                                        type={showSmtpPass ? 'text' : 'password'}
+                                        disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                        value={settings.smtp_pass || ''}
+                                        onChange={(e) => setSettings({ ...settings, smtp_pass: e.target.value.replace(/\s/g, '') })}
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 pl-6 pr-14 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
+                                        placeholder="Paste App Password (spaces auto-removed)"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowSmtpPass(v => !v)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
+                                        tabIndex={-1}
+                                    >
+                                        {showSmtpPass
+                                            ? <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                                            : <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer hover:bg-white transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        disabled={!isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from'])}
+                                        checked={settings.smtp_secure === 'true'}
+                                        onChange={(e) => setSettings({ ...settings, smtp_secure: String(e.target.checked) })}
+                                        className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                    />
+                                    <span className="text-sm font-bold text-slate-700">Use Secure Connection (TLS/SSL)</span>
+                                </label>
+                            </div>
+                        </div>
+                        )} {/* end SMTP conditional */}
+
+                        {isSectionEditing('email', ['email_provider', 'resend_api_key', 'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_from']) && (
+                            <div className="mt-8 flex justify-end gap-4 relative z-10">
+                                <button
+                                    onClick={() => handleSave('email')}
+                                    className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 hover:scale-105 active:scale-95 transition-all"
+                                >
+                                    Save Email Settings
+                                </button>
+                                <button
+                                    onClick={() => handleCancel('email')}
+                                    className="bg-slate-100 text-slate-500 px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        )}
+
+
                     </div>
                 )}
 
@@ -818,8 +1003,8 @@ export default function SettingsPage() {
                 {activeTab === 'media' && (
                     <div className="space-y-10">
                         {/* Cloudinary Section */}
-                        <div className="bg-white rounded-[3rem] p-10 lg:p-12 shadow-2xl shadow-slate-200/40 border border-slate-200/60 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl"></div>
+                        <div className="bg-white rounded-[3rem] p-5 sm:p-8 lg:p-12 shadow-2xl shadow-slate-200 border border-slate-200 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
                             <div className="flex items-center justify-between mb-8 relative z-10">
                                 <div className="flex items-center gap-4">
@@ -843,38 +1028,38 @@ export default function SettingsPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Cloud Name</label>
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Cloud Name</label>
                                     <input
                                         type="text"
                                         disabled={!isSectionEditing('cloudinary', ['cloudinary_cloud_name', 'cloudinary_api_key', 'cloudinary_api_secret'])}
                                         value={settings.cloudinary_cloud_name || ''}
                                         onChange={(e) => setSettings({ ...settings, cloudinary_cloud_name: e.target.value })}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-blue-600/5 focus:bg-white focus:border-blue-600/20 transition-all disabled:opacity-60"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
                                     />
                                 </div>
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">API Key</label>
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">API Key</label>
                                     <input
                                         type="text"
                                         disabled={!isSectionEditing('cloudinary', ['cloudinary_cloud_name', 'cloudinary_api_key', 'cloudinary_api_secret'])}
                                         value={settings.cloudinary_api_key || ''}
                                         onChange={(e) => setSettings({ ...settings, cloudinary_api_key: e.target.value })}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-blue-600/5 focus:bg-white focus:border-blue-600/20 transition-all disabled:opacity-60"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
                                     />
                                 </div>
                                 <div className="md:col-span-2 space-y-3">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">API Secret</label>
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">API Secret</label>
                                     <input
                                         type="password"
                                         disabled={!isSectionEditing('cloudinary', ['cloudinary_cloud_name', 'cloudinary_api_key', 'cloudinary_api_secret'])}
                                         value={settings.cloudinary_api_secret || ''}
                                         onChange={(e) => setSettings({ ...settings, cloudinary_api_secret: e.target.value })}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-blue-600/5 focus:bg-white focus:border-blue-600/20 transition-all opacity-50 focus:opacity-100 disabled:opacity-60"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all opacity-50 focus:opacity-100 disabled:opacity-60"
                                     />
                                 </div>
                             </div>
 
-                            {isSectionEditing('cloudinary', ['cloudinary_cloud_name', 'cloudinary_api_key', 'cloudinary_api_secret']) && editModes['cloudinary'] && (
+                            {isSectionEditing('cloudinary', ['cloudinary_cloud_name', 'cloudinary_api_key', 'cloudinary_api_secret']) && (
                                 <div className="flex gap-4 pt-8 relative z-10">
                                     <button
                                         onClick={() => handleSave('cloudinary')}
@@ -893,8 +1078,8 @@ export default function SettingsPage() {
                         </div>
 
                         {/* S3 / R2 Section */}
-                        <div className="bg-white rounded-[3rem] p-10 lg:p-12 shadow-2xl shadow-slate-200/40 border border-slate-200/60 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl"></div>
+                        <div className="bg-white rounded-[3rem] p-5 sm:p-8 lg:p-12 shadow-2xl shadow-slate-200 border border-slate-200 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
                             <div className="flex items-center justify-between mb-8 relative z-10">
                                 <div className="flex items-center gap-4">
@@ -918,49 +1103,49 @@ export default function SettingsPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Access Key ID</label>
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Access Key ID</label>
                                     <input
                                         type="text"
                                         disabled={!isSectionEditing('s3', ['s3_access_key', 's3_bucket'])}
                                         value={settings.s3_access_key || ''}
                                         onChange={(e) => setSettings({ ...settings, s3_access_key: e.target.value })}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-orange-600/5 focus:bg-white focus:border-orange-600/20 transition-all disabled:opacity-60"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
                                     />
                                 </div>
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Secret Access Key</label>
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Secret Access Key</label>
                                     <input
                                         type="password"
                                         disabled={!isSectionEditing('s3', ['s3_access_key', 's3_bucket'])}
                                         value={settings.s3_secret_key || ''}
                                         onChange={(e) => setSettings({ ...settings, s3_secret_key: e.target.value })}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-orange-600/5 focus:bg-white focus:border-orange-600/20 transition-all opacity-50 focus:opacity-100 disabled:opacity-60"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-400 transition-all opacity-50 focus:opacity-100 disabled:opacity-60"
                                     />
                                 </div>
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Bucket Name</label>
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Bucket Name</label>
                                     <input
                                         type="text"
                                         disabled={!isSectionEditing('s3', ['s3_access_key', 's3_bucket'])}
                                         value={settings.s3_bucket || ''}
                                         onChange={(e) => setSettings({ ...settings, s3_bucket: e.target.value })}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-orange-600/5 focus:bg-white focus:border-orange-600/20 transition-all disabled:opacity-60"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
                                     />
                                 </div>
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Endpoint URL (Optional)</label>
+                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Endpoint URL (Optional)</label>
                                     <input
                                         type="text"
                                         disabled={!isSectionEditing('s3', ['s3_access_key', 's3_bucket'])}
                                         value={settings.s3_endpoint || ''}
                                         onChange={(e) => setSettings({ ...settings, s3_endpoint: e.target.value })}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-[12px] focus:ring-orange-600/5 focus:bg-white focus:border-orange-600/20 transition-all disabled:opacity-60"
+                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
                                         placeholder="e.g. https://<id>.r2.cloudflarestorage.com"
                                     />
                                 </div>
                             </div>
 
-                            {isSectionEditing('s3', ['s3_access_key', 's3_bucket']) && editModes['s3'] && (
+                            {isSectionEditing('s3', ['s3_access_key', 's3_bucket']) && (
                                 <div className="flex gap-4 pt-8 relative z-10">
                                     <button
                                         onClick={() => handleSave('s3')}
@@ -1016,7 +1201,8 @@ export default function SettingsPage() {
 
                 {/* Audit Logs Tab */}
                 {activeTab === 'audit-logs' && (
-                    <div className="bg-white rounded-[3rem] shadow-2xl shadow-slate-200/50 border border-slate-200/60 overflow-hidden">
+                    <div className="bg-white rounded-[3rem] shadow-2xl shadow-slate-200 border border-slate-200 overflow-hidden relative">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-slate-500/5 rounded-full blur-3xl pointer-events-none"></div>
                         <div className="p-10 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-50/20">
                             <div>
                                 <h3 className="text-2xl font-bold text-slate-900 font-display">System Ledger</h3>
@@ -1029,7 +1215,7 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left">
+                            <table className="w-full min-w-[600px] text-left">
                                 <thead>
                                     <tr className="bg-slate-50/50 border-b border-slate-100">
                                         <th className="pl-10 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Technician</th>
@@ -1121,7 +1307,8 @@ export default function SettingsPage() {
                 {/* Performance Tab */}
                 {activeTab === 'performance' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div className="bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-200/40 border border-slate-200/60 space-y-8">
+                        <div className="bg-white rounded-[3rem] p-5 sm:p-8 shadow-2xl shadow-slate-200 border border-slate-200 space-y-8 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-colors pointer-events-none"></div>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/20 text-white">
@@ -1156,8 +1343,8 @@ export default function SettingsPage() {
                                 </div>
                             </label>
 
-                            {isSectionEditing('performance', ['performance_edge_caching']) && editModes['performance'] && (
-                                <div className="flex gap-4 pt-4">
+                            {isSectionEditing('performance', ['performance_edge_caching']) && (
+                                <div className="flex flex-wrap gap-3 pt-4">
                                     <button
                                         onClick={() => handleSave('performance')}
                                         className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all"
@@ -1181,7 +1368,7 @@ export default function SettingsPage() {
                 {/* Security Tab */}
                 {activeTab === 'security' && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                        <div className="bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-200/40 border border-slate-200/60 space-y-8">
+                        <div className="bg-white rounded-[3rem] p-5 sm:p-8 shadow-2xl shadow-slate-200 border border-slate-200 space-y-8">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-emerald-500 rounded-2xl shadow-xl shadow-emerald-500/20 text-white">
@@ -1232,8 +1419,8 @@ export default function SettingsPage() {
                                 ))}
                             </div>
 
-                            {isSectionEditing('security', ['security_session_locking', 'security_failed_login_limit', 'security_token_rotation']) && editModes['security'] && (
-                                <div className="flex gap-4 pt-4">
+                            {isSectionEditing('security', ['security_session_locking', 'security_failed_login_limit', 'security_token_rotation']) && (
+                                <div className="flex flex-wrap gap-3 pt-4">
                                     <button
                                         onClick={() => handleSave('security')}
                                         className="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 transition-all"

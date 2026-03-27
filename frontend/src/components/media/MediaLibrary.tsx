@@ -463,7 +463,7 @@ export default function MediaLibrary({
             </div>
 
             {/* Toolbar Row */}
-            <div className="flex-shrink-0 px-8 py-4 grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-slate-200/60 bg-white/50 backdrop-blur-sm z-10 sticky top-0">
+            <div className="flex-shrink-0 px-8 py-4 grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-slate-200 bg-white/50 backdrop-blur-sm z-10 sticky top-0">
                 <div className="relative group w-full">
                     <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                     <input
@@ -475,7 +475,7 @@ export default function MediaLibrary({
                     />
                 </div>
 
-                <div className="flex items-center gap-1 p-1 bg-slate-100/50 rounded-[2rem] border border-slate-200/50 backdrop-blur-sm">
+                <div className="flex items-center gap-1 p-1 bg-slate-100/50 rounded-[2rem] border border-slate-200 backdrop-blur-sm">
                     {[
                         { id: 'all', label: 'All', icon: FolderIcon },
                         { id: 'images', label: 'Images', icon: PhotoIcon },
@@ -486,7 +486,7 @@ export default function MediaLibrary({
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex-1 flex items-center justify-center gap-2 px-2 py-3 rounded-[1.75rem] text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === tab.id
-                                ? 'bg-white text-blue-600 shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/50'
+                                ? 'bg-white text-blue-600 shadow-xl shadow-slate-200 ring-1 ring-slate-200/50'
                                 : 'text-slate-500 hover:text-slate-900'
                                 }`}
                         >

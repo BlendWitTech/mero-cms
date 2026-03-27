@@ -68,6 +68,10 @@
   .custom-scrollbar-hidden::-webkit-scrollbar {
     display: none;
   }
+  .custom-scrollbar-hidden {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
 
   .hologram-scanlines {
     position: absolute;
@@ -227,6 +231,36 @@ body {
   border-radius: 0;
   background-color: transparent !important;
   box-shadow: none !important;
+}
+
+/* Image alignment inside the editor */
+.ProseMirror .image-align-left {
+  float: left;
+  margin: 0.5em 1.5em 0.5em 0;
+  display: block;
+}
+.ProseMirror .image-align-right {
+  float: right;
+  margin: 0.5em 0 0.5em 1.5em;
+  display: block;
+}
+.ProseMirror .image-align-center {
+  float: none;
+  margin: 1em auto;
+  display: block;
+}
+/* Clear floats after image paragraphs */
+.ProseMirror p:has(img)::after {
+  content: '';
+  display: table;
+  clear: both;
+}
+
+/* Resize handle cursor when image is selected */
+.ProseMirror img.ProseMirror-selectednode {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  cursor: ew-resize;
 }
 
 .ProseMirror mark {

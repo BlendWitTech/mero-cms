@@ -61,7 +61,7 @@ function BlogPageContent() {
         categories: [],
         tags: [],
         publishedAt: '',
-        seo: { title: '', description: '' }
+        seo: { title: '', description: '', keywords: [] as string[], ogImage: '', ogImages: [] as string[] }
     };
     const [formData, setFormData] = useState<any>(defaultFormData);
     const [initialState, setInitialState] = useState<any>(defaultFormData);
@@ -84,7 +84,7 @@ function BlogPageContent() {
         fetchInitialData();
     }, []);
 
-    // Effect to handle URL-based data loading for Edit/New mode
+    // Effect to handle URL-based data loading for Edit mode
     useEffect(() => {
         if (view === 'editor' && action === 'edit' && actionId) {
             const post = posts.find(p => p.id === actionId);
@@ -94,12 +94,17 @@ function BlogPageContent() {
                 // If loaded but not found (pagination?), fetch specific
                 fetchPost(actionId);
             }
-        } else if (view === 'editor' && action === 'new') {
-            if (currentPostId !== null) {
-                resetForm();
-            }
         }
     }, [view, action, actionId, posts, isLoading]);
+
+    // Reset form whenever entering 'new' mode (tracks action transitions via ref)
+    const prevActionRef = React.useRef<string | null>(null);
+    useEffect(() => {
+        if (action === 'new' && prevActionRef.current !== 'new') {
+            resetForm();
+        }
+        prevActionRef.current = action;
+    }, [action]);
 
     // Sync isDirty with FormContext
     useEffect(() => {
@@ -152,7 +157,7 @@ function BlogPageContent() {
             categories: post.categories?.map((c: any) => c.id) || [],
             tags: post.tags?.map((t: any) => t.name) || [],
             publishedAt: post.publishedAt || '',
-            seo: { title: post.seo?.title || '', description: post.seo?.description || '' }
+            seo: { title: post.seo?.title || '', description: post.seo?.description || '', keywords: post.seo?.keywords || [], ogImage: post.seo?.ogImage || '', ogImages: post.seo?.ogImages || [] }
         };
         setFormData(data);
         setInitialState(data);
@@ -206,7 +211,7 @@ function BlogPageContent() {
             const payload = {
                 ...formData,
                 publishedAt: formData.publishedAt ? new Date(formData.publishedAt).toISOString() : undefined,
-                seo: (!formData.seo.title && !formData.seo.description) ? undefined : formData.seo
+                seo: (!formData.seo.title && !formData.seo.description && !formData.seo.ogImage && !formData.seo.keywords?.length) ? undefined : formData.seo
             };
 
             await apiRequest(url, {
@@ -305,7 +310,7 @@ function BlogPageContent() {
                 )}
 
                 {/* Editor Header */}
-                <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200/50 shadow-sm sticky top-4 z-10">
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm sticky top-0 z-10">
                     <div className="flex items-center gap-4">
                         <button onClick={handleBackClick} className="p-2 hover:bg-slate-50 rounded-xl text-slate-500 transition-colors">
                             <ArrowLeftIcon className="h-5 w-5" />
@@ -337,11 +342,11 @@ function BlogPageContent() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="xl:col-span-2 space-y-6">
                         {/* Premium Title & Slug Area */}
-                        <div className="bg-white rounded-2xl p-10 border border-slate-200/60 shadow-xl shadow-slate-200/20 space-y-8 relative overflow-hidden group">
+                        <div className="bg-white rounded-2xl p-10 border border-slate-200 shadow-xl shadow-slate-200 space-y-8 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/30 rounded-full blur-3xl -z-10 group-hover:bg-blue-100/30 transition-colors duration-1000"></div>
 
                             <div className="space-y-3">
@@ -373,14 +378,14 @@ function BlogPageContent() {
 
                         {/* Rich Text Editor */}
                         <div className={isReadOnly ? "pointer-events-none opacity-80" : ""}>
-                            <PostEditor content={formData.content} onChange={(html) => setFormData({ ...formData, content: html })} />
+                            <PostEditor key={action === 'new' ? 'new' : currentPostId ?? 'new'} content={formData.content} onChange={(html) => setFormData({ ...formData, content: html })} />
                         </div>
                     </div>
 
                     {/* Sidebar Metadata */}
                     <div className="space-y-6">
                         {/* Cover Image */}
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
+                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Cover Image</h3>
                                 {formData.coverImage && !isReadOnly && (
@@ -412,7 +417,7 @@ function BlogPageContent() {
                         />
 
                         {/* Categories */}
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
+                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Categories</h3>
                             <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
                                 {categories.map(cat => (
@@ -432,7 +437,7 @@ function BlogPageContent() {
                         </div>
 
                         {/* Tags */}
-                        <div className="bg-white rounded-2xl rounded-b-none p-6 border border-slate-200/50 shadow-sm space-y-4 relative">
+                        <div className="bg-white rounded-2xl rounded-b-none p-6 border border-slate-200 shadow-sm space-y-4 relative">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Tags</h3>
                             <div className="flex flex-wrap gap-2 mb-3">
                                 {formData.tags.map((tag: string) => (
@@ -505,12 +510,12 @@ function BlogPageContent() {
                         </div>
 
                         {/* SEO Metadata */}
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
+                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">SEO Metadata</h3>
                             <div className="space-y-3">
                                 <div>
                                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Meta Title</label>
-                                     <input
+                                    <input
                                         type="text"
                                         value={formData.seo.title}
                                         disabled={isReadOnly}
@@ -522,7 +527,7 @@ function BlogPageContent() {
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Meta Description</label>
-                                     <textarea
+                                    <textarea
                                         value={formData.seo.description}
                                         disabled={isReadOnly}
                                         onChange={(e) => setFormData({ ...formData, seo: { ...formData.seo, description: e.target.value } })}
@@ -532,11 +537,47 @@ function BlogPageContent() {
                                     />
                                     <p className="text-[10px] text-slate-400 mt-1 text-right">{formData.seo.description.length}/160</p>
                                 </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Keywords</label>
+                                    <div className="flex flex-wrap gap-1 mt-1 mb-1">
+                                        {(formData.seo.keywords || []).map((kw: string, i: number) => (
+                                            <span key={i} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-100">
+                                                {kw}
+                                                <button type="button" disabled={isReadOnly} onClick={() => setFormData({ ...formData, seo: { ...formData.seo, keywords: formData.seo.keywords.filter((_: string, j: number) => j !== i) } })} className="hover:text-red-500 disabled:opacity-50">×</button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                    <input
+                                        type="text"
+                                        disabled={isReadOnly}
+                                        placeholder="Type keyword and press Enter…"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
+                                        onKeyDown={(e) => {
+                                            if ((e.key === 'Enter' || e.key === ',') && (e.target as HTMLInputElement).value.trim()) {
+                                                e.preventDefault();
+                                                const kw = (e.target as HTMLInputElement).value.trim();
+                                                setFormData({ ...formData, seo: { ...formData.seo, keywords: [...(formData.seo.keywords || []), kw] } });
+                                                (e.target as HTMLInputElement).value = '';
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">OG Image URL</label>
+                                    <input
+                                        type="url"
+                                        value={formData.seo.ogImage || ''}
+                                        disabled={isReadOnly}
+                                        onChange={(e) => setFormData({ ...formData, seo: { ...formData.seo, ogImage: e.target.value } })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
+                                        placeholder="https://…/og-image.jpg (for social sharing)"
+                                    />
+                                </div>
                             </div>
                         </div>
 
                         {/* Scheduling */}
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
+                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Publishing</h3>
                             <div>
                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Publish Date</label>
@@ -594,7 +635,7 @@ function BlogPageContent() {
             </div>
 
             {/* Posts List */}
-            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden">
+            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row items-center gap-4 bg-slate-50/10">
                     <div className="relative flex-1 group">
                         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
@@ -636,7 +677,7 @@ function BlogPageContent() {
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full min-w-[700px] text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-100 bg-slate-50/30">
                                 <th className="pl-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Article</th>
@@ -704,7 +745,7 @@ function BlogPageContent() {
                                             </td>
                                             <td className="pr-8 py-5 text-right">
                                                 {canManageContent && (
-                                                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="flex items-center justify-end gap-2">
                                                         <Link href={`/dashboard/comments?postId=${post.id}`} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-emerald-500 hover:border-emerald-200 transition-all" title="View Comments">
                                                             <ChatBubbleLeftRightIcon className="h-4 w-4" />
                                                         </Link>

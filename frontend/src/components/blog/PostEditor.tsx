@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useEditor, EditorContent, TiptapBubbleMenu as BubbleMenu } from '@tiptap/react';
-
-// @ts-ignore
-const AnyBubbleMenu = BubbleMenu as any;
+import React, { useState, useEffect, useRef } from 'react';
+import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
+import type { NodeViewProps } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
@@ -20,7 +18,6 @@ import { createLowlight, common } from 'lowlight';
 import FontFamily from '@tiptap/extension-font-family';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Extension, Node } from '@tiptap/core';
-import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 
 // Custom Font Size Extension
 const FontSize = Extension.create({
@@ -109,20 +106,6 @@ const MenuButton = ({ onClick, isActive = false, icon: Icon, title }: any) => (
             }`}
     >
         <Icon className="h-4 w-4" strokeWidth={2.5} />
-    </button>
-);
-
-const BubbleButton = ({ onClick, isActive = false, icon: Icon, label }: any) => (
-    <button
-        onClick={onClick}
-        onMouseDown={(e) => e.preventDefault()}
-        title={label}
-        className={`p-2 rounded-xl transition-all duration-200 ${isActive
-            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10'
-            : 'hover:bg-slate-50 text-slate-400 hover:text-slate-900'
-            }`}
-    >
-        <Icon className="h-3.5 w-3.5" strokeWidth={3} />
     </button>
 );
 
@@ -222,6 +205,152 @@ const MenuBar = ({ editor, onOpenMedia }: { editor: any, onOpenMedia: () => void
     );
 };
 
+// ── Layout preset definitions ─────────────────────────────────────────────────
+const IMG_PRESETS = [
+    { label: '1/row',   title: 'Full width',   align: 'center', newWidth: '100%', icon: <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="0" width="16" height="11" rx="1.5"/></svg> },
+    { label: '2/row',   title: '2 per row',    align: 'half',   newWidth: '49%',  icon: <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="0" width="7"  height="11" rx="1.5"/><rect x="9"   y="0" width="7"   height="11" rx="1.5"/></svg> },
+    { label: '3/row',   title: '3 per row',    align: 'third',  newWidth: '31%',  icon: <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="0" width="4"  height="11" rx="1"/><rect x="6"    y="0" width="4"   height="11" rx="1"/><rect x="12"  y="0" width="4" height="11" rx="1"/></svg> },
+    { label: 'Float L', title: 'Float left',   align: 'left',   newWidth: null,   icon: <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="0" width="7" height="7" rx="1.5"/><rect x="9" y="1" width="7" height="1.5" rx="0.75" opacity="0.5"/><rect x="9" y="4" width="7" height="1.5" rx="0.75" opacity="0.5"/><rect x="0" y="9.5" width="16" height="1.5" rx="0.75" opacity="0.4"/></svg> },
+    { label: 'Float R', title: 'Float right',  align: 'right',  newWidth: null,   icon: <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="9" y="0" width="7" height="7" rx="1.5"/><rect x="0" y="1" width="7" height="1.5" rx="0.75" opacity="0.5"/><rect x="0" y="4" width="7" height="1.5" rx="0.75" opacity="0.5"/><rect x="0" y="9.5" width="16" height="1.5" rx="0.75" opacity="0.4"/></svg> },
+] as const;
+
+// ── Resizable image NodeView ──────────────────────────────────────────────────
+const ResizableImageView = ({ node, updateAttributes, selected }: NodeViewProps) => {
+    const { src, alt, title, width, align } = node.attrs;
+    const resolvedWidth: string = width || '100%';
+    const isFloat = align === 'left' || align === 'right';
+    const isMulti = align === 'half' || align === 'third';
+
+    const handleResizeStart = (e: React.MouseEvent, side: 'left' | 'right') => {
+        e.preventDefault();
+        e.stopPropagation();
+        const startX = e.clientX;
+        const proseMirror = (e.currentTarget as HTMLElement).closest('.ProseMirror') as HTMLElement | null;
+        const parentWidth = proseMirror?.clientWidth || 800;
+        const startPct = parseFloat(resolvedWidth) || 100;
+        const startPx = (startPct / 100) * parentWidth;
+        const onMove = (ev: MouseEvent) => {
+            const dx = ev.clientX - startX;
+            const newPx = side === 'right' ? startPx + dx : startPx - dx;
+            const newPct = Math.round((newPx / parentWidth) * 100);
+            updateAttributes({ width: `${Math.max(10, Math.min(100, newPct))}%` });
+        };
+        const onUp = () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+    };
+
+    const applyPreset = (e: React.MouseEvent, preset: typeof IMG_PRESETS[number]) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const finalWidth = preset.newWidth ?? (parseFloat(resolvedWidth) > 55 ? '40%' : resolvedWidth);
+        updateAttributes({ align: preset.align, width: finalWidth });
+    };
+
+    return (
+        <NodeViewWrapper
+            as="span"
+            className={`resizable-img-node rimg-${align || 'center'}`}
+            style={{ width: resolvedWidth }}
+            data-drag-handle
+        >
+            <img
+                src={src}
+                alt={alt || ''}
+                title={title || ''}
+                className="bg-transparent transition-all duration-300"
+                style={{ width: '100%', display: 'block', userSelect: 'none', pointerEvents: 'none' }}
+                draggable={false}
+            />
+
+            {selected && (
+                <>
+                    {/* Blue selection ring */}
+                    <div style={{ position: 'absolute', inset: 0, border: '2.5px solid #3B82F6', borderRadius: 3, pointerEvents: 'none' }} />
+
+                    {/* ── Inline toolbar (always visible when selected) ── */}
+                    <div
+                        onMouseDown={(e) => e.preventDefault()} // keep editor focused
+                        style={{
+                            position: 'absolute', top: -56, left: '50%', transform: 'translateX(-50%)',
+                            background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.13)', padding: '5px 7px',
+                            display: 'flex', flexDirection: 'column', gap: 4,
+                            zIndex: 50, whiteSpace: 'nowrap',
+                        }}
+                    >
+                        {/* Layout preset row */}
+                        <div style={{ display: 'flex', gap: 2 }}>
+                            {IMG_PRESETS.map(p => (
+                                <button
+                                    key={p.label}
+                                    title={p.title}
+                                    onMouseDown={(e) => applyPreset(e, p)}
+                                    style={{
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                                        padding: '5px 8px', borderRadius: 9, border: 'none', cursor: 'pointer',
+                                        background: align === p.align ? '#2563EB' : 'transparent',
+                                        color: align === p.align ? '#fff' : '#64748B',
+                                        fontSize: 9, fontWeight: 800, lineHeight: 1,
+                                    }}
+                                >
+                                    {p.icon}
+                                    {p.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Width preset row — float only */}
+                        {isFloat && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 3, paddingTop: 4, borderTop: '1px solid #F1F5F9' }}>
+                                <span style={{ fontSize: 8, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 2 }}>W</span>
+                                {[25, 33, 40, 50].map(size => (
+                                    <button key={size}
+                                        onMouseDown={(e) => { e.preventDefault(); updateAttributes({ width: `${size}%` }); }}
+                                        style={{
+                                            padding: '2px 7px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                                            fontSize: 10, fontWeight: 800,
+                                            background: resolvedWidth === `${size}%` ? '#2563EB' : '#F1F5F9',
+                                            color: resolvedWidth === `${size}%` ? '#fff' : '#64748B',
+                                        }}
+                                    >{size}%</button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Usage hint */}
+                        {(isMulti || isFloat) && (
+                            <div style={{ fontSize: 9, color: '#94A3B8', paddingTop: 2, borderTop: '1px solid #F1F5F9', maxWidth: 260, lineHeight: 1.4 }}>
+                                {isMulti
+                                    ? `Place ${align === 'half' ? '2' : '3'} images back-to-back in the same paragraph (no Enter) for side-by-side.`
+                                    : `Type text in the same paragraph — wraps around the ${align === 'left' ? 'right' : 'left'} side.`}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Resize handles */}
+                    <div title="Drag to resize"
+                        style={{ position: 'absolute', left: -5, top: '50%', transform: 'translateY(-50%)', width: 10, height: 32, background: '#3B82F6', borderRadius: 5, cursor: 'ew-resize', zIndex: 20 }}
+                        onMouseDown={(e) => handleResizeStart(e, 'left')}
+                    />
+                    <div title="Drag to resize"
+                        style={{ position: 'absolute', right: -5, top: '50%', transform: 'translateY(-50%)', width: 10, height: 32, background: '#3B82F6', borderRadius: 5, cursor: 'ew-resize', zIndex: 20 }}
+                        onMouseDown={(e) => handleResizeStart(e, 'right')}
+                    />
+
+                    {/* Width indicator at bottom */}
+                    <div style={{ position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.65)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 10 }}>
+                        {resolvedWidth}
+                    </div>
+                </>
+            )}
+        </NodeViewWrapper>
+    );
+};
+
 export default function PostEditor({ content, onChange }: { content: string, onChange: (html: string) => void }) {
     const [isMediaOpen, setIsMediaOpen] = useState(false);
     const [, forceUpdate] = useState(0);
@@ -238,22 +367,26 @@ export default function PostEditor({ content, onChange }: { content: string, onC
                     keepAttributes: false,
                 },
                 codeBlock: false,
-                // link and underline are not usually in StarterKit, but if the user has a custom one, disabling here is safe
-                // or maybe they are added by mistake elsewhere.
+                link: false,
+                underline: false,
             }),
             Image.extend({
+                inline: true,
+                group: 'inline',
                 draggable: true,
                 addAttributes() {
                     return {
                         ...this.parent?.(),
                         width: {
                             default: '100%',
+                            parseHTML: element => element.style.width || element.getAttribute('width') || '100%',
                             renderHTML: attributes => ({
                                 style: `width: ${attributes.width};`,
                             }),
                         },
                         align: {
                             default: 'center',
+                            parseHTML: element => element.getAttribute('data-align') || 'center',
                             renderHTML: attributes => ({
                                 'data-align': attributes.align,
                                 class: `image-align-${attributes.align}`,
@@ -261,9 +394,12 @@ export default function PostEditor({ content, onChange }: { content: string, onC
                         },
                     };
                 },
+                addNodeView() {
+                    return ReactNodeViewRenderer(ResizableImageView);
+                },
             }).configure({
                 HTMLAttributes: {
-                    class: 'bg-transparent my-8 mx-auto transition-all duration-300'
+                    class: 'bg-transparent transition-all duration-300'
                 }
             }),
             Link.configure({
@@ -290,7 +426,6 @@ export default function PostEditor({ content, onChange }: { content: string, onC
             TextStyle,
             FontFamily,
             FontSize,
-            BubbleMenuExtension,
             // Simple Video Node
             Node.create({
                 name: 'video',
@@ -354,9 +489,12 @@ export default function PostEditor({ content, onChange }: { content: string, onC
     const handleSelectImage = (url: string) => {
         if (editor) {
             const isVideo = url.match(/\.(mp4|webm|ogg)$/i);
+            const isImageSelected = (editor.state.selection as any)?.node?.type?.name === 'image';
             if (isVideo) {
                 // @ts-ignore
                 editor.chain().focus().setVideo({ src: url }).run();
+            } else if (isImageSelected) {
+                editor.chain().focus().updateAttributes('image', { src: url }).run();
             } else {
                 editor.chain().focus().setImage({ src: url }).run();
             }
@@ -365,108 +503,79 @@ export default function PostEditor({ content, onChange }: { content: string, onC
     };
 
     return (
-        <div className="border border-slate-200 rounded-2xl bg-white shadow-2xl shadow-slate-200/40 focus-within:ring-8 focus-within:ring-blue-600/5 transition-all duration-500">
-            {editor && (
-                <AnyBubbleMenu
-                    editor={editor}
-                    tippyOptions={{ duration: 100, zIndex: 999, maxWidth: 'none', placement: 'top' }}
-                    shouldShow={({ editor }: any) => editor.isActive('image')}
-
-                >
-                    <div className="flex items-center gap-1 p-1 bg-white rounded-2xl shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200 overflow-hidden">
-                        {/* Alignment */}
-                        <div className="flex items-center gap-0.5 border-r border-slate-100 pr-1 mr-1">
-                            <BubbleButton
-                                onClick={() => {
-                                    const currentWidthStr = editor.getAttributes('image').width || '100%';
-                                    const currentWidth = parseInt(currentWidthStr);
-                                    const updates: any = { align: 'left' };
-                                    // If current width is greater than 60, auto-resize to 50% for better wrapping
-                                    if (currentWidth > 60) updates.width = '50%';
-                                    editor.chain().focus().updateAttributes('image', updates).run();
-                                }}
-                                isActive={editor.getAttributes('image').align === 'left'}
-                                icon={Bars3BottomLeftIcon}
-                                label="Left (Wrap)"
-                            />
-                            <BubbleButton
-                                onClick={() => editor.chain().focus().updateAttributes('image', { align: 'center', width: '75%' }).run()}
-                                isActive={editor.getAttributes('image').align === 'center' || editor.getAttributes('image').align === 'full'}
-                                icon={Bars3Icon}
-                                label="Center"
-                            />
-                            <BubbleButton
-                                onClick={() => {
-                                    const currentWidthStr = editor.getAttributes('image').width || '100%';
-                                    const currentWidth = parseInt(currentWidthStr);
-                                    const updates: any = { align: 'right' };
-                                    // If current width is greater than 60, auto-resize to 50% for better wrapping
-                                    if (currentWidth > 60) updates.width = '50%';
-                                    editor.chain().focus().updateAttributes('image', updates).run();
-                                }}
-                                isActive={editor.getAttributes('image').align === 'right'}
-                                icon={Bars3BottomRightIcon}
-                                label="Right (Wrap)"
-                            />
-                        </div>
-                        {/* Sizing */}
-                        <div className="flex items-center gap-1 px-1">
-                            {(() => {
-                                const align = editor.getAttributes('image').align;
-                                const isWrap = align === 'left' || align === 'right';
-                                const sizes = isWrap ? [25, 35, 50, 60] : [25, 50, 75, 100];
-
-                                return sizes.map(size => (
-                                    <button
-                                        key={size}
-                                        onClick={() => editor.chain().focus().updateAttributes('image', { width: `${size}%` }).run()}
-                                        className={`px-2 py-1.5 text-[10px] font-black rounded-lg transition-all ${editor.getAttributes('image').width === `${size}%`
-                                            ? 'bg-blue-600 text-white'
-                                            : 'hover:bg-slate-50 text-slate-500'
-                                            }`}
-                                    >
-                                        {size}%
-                                    </button>
-                                ));
-                            })()}
-                        </div>
-                    </div>
-                </AnyBubbleMenu>
-            )
-            }
-
+        <div className="border border-slate-200 rounded-2xl bg-white shadow-2xl shadow-slate-200 focus-within:ring-8 focus-within:ring-blue-600/5 transition-all duration-500">
             <MenuBar editor={editor} onOpenMedia={() => setIsMediaOpen(true)} />
             <div className="custom-scrollbar overflow-y-auto max-h-[800px] prose-img-custom">
                 <style jsx global>{`
-                    .prose-img-custom .image-align-left {
-                        float: left;
-                        margin-right: 2rem;
-                        margin-top: 0.5rem;
-                        margin-bottom: 0.5rem;
+                    /* ── NodeView image wrapper base ──────────────────────── */
+                    .prose-img-custom .resizable-img-node {
+                        position: relative;
+                        box-sizing: border-box;
+                        max-width: 100%;
                     }
-                    .prose-img-custom .image-align-right {
-                        float: right;
-                        margin-left: 2rem;
-                        margin-top: 0.5rem;
-                        margin-bottom: 0.5rem;
-                    }
-                    .prose-img-custom .image-align-center {
+
+                    /* Center — block, margin auto */
+                    .prose-img-custom .rimg-center {
                         display: block;
                         margin-left: auto;
                         margin-right: auto;
+                        margin-top: 1.5rem;
+                        margin-bottom: 1.5rem;
                     }
-                    .prose-img-custom .image-align-full {
+
+                    /* 2 per row */
+                    .prose-img-custom .rimg-half {
+                        display: inline-block !important;
+                        vertical-align: top;
+                        margin: 0.25% 0.5%;
+                    }
+
+                    /* 3 per row */
+                    .prose-img-custom .rimg-third {
+                        display: inline-block !important;
+                        vertical-align: top;
+                        margin: 0.25% 1%;
+                    }
+
+                    /* Float left — text wraps right */
+                    .prose-img-custom .rimg-left {
+                        float: left !important;
                         display: block;
-                        width: 100% !important;
-                        max-width: none;
-                        margin-top: 2rem;
-                        margin-bottom: 2rem;
+                        margin-right: 1.75rem;
+                        margin-top: 0.25rem;
+                        margin-bottom: 0.75rem;
                     }
-                    .prose-img-custom .ProseMirror:after {
+
+                    /* Float right — text wraps left */
+                    .prose-img-custom .rimg-right {
+                        float: right !important;
+                        display: block;
+                        margin-left: 1.75rem;
+                        margin-top: 0.25rem;
+                        margin-bottom: 0.75rem;
+                    }
+
+                    /* Remove whitespace gaps between inline-block images */
+                    .prose-img-custom .ProseMirror p:has(.rimg-half),
+                    .prose-img-custom .ProseMirror p:has(.rimg-third) {
+                        font-size: 0;
+                        line-height: 0;
+                    }
+
+                    /* Per-paragraph clearfix so floated images don't bleed out */
+                    .prose-img-custom .ProseMirror p::after {
                         content: "";
                         display: table;
                         clear: both;
                     }
+
+                    /* ── Legacy output classes (keep for already-saved content) ── */
+                    .prose-img-custom .image-align-center { display: block; margin: 1.5rem auto; }
+                    .prose-img-custom .image-align-half   { display: inline-block; vertical-align: top; margin: 0.25% 0.5%; box-sizing: border-box; }
+                    .prose-img-custom .image-align-third  { display: inline-block; vertical-align: top; margin: 0.25% 1%;   box-sizing: border-box; }
+                    .prose-img-custom .image-align-left   { float: left;  margin-right: 1.75rem; margin-bottom: 0.75rem; }
+                    .prose-img-custom .image-align-right  { float: right; margin-left:  1.75rem; margin-bottom: 0.75rem; }
+                    .prose-img-custom .image-align-full   { display: block; width: 100% !important; max-width: none; margin: 2rem 0; }
                 `}</style>
                 <EditorContent editor={editor} />
             </div>

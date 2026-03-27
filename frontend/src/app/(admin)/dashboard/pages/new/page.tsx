@@ -14,9 +14,13 @@ export default function NewPage() {
         title: '',
         slug: '',
         content: '',
+        seoTitle: '',
         description: '',
+        keywords: [] as string[],
+        ogImage: '',
         status: 'DRAFT',
     });
+    const [kwInput, setKwInput] = useState('');
 
     const handleTitleChange = (title: string) => {
         const autoSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -34,7 +38,12 @@ export default function NewPage() {
                 method: 'POST',
                 body: {
                     ...formData,
-                    seo: { title: formData.title, description: formData.description },
+                    seo: {
+                        title: formData.seoTitle || formData.title,
+                        description: formData.description,
+                        keywords: formData.keywords,
+                        ogImage: formData.ogImage,
+                    },
                 },
             });
             showToast('Page created.', 'success');
@@ -48,7 +57,7 @@ export default function NewPage() {
 
     return (
         <div className="max-w-3xl mx-auto space-y-6">
-            <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200/50 shadow-sm sticky top-4 z-10">
+            <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm sticky top-0 z-10">
                 <div className="flex items-center gap-4">
                     <button onClick={() => router.back()} className="p-2 hover:bg-slate-50 rounded-xl text-slate-500 transition-colors">
                         <ArrowLeftIcon className="h-5 w-5" />
@@ -77,7 +86,7 @@ export default function NewPage() {
                 </div>
             </div>
 
-            <div className="bg-white rounded-[2rem] p-8 shadow-xl shadow-slate-200/40 border border-slate-200/60 space-y-6">
+            <div className="bg-white rounded-[2rem] p-8 shadow-xl shadow-slate-200 border border-slate-200 space-y-6">
                 <div className="space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Page Title</label>
                     <input
@@ -112,13 +121,58 @@ export default function NewPage() {
                     />
                 </div>
                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Meta Description (SEO)</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SEO Title <span className="normal-case font-normal text-slate-300">({(formData.seoTitle || '').length}/60)</span></label>
+                    <input
+                        type="text"
+                        value={formData.seoTitle}
+                        onChange={e => setFormData({ ...formData, seoTitle: e.target.value })}
+                        placeholder={formData.title || 'Page title for search engines...'}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-300"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Meta Description <span className="normal-case font-normal text-slate-300">({(formData.description || '').length}/160)</span></label>
                     <textarea
                         rows={2}
                         value={formData.description}
                         onChange={e => setFormData({ ...formData, description: e.target.value })}
                         placeholder="Brief description for search engines..."
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 resize-none"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Keywords</label>
+                    <div className="flex flex-wrap gap-1 mb-1">
+                        {formData.keywords.map((kw, i) => (
+                            <span key={i} className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded-full border border-indigo-100">
+                                {kw}
+                                <button type="button" onClick={() => setFormData(f => ({ ...f, keywords: f.keywords.filter((_, j) => j !== i) }))} className="hover:text-red-500">×</button>
+                            </span>
+                        ))}
+                    </div>
+                    <input
+                        type="text"
+                        value={kwInput}
+                        onChange={e => setKwInput(e.target.value)}
+                        onKeyDown={e => {
+                            if ((e.key === 'Enter' || e.key === ',') && kwInput.trim()) {
+                                e.preventDefault();
+                                setFormData(f => ({ ...f, keywords: [...f.keywords, kwInput.trim()] }));
+                                setKwInput('');
+                            }
+                        }}
+                        placeholder="Type keyword and press Enter…"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-300"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">OG Image URL</label>
+                    <input
+                        type="url"
+                        value={formData.ogImage}
+                        onChange={e => setFormData({ ...formData, ogImage: e.target.value })}
+                        placeholder="https://…/og-image.jpg"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-300"
                     />
                 </div>
             </div>

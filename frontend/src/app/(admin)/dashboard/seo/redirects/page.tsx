@@ -121,7 +121,7 @@ export default function RedirectsPage() {
                 </button>
             </div>
 
-            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden">
+            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="p-6 border-b border-slate-100 bg-slate-50/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="relative group flex-1 max-w-md">
                         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
@@ -136,7 +136,7 @@ export default function RedirectsPage() {
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full min-w-[700px] text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-100 bg-slate-50/30">
                                 <th className="pl-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">From Path</th>
@@ -203,7 +203,7 @@ export default function RedirectsPage() {
                                             )}
                                         </td>
                                         <td className="pr-8 py-5 text-right">
-                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center justify-end gap-2">
                                                 <button onClick={() => handleOpenModal(redirect)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-blue-600 transition-all">
                                                     <PencilSquareIcon className="h-4 w-4" />
                                                 </button>

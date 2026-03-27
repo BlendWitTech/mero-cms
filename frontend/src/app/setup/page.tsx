@@ -22,8 +22,6 @@ export default function SetupPage() {
     const [availableModules, setAvailableModules] = useState<ModuleMeta[]>([]);
     const [selectedModules, setSelectedModules] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [modulesLoading, setModulesLoading] = useState(true);
-    const [modulesError, setModulesError] = useState('');
     const [error, setError] = useState('');
     const [restartAttempts, setRestartAttempts] = useState(0);
 
@@ -33,26 +31,6 @@ export default function SetupPage() {
     const [adminEmail, setAdminEmail] = useState('');
     const [adminPassword, setAdminPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-
-    const loadModules = async () => {
-        setModulesLoading(true);
-        setModulesError('');
-        try {
-            const r = await fetch(`${API_URL}/setup/modules`);
-            if (!r.ok) throw new Error(`Server returned ${r.status}`);
-            const data = await r.json();
-            const optional: ModuleMeta[] = data.optional || [];
-            setAvailableModules(optional);
-            // Select all by default
-            setSelectedModules(optional.map((m) => m.key));
-        } catch (err: any) {
-            setModulesError(
-                `Could not load modules from backend (${err.message}). Make sure the backend is running at ${API_URL}.`
-            );
-        } finally {
-            setModulesLoading(false);
-        }
-    };
 
     useEffect(() => {
         // Redirect to dashboard if setup already complete
@@ -64,8 +42,14 @@ export default function SetupPage() {
             .catch(() => { });
 
         // Load available modules
-        loadModules();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        fetch(`${API_URL}/setup/modules`)
+            .then((r) => r.json())
+            .then((data) => {
+                setAvailableModules(data.optional || []);
+                // Select all by default
+                setSelectedModules((data.optional || []).map((m: ModuleMeta) => m.key));
+            })
+            .catch(() => { });
     }, [router]);
 
     const toggleModule = (key: string) => {
@@ -270,29 +254,6 @@ export default function SetupPage() {
                                 </p>
                             </div>
 
-                            {modulesLoading && (
-                                <div className="flex items-center justify-center gap-3 py-10 text-gray-400">
-                                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                                    </svg>
-                                    <span className="text-sm">Loading modules...</span>
-                                </div>
-                            )}
-
-                            {!modulesLoading && modulesError && (
-                                <div className="bg-red-900/30 border border-red-700 rounded-lg p-4 space-y-3">
-                                    <p className="text-red-400 text-sm">{modulesError}</p>
-                                    <button
-                                        onClick={loadModules}
-                                        className="text-sm text-blue-400 hover:text-blue-300 underline"
-                                    >
-                                        Retry
-                                    </button>
-                                </div>
-                            )}
-
-                            {!modulesLoading && !modulesError && (
                             <div className="space-y-5 max-h-96 overflow-y-auto pr-1">
                                 {modulesByGroup.map(({ group, modules }) => (
                                     <div key={group}>
@@ -325,7 +286,6 @@ export default function SetupPage() {
                                     </div>
                                 ))}
                             </div>
-                            )}
 
                             <div className="flex gap-3 pt-2">
                                 <button

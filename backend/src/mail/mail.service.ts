@@ -5,9 +5,106 @@ import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
 export class MailService {
+    private transporter: nodemailer.Transporter;
     private readonly logger = new Logger(MailService.name);
 
     constructor(@Inject(forwardRef(() => SettingsService)) private settingsService: SettingsService) { }
+
+    /**
+     * Wraps email content in a branded KTM Plots HTML template.
+     * Uses inline styles for maximum email client compatibility.
+     */
+    buildTemplate(settings: Record<string, any>, content: string, preheader?: string): string {
+        const siteTitle = settings['site_title'] || 'KTM Plots';
+        const primaryColor = settings['primary_color'] || '#CC1414';
+        const appBase = (process.env.APP_URL || `http://localhost:${process.env.PORT || 3001}`).replace(/\/$/, '');
+        const rawLogoUrl = settings['logo_url'] || null;
+        // Resolve relative paths (e.g. /uploads/logo.png) to absolute so email clients can load them
+        const logoUrl = rawLogoUrl
+            ? rawLogoUrl.startsWith('http://') || rawLogoUrl.startsWith('https://')
+                ? rawLogoUrl
+                : `${appBase}${rawLogoUrl}`
+            : null;
+        const year = new Date().getFullYear();
+        const footerText = settings['footer_text'] || `${siteTitle} — Kathmandu Valley's Trusted Land Partner`;
+        const copyrightText = settings['copyright_text'] || `© ${year} ${siteTitle}. All rights reserved.`;
+        const contactEmail = settings['smtp_from'] || settings['smtp_user'] || '';
+        const contactPhone = settings['contact_phone'] || '';
+        const address = settings['address'] || '';
+
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>${siteTitle}</title>
+  <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#F4F4F4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>` : ''}
+
+  <!-- Outer wrapper -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F4F4F4;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <!-- Email card -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;">
+
+          <!-- Header -->
+          <tr>
+            <td>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${primaryColor};border-radius:16px 16px 0 0;overflow:hidden;">
+                <tr>
+                  <td style="padding:32px 40px;text-align:center;">
+                    ${logoUrl
+                ? `<img src="${logoUrl}" alt="${siteTitle}" style="max-height:56px;max-width:200px;width:auto;display:inline-block;margin:0 auto;" />`
+                : `<div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:12px;padding:12px 24px;">
+                        <span style="color:#FFFFFF;font-size:22px;font-weight:900;letter-spacing:-0.5px;">${siteTitle}</span>
+                      </div>`
+            }
+                  </td>
+                </tr>
+                <!-- Red accent bar at bottom of header -->
+                <tr>
+                  <td style="height:4px;background:rgba(0,0,0,0.15);"></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="background-color:#FFFFFF;padding:40px;border-left:1px solid #E5E7EB;border-right:1px solid #E5E7EB;">
+              ${content}
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#1E1E1E;border-radius:0 0 16px 16px;padding:28px 40px;text-align:center;">
+              <p style="margin:0 0 8px;color:rgba(255,255,255,0.5);font-size:11px;line-height:1.6;">${footerText}</p>
+              ${contactEmail || contactPhone || address ? `
+              <p style="margin:0 0 12px;color:rgba(255,255,255,0.35);font-size:10px;line-height:1.7;">
+                ${contactEmail ? `<a href="mailto:${contactEmail}" style="color:rgba(255,255,255,0.5);text-decoration:none;">${contactEmail}</a>` : ''}
+                ${contactEmail && contactPhone ? ' &nbsp;·&nbsp; ' : ''}
+                ${contactPhone ? `<a href="tel:${contactPhone}" style="color:rgba(255,255,255,0.5);text-decoration:none;">${contactPhone}</a>` : ''}
+                ${address ? `<br>${address}` : ''}
+              </p>` : ''}
+              <p style="margin:0;color:rgba(255,255,255,0.2);font-size:10px;">${copyrightText}</p>
+            </td>
+          </tr>
+
+          <!-- Bottom spacer -->
+          <tr><td style="height:24px;"></td></tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+    }
 
     private async createTransporter() {
         const settings = await this.settingsService.findAll();
@@ -47,14 +144,15 @@ export class MailService {
     }
 
     /**
-     * Send an HTML email. Automatically routes through Resend or SMTP
-     * based on the `email_provider` setting (defaults to 'smtp').
+     * Send a raw HTML email (bypasses template wrapper).
+     * Prefer sendTemplatedMail for branded outgoing emails.
+     * Automatically uses Resend or SMTP based on the email_provider setting.
      */
     async sendMail(to: string, subject: string, html: string) {
         try {
             const settings = await this.settingsService.findAll();
             const provider = (settings['email_provider'] as string) || process.env.EMAIL_PROVIDER || 'smtp';
-            const siteTitle = settings['site_title'] || 'Blendwit CMS';
+            const siteTitle = settings['site_title'] || 'KTM Plots';
             const fromEmail = settings['smtp_from'] || settings['smtp_user'] || process.env.SMTP_FROM;
 
             if (!fromEmail) {
@@ -100,10 +198,12 @@ export class MailService {
     }
 
     /**
-     * Alias of sendMail — provided so modules can call sendTemplatedMail()
-     * and themes/client deployments can override with branded templates.
+     * Send a branded email using the site template.
+     * Pass raw inner HTML content — it gets wrapped in the full template automatically.
      */
-    async sendTemplatedMail(to: string, subject: string, innerHtml: string, _preheader?: string) {
-        return this.sendMail(to, subject, innerHtml);
+    async sendTemplatedMail(to: string, subject: string, innerHtml: string, preheader?: string) {
+        const settings = await this.settingsService.findAll();
+        const branded = this.buildTemplate(settings, innerHtml, preheader);
+        return this.sendMail(to, subject, branded);
     }
 }

@@ -41,8 +41,8 @@ export class AccessControlService {
             throw new ForbiddenException('You cannot perform administrative actions on your own account.');
         }
 
-        // Level 0 (Super Admin) can do everything else
-        if (actor.role.level === 0) return;
+        // Super Admin (level 0 or role name) can do everything to lower-privilege users
+        if (actor.role.level === 0 || actor.role.name === 'Super Admin') return;
 
         if (!this.isSuperior(actor.role.level, target.role.level)) {
             throw new ForbiddenException('You do not have enough superiority to perform this action on this user.');
@@ -65,13 +65,14 @@ export class AccessControlService {
 
         if (!actor || !targetRole) return;
 
-        // Super Admin (0) can assign any role EXCEPT Super Admin (should only be one)
-        // Actually, Super Admin can assign anything, but logic should prevent multiple Super Admins if that's the rule.
-        if (actor.role.level === 0) {
+        // Super Admin (level 0 or role name) can assign any role EXCEPT creating another Super Admin
+        const isSuperAdmin = actor.role.level === 0 || actor.role.name === 'Super Admin';
+        if (isSuperAdmin) {
             // Check if they are trying to assign Super Admin and if one already exists
-            if (targetRole.level === 0) {
+            const isAssigningSuperAdmin = targetRole.level === 0 || targetRole.name === 'Super Admin';
+            if (isAssigningSuperAdmin) {
                 const superAdminCount = await this.prisma.user.count({
-                    where: { role: { level: 0 } }
+                    where: { role: { name: 'Super Admin' } }
                 });
                 if (superAdminCount > 0) {
                     throw new ForbiddenException('Only one Super Admin can exist in the system.');

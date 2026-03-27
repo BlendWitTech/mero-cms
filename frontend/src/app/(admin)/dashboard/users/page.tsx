@@ -307,7 +307,7 @@ function UsersPageContent() {
                     { label: 'New This Month', value: stats.recent, detail: 'Last 30d', color: 'purple' },
                     { label: 'Pending Invitations', value: stats.pending, detail: 'Awaiting', color: 'amber' },
                 ].map((stat) => (
-                    <div key={stat.label} className="relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm border border-slate-200/50 group hover:shadow-xl hover:shadow-slate-200/40 hover:-translate-y-1 transition-all duration-500 cursor-default">
+                    <div key={stat.label} className="relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm border border-slate-200 group hover:shadow-xl hover:shadow-slate-200 hover:-translate-y-1 transition-all duration-500 cursor-default">
                         <div className={`absolute top-0 right-0 w-24 h-24 mt-[-20px] mr-[-20px] bg-${stat.color}-500/5 rounded-full blur-2xl group-hover:bg-${stat.color}-500/15 transition-all duration-700 group-hover:scale-150`}></div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest relative z-10">{stat.label}</p>
                         <div className="mt-2 flex items-baseline gap-2 relative z-10">
@@ -321,7 +321,7 @@ function UsersPageContent() {
             </div>
 
             {/* Table Section */}
-            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden text-sm font-medium">
+            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden text-sm font-medium">
                 <div className="p-6 border-b border-slate-100 bg-slate-50/10 flex items-center justify-between">
                     <h3 className="text-sm font-bold text-slate-900 font-display">User Records</h3>
                     {selectedUsers.length > 0 && (
@@ -334,7 +334,7 @@ function UsersPageContent() {
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full min-w-[700px] text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-100">
                                 <th className="pl-6 py-4 w-12 text-center">
@@ -354,7 +354,9 @@ function UsersPageContent() {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {users.map((user) => {
-                                const roleName = user.type === 'User' ? user.role?.name : user.roleId;
+                                const roleName = user.type === 'User'
+                                    ? user.role?.name
+                                    : (roles.find((r: any) => r.id === user.roleId)?.name ?? user.roleId);
 
                                 // Dynamic Mapping for UI aesthetics
                                 const roleStyles: Record<string, { icon: any, color: string }> = {

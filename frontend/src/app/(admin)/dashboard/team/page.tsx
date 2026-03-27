@@ -46,7 +46,7 @@ function TeamPageContent() {
         role: '',
         bio: '',
         image: '',
-        socialLinks: { linkedin: '', twitter: '', instagram: '' },
+        socialLinks: { linkedin: '', twitter: '', instagram: '', facebook: '', youtube: '', whatsapp: '', email: '', phone: '' },
         order: 0
     };
 
@@ -132,7 +132,7 @@ function TeamPageContent() {
             role: member.role,
             bio: member.bio || '',
             image: member.image || '',
-            socialLinks: member.socialLinks || { linkedin: '', twitter: '', instagram: '' },
+            socialLinks: { linkedin: '', twitter: '', instagram: '', facebook: '', youtube: '', whatsapp: '', email: '', phone: '', ...(member.socialLinks || {}) },
             order: member.order
         };
         setFormData(data);
@@ -257,7 +257,7 @@ function TeamPageContent() {
 
                 <ThemeCompatibilityBanner moduleName="team" />
 
-                <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200/50 shadow-sm sticky top-4 z-10">
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm sticky top-0 z-10">
                     <div className="flex items-center gap-4">
                         <button onClick={handleBackClick} className="p-2 hover:bg-slate-50 rounded-xl text-slate-500 transition-colors">
                             <ArrowLeftIcon className="h-5 w-5" />
@@ -277,9 +277,9 @@ function TeamPageContent() {
                     </button>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-white rounded-2xl p-10 border border-slate-200/60 shadow-xl space-y-6">
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    <div className="xl:col-span-2 space-y-6">
+                        <div className="bg-white rounded-2xl p-10 border border-slate-200 shadow-xl space-y-6">
                             <div>
                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Full Name</label>
                                  <input
@@ -304,7 +304,7 @@ function TeamPageContent() {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
+                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Biography</h3>
                              <textarea
                                 value={formData.bio}
@@ -316,39 +316,35 @@ function TeamPageContent() {
                             />
                         </div>
 
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Social Links</h3>
+                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Contact & Social Links</h3>
                             <div className="space-y-3">
-                                 <input
-                                    type="text"
-                                    value={formData.socialLinks.linkedin}
-                                    disabled={isReadOnly}
-                                    onChange={(e) => setFormData({ ...formData, socialLinks: { ...formData.socialLinks, linkedin: e.target.value } })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
-                                    placeholder="LinkedIn URL"
-                                />
-                                <input
-                                    type="text"
-                                    value={formData.socialLinks.twitter}
-                                    disabled={isReadOnly}
-                                    onChange={(e) => setFormData({ ...formData, socialLinks: { ...formData.socialLinks, twitter: e.target.value } })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
-                                    placeholder="Twitter URL"
-                                />
-                                <input
-                                    type="text"
-                                    value={formData.socialLinks.instagram}
-                                    disabled={isReadOnly}
-                                    onChange={(e) => setFormData({ ...formData, socialLinks: { ...formData.socialLinks, instagram: e.target.value } })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
-                                    placeholder="Instagram URL"
-                                />
+                                {[
+                                    { key: 'email',     placeholder: 'Email address',  type: 'email' },
+                                    { key: 'phone',     placeholder: 'Phone / WhatsApp number', type: 'text' },
+                                    { key: 'linkedin',  placeholder: 'LinkedIn URL',   type: 'text' },
+                                    { key: 'twitter',   placeholder: 'Twitter / X URL', type: 'text' },
+                                    { key: 'instagram', placeholder: 'Instagram URL',  type: 'text' },
+                                    { key: 'facebook',  placeholder: 'Facebook URL',   type: 'text' },
+                                    { key: 'youtube',   placeholder: 'YouTube URL',    type: 'text' },
+                                    { key: 'whatsapp',  placeholder: 'WhatsApp number (digits only)', type: 'text' },
+                                ].map(({ key, placeholder, type }) => (
+                                    <input
+                                        key={key}
+                                        type={type}
+                                        value={formData.socialLinks[key] || ''}
+                                        disabled={isReadOnly}
+                                        onChange={(e) => setFormData({ ...formData, socialLinks: { ...formData.socialLinks, [key]: e.target.value } })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
+                                        placeholder={placeholder}
+                                    />
+                                ))}
                             </div>
                         </div>
                     </div>
 
                     <div className="space-y-6">
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
+                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Profile Photo</h3>
                                  {formData.image && !isReadOnly && (
@@ -382,7 +378,7 @@ function TeamPageContent() {
                             }}
                         />
 
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-4">
+                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Display Order</h3>
                              <input
                                 type="number"
@@ -424,9 +420,9 @@ function TeamPageContent() {
 
             <ThemeCompatibilityBanner moduleName="team" />
 
-            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden">
+            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full min-w-[700px] text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-100 bg-slate-50/30">
                                 <th className="pl-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Member</th>
@@ -472,7 +468,7 @@ function TeamPageContent() {
                                         <td className="px-4 py-5 text-xs font-semibold text-slate-500">{member.order}</td>
                                         <td className="pr-8 py-5 text-right">
                                             {canManageContent && (
-                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="flex items-center justify-end gap-2">
                                                     <button onClick={() => handleEdit(member)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all">
                                                         <PencilSquareIcon className="h-4 w-4" />
                                                     </button>

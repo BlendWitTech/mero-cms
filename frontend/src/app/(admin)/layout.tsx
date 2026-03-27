@@ -3,12 +3,12 @@
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, Suspense } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { clearAuthToken } from '@/lib/auth';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import HelpFAB from '@/components/ui/HelpFAB';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
+import HelpFAB from '@/components/ui/HelpFAB';
 import { PermissionsProvider } from '@/context/PermissionsContext';
 import { FormProvider } from '@/context/FormContext';
 import { ModulesProvider } from '@/context/ModulesContext';
@@ -22,7 +22,6 @@ export default function AdminLayout({
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [revocationMessage, setRevocationMessage] = useState<string | null>(null);
     const pathname = usePathname();
-    const router = useRouter();
     const isMediaPage = pathname?.includes('/media');
     const isSettingsPage = pathname?.includes('/settings');
 

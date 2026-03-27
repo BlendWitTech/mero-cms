@@ -101,7 +101,6 @@ function when(...keys: string[]) {
     ...when('team')(TeamModule),
     ...when('services')(ServicesModule),
     ...when('testimonials')(TestimonialsModule),
-
     ...when('leads')(LeadsModule),
 
     ...when('seo')(SeoMetaModule),

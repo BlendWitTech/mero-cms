@@ -85,8 +85,8 @@ export default function LeadsPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 px-2">
-                <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2">
+                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Leads</p>
                     <p className="text-3xl font-bold text-slate-900 mt-2">{stats.total}</p>
                 </div>
@@ -105,7 +105,7 @@ export default function LeadsPage() {
             </div>
 
             {/* Leads List */}
-            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden">
+            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="p-6 border-b border-slate-100 flex items-center gap-4 bg-slate-50/10">
                     <div className="relative flex-1 md:w-48 group">
                         <FunnelIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-all" />
@@ -124,7 +124,7 @@ export default function LeadsPage() {
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full min-w-[700px] text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-100 bg-slate-50/30">
                                 <th className="pl-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Contact</th>
@@ -194,7 +194,7 @@ export default function LeadsPage() {
                                             </td>
                                             <td className="pr-8 py-5 text-right">
                                                 {canManageContent && (
-                                                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="flex items-center justify-end gap-2">
                                                         <button onClick={() => handleDelete(lead.id)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 transition-all">
                                                             <TrashIcon className="h-4 w-4" />
                                                         </button>

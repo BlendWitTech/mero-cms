@@ -5,7 +5,9 @@ import Link from 'next/link';
 import {
     PencilSquareIcon,
     Bars3Icon,
-    LinkIcon
+    LinkIcon,
+    PlusIcon,
+    TrashIcon
 } from '@heroicons/react/24/outline';
 import { apiRequest } from '@/lib/api';
 import { useNotification } from '@/context/NotificationContext';
@@ -31,6 +33,17 @@ export default function MenusManagement() {
         }
     };
 
+    const handleDelete = async (id: string, name: string) => {
+        if (!confirm(`Delete menu "${name}"? This cannot be undone.`)) return;
+        try {
+            await apiRequest(`/menus/${id}`, { method: 'DELETE' });
+            showToast('Menu deleted', 'success');
+            fetchMenus();
+        } catch (error: any) {
+            showToast(error.message || 'Failed to delete menu', 'error');
+        }
+    };
+
 
 
     return (
@@ -41,14 +54,23 @@ export default function MenusManagement() {
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Navigation <span className="text-blue-600">Menus</span></h1>
                     <p className="text-slate-500 font-medium mt-1">Menus are automatically extracted from your theme. Edit names and URLs as needed.</p>
                 </div>
-                <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2.5 rounded-2xl border border-blue-200">
-                    <Bars3Icon className="h-4 w-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Auto-Synced</span>
+                <div className="flex items-center gap-3">
+                    <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2.5 rounded-2xl border border-blue-200">
+                        <Bars3Icon className="h-4 w-4" />
+                        <span className="text-xs font-bold uppercase tracking-wider">Auto-Synced</span>
+                    </div>
+                    <Link
+                        href="/dashboard/menus/new"
+                        className="inline-flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-black transition-all shadow-sm"
+                    >
+                        <PlusIcon className="h-4 w-4" strokeWidth={2.5} />
+                        New Menu
+                    </Link>
                 </div>
             </div>
 
             {/* Menus List */}
-            <div className="mx-2 bg-white/50 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden min-h-[400px]">
+            <div className="mx-2 bg-white/50 backdrop-blur-xl rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden min-h-[400px]">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center h-[400px] gap-4">
                         <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
@@ -56,7 +78,7 @@ export default function MenusManagement() {
                     </div>
                 ) : menus.length > 0 ? (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full min-w-[700px] text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-slate-100">
                                     <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Menu Details</th>
@@ -96,12 +118,19 @@ export default function MenusManagement() {
                                             <div className="flex items-center justify-end gap-2">
                                                 <Link
                                                     href={`/dashboard/menus/${menu.id}`}
-                                                    className="inline-flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all font-bold text-xs uppercase tracking-wider"
+                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl transition-all font-bold text-xs uppercase tracking-wider"
                                                     title="Edit Menu Items"
                                                 >
                                                     <PencilSquareIcon className="h-4 w-4" />
                                                     Edit Items
                                                 </Link>
+                                                <button
+                                                    onClick={() => handleDelete(menu.id, menu.name)}
+                                                    className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                                    title="Delete menu"
+                                                >
+                                                    <TrashIcon className="h-4 w-4" />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>

@@ -3,11 +3,18 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { LockClosedIcon, UserIcon, EnvelopeIcon, ArrowRightIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import {
+    LockClosedIcon,
+    UserIcon,
+    EyeIcon,
+    EyeSlashIcon,
+    CheckCircleIcon,
+    ExclamationCircleIcon,
+} from '@heroicons/react/24/outline';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-function RegisterForm() {
+function RegisterForm({ settings }: { settings: any }) {
     const searchParams = useSearchParams();
     const token = searchParams.get('token');
 
@@ -15,34 +22,20 @@ function RegisterForm() {
     const [name, setName] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
-    const [settings, setSettings] = useState({
-        cms_title: 'Blendwit CMS',
-        cms_subtitle: 'Elevate Your Horizontal Content Strategy',
-        cms_login_avatar: '/assets/boy_idea_shock.png'
-    });
 
     useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const res = await fetch(`${API_URL}/settings`);
-                const data = await res.json();
-                if (data.cms_title) setSettings(data);
-            } catch (error) {
-                console.error('Failed to fetch settings:', error);
-            }
-        };
-
         const verifyToken = async () => {
             if (!token) {
                 setError('No invitation token provided.');
                 setIsLoading(false);
                 return;
             }
-
             try {
                 const res = await fetch(`${API_URL}/invitations/verify/${token}`);
                 if (!res.ok) {
@@ -52,14 +45,12 @@ function RegisterForm() {
                     const data = await res.json();
                     setInvitation(data);
                 }
-            } catch (err) {
+            } catch {
                 setError('Connection error. Please try again.');
             } finally {
                 setIsLoading(false);
             }
         };
-
-        fetchSettings();
         verifyToken();
     }, [token]);
 
@@ -71,9 +62,8 @@ function RegisterForm() {
             setError('Passwords do not match.');
             return;
         }
-
         if (password.length < 8) {
-            setError('Password must be at least 8 characters long.');
+            setError('Password must be at least 8 characters.');
             return;
         }
 
@@ -87,46 +77,44 @@ function RegisterForm() {
 
             if (res.ok) {
                 setSuccess(true);
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 3000);
+                setTimeout(() => { window.location.href = '/'; }, 3000);
             } else {
                 const data = await res.json();
                 setError(data.message || 'Registration failed.');
             }
-        } catch (err) {
+        } catch {
             setError('Server error occurred.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    const inputClass = "block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium";
+
     if (isLoading) {
         return (
-            <div className="flex flex-col items-center justify-center space-y-4">
-                <div className="w-12 h-12 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin"></div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Verifying Invitation...</p>
+            <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                <div className="w-10 h-10 border-[3px] border-slate-200 border-t-blue-600 rounded-full animate-spin" />
+                <p className="text-xs font-semibold text-slate-400">Verifying invitation…</p>
             </div>
         );
     }
 
-    if (error) {
+    if (error && !invitation) {
         return (
-            <div className="text-center space-y-6">
-                <div className="flex justify-center">
-                    <div className="p-4 bg-red-50 rounded-full">
-                        <ExclamationCircleIcon className="h-12 w-12 text-red-500" />
-                    </div>
+            <div className="flex flex-col items-center text-center py-8 space-y-6">
+                <div className="p-4 bg-red-50 rounded-2xl">
+                    <ExclamationCircleIcon className="h-10 w-10 text-red-500" />
                 </div>
-                <div className="space-y-2">
-                    <h3 className="premium-heading text-2xl text-slate-900">Access Denied</h3>
-                    <p className="text-xs text-slate-400 font-medium px-4">{error}</p>
+                <div>
+                    <h3 className="text-xl font-black text-slate-900 mb-1">Access Denied</h3>
+                    <p className="text-sm text-slate-500 font-medium">{error}</p>
                 </div>
                 <button
                     onClick={() => window.location.href = '/'}
-                    className="inline-flex items-center gap-2 text-blue-600 text-[10px] font-black uppercase tracking-widest hover:gap-4 transition-all"
+                    className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors"
                 >
-                    Back to Terminal <ArrowRightIcon className="h-3 w-3" />
+                    ← Back to sign in
                 </button>
             </div>
         );
@@ -134,104 +122,123 @@ function RegisterForm() {
 
     if (success) {
         return (
-            <div className="text-center space-y-6">
-                <div className="flex justify-center">
-                    <div className="p-4 bg-emerald-50 rounded-full animate-bounce">
-                        <CheckCircleIcon className="h-12 w-12 text-emerald-500" />
-                    </div>
+            <div className="flex flex-col items-center text-center py-8 space-y-6">
+                <div className="p-4 bg-emerald-50 rounded-2xl animate-bounce">
+                    <CheckCircleIcon className="h-10 w-10 text-emerald-500" />
                 </div>
-                <div className="space-y-2">
-                    <h3 className="premium-heading text-2xl text-slate-900">Account Active</h3>
-                    <p className="text-xs text-slate-400 font-medium">Your credentials have been established. Redirecting to gateway...</p>
+                <div>
+                    <h3 className="text-xl font-black text-slate-900 mb-1">Account Created!</h3>
+                    <p className="text-sm text-slate-500 font-medium">Redirecting you to the sign in page…</p>
                 </div>
-                <div className="pt-4">
-                    <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
-                        <div className="bg-emerald-500 h-full w-full origin-left animate-[loading_3s_linear]"></div>
-                    </div>
+                <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
+                    <div className="bg-emerald-500 h-full animate-[loading_3s_linear_forwards] w-full origin-left" />
                 </div>
             </div>
         );
     }
 
     return (
-        <form className="space-y-6 relative z-10" onSubmit={handleSubmit}>
-            <div className="text-center mb-8">
-                <span className="section-label mb-4">Onboarding</span>
-                <h2 className="premium-heading text-3xl text-slate-900 leading-none mb-2">
-                    Establish <span className="low-opacity">Access</span>
-                </h2>
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Invited: {invitation?.email}</p>
+        <>
+            <div className="mb-8">
+                <h2 className="text-2xl font-black text-slate-900 mb-1">Complete your account</h2>
+                <p className="text-sm text-slate-500 font-medium">
+                    You&apos;ve been invited as <span className="font-bold text-slate-700">{invitation?.email}</span>
+                </p>
             </div>
 
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-4">Full Identity</label>
+            {error && (
+                <div className="mb-4 p-3.5 bg-red-50 border border-red-100 rounded-xl text-xs font-semibold text-red-600">
+                    {error}
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Full Name</label>
                     <div className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <UserIcon className="h-4 w-4 text-slate-300 group-focus-within:text-blue-600 transition-colors" />
-                        </div>
+                        <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                         <input
                             type="text"
                             required
-                            className="block w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-none text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-0 focus:border-blue-600 transition-all sm:text-xs font-bold"
-                            placeholder="YOUR FULL NAME"
+                            autoComplete="name"
+                            className={inputClass}
+                            placeholder="Your full name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                         />
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-4">Access Cipher</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Password</label>
                     <div className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <LockClosedIcon className="h-4 w-4 text-slate-300 group-focus-within:text-blue-600 transition-colors" />
-                        </div>
+                        <LockClosedIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                         <input
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             required
-                            className="block w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-none text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-0 focus:border-blue-600 transition-all sm:text-xs font-bold"
-                            placeholder="MlN. 8 CHARACTERS"
+                            autoComplete="new-password"
+                            className={`${inputClass} pr-11`}
+                            placeholder="Min. 8 characters"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
+                        <button
+                            type="button"
+                            tabIndex={-1}
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                            {showPassword ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                        </button>
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-4">Confirm Cipher</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Confirm Password</label>
                     <div className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <LockClosedIcon className="h-4 w-4 text-slate-300 group-focus-within:text-blue-600 transition-colors" />
-                        </div>
+                        <LockClosedIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                         <input
-                            type="password"
+                            type={showConfirmPassword ? 'text' : 'password'}
                             required
-                            className="block w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-none text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-0 focus:border-blue-600 transition-all sm:text-xs font-bold"
-                            placeholder="REPEAT PASSWORD"
+                            autoComplete="new-password"
+                            className={`${inputClass} pr-11`}
+                            placeholder="Repeat your password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                         />
+                        <button
+                            type="button"
+                            tabIndex={-1}
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                            {showConfirmPassword ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            <button
-                type="submit"
-                disabled={isSubmitting}
-                className="relative flex w-full justify-center bg-slate-900 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-2xl transition-all hover:bg-blue-600 focus:outline-none active:scale-[0.98]"
-            >
-                {isSubmitting ? 'Registering...' : 'Complete Onboarding'}
-            </button>
-        </form>
+                <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full mt-2 bg-slate-900 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-slate-900/20 hover:bg-blue-600 hover:shadow-blue-600/20 transition-all active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none"
+                >
+                    {isSubmitting ? (
+                        <span className="flex items-center justify-center gap-2">
+                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Creating account…
+                        </span>
+                    ) : 'Create Account'}
+                </button>
+            </form>
+        </>
     );
 }
 
 export default function RegisterPage() {
     const [settings, setSettings] = useState({
         cms_title: 'Blendwit CMS',
-        cms_subtitle: 'Elevate Your Horizontal Content Strategy',
-        cms_login_avatar: '/assets/boy_idea_shock.png'
+        cms_subtitle: 'Elevate Your Content Strategy',
+        cms_login_avatar: '/assets/boy_idea_shock.png',
     });
 
     useEffect(() => {
@@ -240,50 +247,79 @@ export default function RegisterPage() {
                 const res = await fetch(`${API_URL}/settings`);
                 const data = await res.json();
                 if (data.cms_title) setSettings(data);
-            } catch (error) {
-                console.error('Failed to fetch settings:', error);
-            }
+            } catch { }
         };
         fetchSettings();
     }, []);
 
     return (
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white px-4 font-sans selection:bg-blue-600 selection:text-white">
-            <div className="relative w-full max-w-md">
-                {/* Avatar Section */}
-                <div className="flex justify-center -mb-20 relative z-10">
-                    <div className="relative p-1 rounded-full bg-white shadow-2xl border border-slate-100">
-                        <div className="w-32 h-32 rounded-full overflow-hidden grayscale hover:grayscale-0 transition-all duration-1000 border-4 border-white">
-                            <Image
-                                src={settings.cms_login_avatar}
-                                alt="CMS Avatar"
-                                width={128}
-                                height={128}
-                                className="object-cover"
-                                priority
-                            />
-                        </div>
+        <div className="min-h-screen flex font-sans">
+            {/* ── Left brand panel ──────────────────────────────── */}
+            <div className="hidden lg:flex lg:w-[45%] xl:w-[42%] flex-col items-center justify-center relative overflow-hidden bg-slate-900 text-white p-12">
+                {/* Decorative grid */}
+                <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+                {/* Gradient orbs */}
+                <div className="absolute top-[-80px] left-[-80px] w-[360px] h-[360px] rounded-full bg-blue-600/20 blur-[80px] pointer-events-none" />
+                <div className="absolute bottom-[-60px] right-[-60px] w-[280px] h-[280px] rounded-full bg-indigo-600/15 blur-[60px] pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col items-center text-center max-w-sm">
+                    <div className="w-28 h-28 rounded-2xl overflow-hidden mb-8 ring-4 ring-white/10 shadow-2xl">
+                        <Image
+                            src={settings.cms_login_avatar}
+                            alt="CMS"
+                            width={112}
+                            height={112}
+                            className="object-cover w-full h-full"
+                            priority
+                        />
+                    </div>
+
+                    <h1 className="text-3xl font-black tracking-tight mb-3 leading-tight">
+                        {settings.cms_title}
+                    </h1>
+                    <p className="text-sm text-slate-400 font-medium leading-relaxed mb-12">
+                        {settings.cms_subtitle}
+                    </p>
+
+                    <div className="space-y-3 w-full text-left">
+                        {[
+                            { icon: '✉️', text: 'You received a personal invitation' },
+                            { icon: '🔒', text: 'Your account is pre-authorized' },
+                            { icon: '⚡', text: 'Get started in seconds' },
+                        ].map((f) => (
+                            <div key={f.text} className="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3 border border-white/5">
+                                <span className="text-lg">{f.icon}</span>
+                                <span className="text-xs font-semibold text-slate-300">{f.text}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
+            </div>
 
-                <div className="bg-white/80 backdrop-blur-3xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-white rounded-[3rem] p-10 pt-28 space-y-8 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
+            {/* ── Right form panel ───────────────────────────────── */}
+            <div className="flex-1 flex flex-col items-center justify-center bg-white px-6 py-12">
+                {/* Mobile logo */}
+                <div className="flex lg:hidden items-center gap-3 mb-10">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden">
+                        <Image src={settings.cms_login_avatar} alt="CMS" width={40} height={40} className="object-cover w-full h-full" />
+                    </div>
+                    <span className="text-lg font-black text-slate-900">{settings.cms_title}</span>
+                </div>
 
+                <div className="w-full max-w-sm">
                     <Suspense fallback={
-                        <div className="flex flex-col items-center justify-center space-y-4">
-                            <div className="w-12 h-12 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin"></div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Loading Terminal...</p>
+                        <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                            <div className="w-10 h-10 border-[3px] border-slate-200 border-t-blue-600 rounded-full animate-spin" />
+                            <p className="text-xs font-semibold text-slate-400">Loading…</p>
                         </div>
                     }>
-                        <RegisterForm />
+                        <RegisterForm settings={settings} />
                     </Suspense>
-
-                    <div className="pt-8 border-t border-slate-50 relative z-10 flex flex-col items-center gap-4">
-                        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">
-                            System Gateway v1.4.2
-                        </p>
-                    </div>
                 </div>
+
+                <p className="mt-12 text-[10px] font-semibold text-slate-300 tracking-widest uppercase">
+                    {settings.cms_title} · Admin Portal
+                </p>
             </div>
         </div>
     );
