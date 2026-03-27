@@ -360,6 +360,35 @@ export default function ThemesPage() {
                                             </div>
                                         )}
 
+                                        {/* Deployed URL */}
+                                        <div className="flex gap-2 items-center">
+                                            <input
+                                                type="url"
+                                                value={deployedUrls[theme.slug] || ''}
+                                                onChange={e => setDeployedUrls(prev => ({ ...prev, [theme.slug]: e.target.value }))}
+                                                placeholder="https://your-theme.vercel.app"
+                                                className="flex-1 text-xs px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 placeholder-slate-300 focus:outline-none focus:border-blue-300 focus:bg-white transition-colors"
+                                            />
+                                            <button
+                                                onClick={() => handleSaveDeployedUrl(theme.slug)}
+                                                title="Save URL"
+                                                className="p-2 rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-500 transition-colors"
+                                            >
+                                                <LinkIcon className="w-4 h-4" />
+                                            </button>
+                                            {deployedUrls[theme.slug] && (
+                                                <a
+                                                    href={deployedUrls[theme.slug]}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    title="Open site"
+                                                    className="p-2 rounded-xl bg-slate-100 hover:bg-green-50 hover:text-green-600 text-slate-500 transition-colors"
+                                                >
+                                                    <DocumentDuplicateIcon className="w-4 h-4" />
+                                                </a>
+                                            )}
+                                        </div>
+
                                         {/* Action Buttons */}
                                         <div className="flex gap-2 pt-2 border-t border-slate-50">
                                             <button
