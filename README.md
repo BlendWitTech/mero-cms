@@ -1,237 +1,220 @@
-# Mero CMS
-
-**Mero CMS** is a modular, self-hosted content management system built by [Blendwit Tech](https://blendwit.com).
-
-It consists of three parts that are always deployed separately:
-
-| Part | What it is | Deployed on |
-|------|-----------|-------------|
-| **Backend** (`backend/`) | NestJS REST API + admin logic | Railway |
-| **Dashboard** (`frontend/`) | Next.js admin panel | Vercel |
-| **Theme** (separate repo) | Client's public-facing website | Vercel |
-
-### Branch Strategy
-
-| Branch | Purpose | Purchase/Deploy |
-| :--- | :--- | :--- |
-| `main` | **Clean Base Version**. Stripped of all demo code. | For clean agency/client purchases. |
-| `stable` | **Production Version**. Code used by live clients. | For `ktm-plots` and current client setups. |
-| `marketing` | **Demo Version**. Includes showcase/demo logic. | For `demo.merocms.com`. |
-| `develop` | **Internal Development**. Where new features are merged. | For developers and team testing. |
+> **Branch:** `develop` — active development. Unstable. Do not use for client deployments.
+> For stable agency use, see the [`main`](https://github.com/BlendWitTech/mero-cms/tree/main) branch.
 
 ---
 
-## For Agencies — Delivering to a Client
+# Mero CMS — Developer Guide
 
-There are three ways to deliver Mero CMS to a client. Pick the one that fits.
+**Mero CMS** is a modular, self-hosted CMS built by [Blendwit Tech](https://blendwit.com).
 
----
-
-### Model A — You manage everything (recommended)
-
-You host the CMS. Client gets a login and a live website. They never touch a server.
-
-```
-You → Deploy backend on Railway        (mero-cms @ v1.1.0, root: backend/)
-You → Deploy dashboard on Vercel       (mero-cms @ v1.1.0, root: frontend/)
-You → Fork mero-cms-theme-starter      → build client design → deploy on Vercel
-You → Run setup wizard, seed content
-You → Hand client: dashboard URL + login + live site URL
-```
-
-**Client gets:** A working CMS and live website. No server knowledge needed.
-**You manage:** Hosting, upgrades, backups. Charge a monthly retainer.
-
-**To upgrade a client later:**
-- Railway → Service → Settings → Source → change tag `v1.1.0` → `v1.2.0`
-- Vercel → Settings → Git → update pinned tag → redeploy
-- Theme is unaffected (separate repo, separate deployment)
+| Part | Stack | Default port |
+|------|-------|-------------|
+| `backend/` | NestJS REST API | 3001 |
+| `frontend/` | Next.js admin dashboard | 3000 |
 
 ---
 
-### Model B — Client self-hosts, you deploy
+## Branch Strategy
 
-Client owns the Railway/Vercel accounts. You deploy on their behalf.
+| Branch | Purpose | Tag format |
+|--------|---------|-----------|
+| `main` | Clean production code — no demo, no dev notes | `v1.2.0` |
+| `marketing` | `main` + demo overlay for `demo.merocms.com` | `v1.2.0-marketing` |
+| `stable` | Frozen snapshot used by live clients | `v1.1.0-stable` |
+| `develop` | Active development — merge here first | `v1.2.0-dev` |
 
-```
-Client → Creates Railway + Vercel accounts, gives you access
-You    → Deploy backend on their Railway   (mero-cms @ v1.1.0)
-You    → Deploy dashboard on their Vercel  (mero-cms @ v1.1.0)
-You    → Build and deploy theme on Vercel  (separate theme repo)
-You    → Run setup wizard → hand over credentials
-Client → Owns all infrastructure going forward
-```
-
-**Client gets:** Full ownership of hosting and code.
-**To upgrade:** Client (or you) updates the pinned tag and redeploys.
+**Never point a live client deployment at `develop` or `main` directly. Always use a pinned tag.**
 
 ---
 
-### Model C — Client pulls and self-deploys
-
-For technical clients who want full control from day one.
-
-```
-Client → Clones mero-cms at tag v1.1.0
-Client → Deploys backend (Railway/VPS) + dashboard (Vercel) themselves
-You    → Build the theme → hand ZIP or separate repo to client
-Client → Uploads theme ZIP via dashboard → Setup → Activate
-Client → Manages hosting, upgrades, backups themselves
-```
-
-**Client gets:** Full source access and self-management.
-
----
-
-## For Developers — Local Setup
+## Local Development Setup
 
 ### Prerequisites
-- Node.js 20+
-- PostgreSQL (or Docker)
 
-### 1. Clone and install
+- Node.js 20+
+- PostgreSQL 15+ (or Docker)
+
+### 1. Install
 
 ```bash
 git clone https://github.com/BlendWitTech/mero-cms.git
 cd mero-cms
-npm install
+npm install          # root workspace (installs backend deps)
+cd frontend && npm install
 ```
 
 ### 2. Configure environment
 
 ```bash
-cp backend/.env.example backend/.env
-# Edit: DATABASE_URL, JWT_SECRET, SMTP settings
+# Backend
+cp .env.example backend/.env
+# Required: DATABASE_URL, JWT_SECRET
 
-cp frontend/.env.local.example frontend/.env.local
-# Edit: NEXT_PUBLIC_API_URL=http://localhost:3001
+# Frontend
+echo "NEXT_PUBLIC_API_URL=http://localhost:3001" > frontend/.env.local
 ```
 
 ### 3. Database
 
 ```bash
-npm run db:migrate    # Run migrations
-npm run db:seed       # Seed default roles (optional)
+cd backend
+npx prisma db push        # apply schema
+npm run seed:starter      # seed roles + CMS defaults (no users)
+# Then open http://localhost:3000 → complete setup wizard
 ```
 
 ### 4. Start dev servers
 
 ```bash
-npm run dev           # Backend on :3001 + Dashboard on :3000
-```
+# Terminal 1 — backend
+cd backend && npm run start:dev
 
-Open `http://localhost:3000` → complete the setup wizard.
-
-### 5. Run a theme locally
-
-```bash
-# In a separate terminal, inside your theme repo:
-CMS_API_URL=http://localhost:3001 npm run dev
-# Theme runs on http://localhost:3002
+# Terminal 2 — frontend
+cd frontend && npm run dev
 ```
 
 ---
 
-## Architecture
+## Docker
 
+### Standard deployment
+
+```bash
+cp .env.example .env
+# Fill in: JWT_SECRET, DB_PASSWORD, LICENSE_KEY
+docker compose up -d
 ```
-mero-cms/                        ← This repo (engine)
-  backend/                       ← NestJS API  → Railway
-  frontend/                      ← Admin dashboard → Vercel
-  themes/
-    blank/                       ← Minimal built-in placeholder (always present)
-  demo/                          ← Shared demo site (ONE deployment, never per client)
 
-mero-cms-theme-starter/          ← Fork this for every new client theme
-  src/lib/cms.ts                 ← CMS data fetching (do not modify)
-  src/app/                       ← Pages: Home, Blog, [slug]
-  src/app/api/revalidate/        ← Cache invalidation endpoint
-  theme.json                     ← Theme metadata + seed data
+### Demo deployment (marketing branch only)
 
-mero-cms-client-starter/         ← Fork this for every new client onboarding
-  SETUP.md                       ← Step-by-step deployment checklist
-  client.md                      ← Client contacts, deployment URLs, notes
-  .env.backend.example           ← All Railway backend env vars
-  .env.frontend.example          ← Vercel dashboard env vars
-  .env.theme.example             ← Vercel theme env vars
+```bash
+docker compose -f docker-compose.yml -f docker-compose.demo.yml up -d
 ```
 
 ---
 
 ## Environment Variables
 
-### Backend (Railway)
+### Required
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `JWT_SECRET` | Yes | Long random string for auth tokens |
-| `FRONTEND_URL` | Yes | Dashboard Vercel URL (for invite emails) |
-| `CORS_ORIGINS` | Yes | Comma-separated allowed origins |
-| `CORS_VERCEL_PROJECT` | No | Vercel project name (allows all preview URLs) |
-| `THEME_URL` | Yes | Client's deployed theme Vercel URL |
-| `REVALIDATE_SECRET` | Yes | Shared secret for cache invalidation |
-| `EMAIL_PROVIDER` | No | `smtp` (default) or `resend` |
-| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | For SMTP | Gmail or any SMTP |
-| `RESEND_API_KEY` | For Resend | Resend.com API key |
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `JWT_SECRET` | Long random string — `openssl rand -base64 32` |
+| `NEXT_PUBLIC_API_URL` | Backend public URL (frontend build-time var) |
 
-### Dashboard (Vercel)
+### Licensing
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_API_URL` | Yes | Backend Railway public URL |
+| Variable | Description |
+|----------|-------------|
+| `LICENSE_KEY` | RSA-signed JWT from Blendwit — sets tier, domain, seats, expiry |
 
-### Theme (Vercel)
+Generate a key internally:
+```bash
+node tools/issue-license.js --tier Premium --domain client.com --seats 5 --days 365
+```
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `CMS_API_URL` | Yes | Backend Railway public URL |
-| `NEXT_PUBLIC_SITE_URL` | Yes | Theme's own public URL |
-| `REVALIDATE_SECRET` | Yes | Must match backend's `REVALIDATE_SECRET` |
+### Module selection (set by setup wizard)
 
----
+| Variable | Description |
+|----------|-------------|
+| `ENABLED_MODULES` | Comma-separated module keys, e.g. `blogs,seo,analytics` |
+| `SETUP_COMPLETE` | `true` after setup wizard runs |
 
-| Tag Suffix | Use Case | Example |
-| :--- | :--- | :--- |
-| (None) | Clean `main` branch releases | `v1.1.0` |
-| `-stable` | Production client releases | `v1.1.0-stable` |
-| `-marketing` | Demo/Showcase site releases | `v1.1.0-marketing` |
-| `-develop` | Internal development snapshots | `v1.1.0-develop` |
+### Optional
 
-Always pin client deployments to a specific tag in Railway and Vercel.
-**Never point a client's production deployment to `main` (clean) or `develop`.**
+| Variable | Description |
+|----------|-------------|
+| `MAIL_HOST` / `MAIL_USER` / `MAIL_PASSWORD` / `MAIL_FROM` | SMTP for invitations + password reset |
+| `WEBHOOK_SECRET_KEY` | Encryption key for webhook secrets (defaults to `JWT_SECRET`) |
+| `CORS_ORIGINS` | Allowed CORS origins (comma-separated) |
+
+Full reference: [`.env.example`](.env.example)
 
 ---
 
 ## Modules
 
-Enable only what each client needs via `ENABLED_MODULES` env var on Railway:
+All modules except core are opt-in via `ENABLED_MODULES`:
 
-```
-ENABLED_MODULES=blogs,services,testimonials,team,leads,seo,analytics,themes,menus,categories,comments,redirects,robots,sitemap
-```
-
----
-
-## Onboarding a New Client (Quick Reference)
-
-```
-1. Fork mero-cms-client-starter  → client-[name]  (private repo)
-2. Follow SETUP.md in that repo
-3. Fork mero-cms-theme-starter   → [name]-theme
-4. Build client design → fill theme.json → deploy to Vercel
-5. Set THEME_URL in Railway backend env → redeploy
-6. Open dashboard → Setup wizard → connect theme → done
-```
-
-Full checklist: [mero-cms-client-starter/SETUP.md](https://github.com/BlendWitTech/mero-cms-client-starter)
+| Key | What it adds |
+|-----|-------------|
+| `blogs` | Posts, authors, drafts/publish workflow |
+| `categories` / `tags` | Blog taxonomy |
+| `comments` | Moderated comments on posts |
+| `team` | Team member profiles |
+| `services` | Services showcase |
+| `testimonials` | Client testimonials |
+| `leads` | Lead capture forms |
+| `seo` | Per-page SEO meta fields |
+| `redirects` | 301/302 redirect rules |
+| `analytics` | Page view tracking |
+| `sitemap` | XML sitemap generation |
+| `robots` | robots.txt management |
+| `forms` | Custom form builder |
+| `webhooks` | Event-driven webhooks |
 
 ---
 
-## Demo Site
+## Licensing Tiers
 
-`demo/` is deployed **once** as a shared sales/demo site.
-**Never deploy it per client.** See [`demo/DEMO-ONLY.md`](demo/DEMO-ONLY.md).
+| Tier | Unlocks |
+|------|---------|
+| Basic | blogs, categories, tags, pages, menus, media, forms |
+| Premium | Basic + team, services, testimonials, leads, seo, redirects, analytics, sitemap, robots, webhooks |
+| Enterprise | Premium + collections, comments |
+| Custom | All modules |
+
+`TierGuard` reads the `LICENSE_KEY` JWT. Without a key, the CMS runs as **Basic** (unlicensed).
+
+---
+
+## Releasing
+
+Tag `develop` as `v{major}.{minor}.{patch}-dev`, merge to `main`, tag as `v{major}.{minor}.{patch}`:
+
+```bash
+git tag v1.3.0-dev
+git checkout main && git merge develop --no-ff
+git tag v1.3.0
+git push origin main develop --tags
+```
+
+For the marketing/demo branch:
+```bash
+git checkout marketing && git merge main --no-ff
+# restore/update backend/src/demo/ files as needed
+git tag v1.3.0-marketing
+git push origin marketing --tags
+```
+
+GitHub Actions will automatically build and push Docker images to GHCR on tag push.
+
+---
+
+## Architecture
+
+```
+mero-cms/                   ← This repo (CMS engine)
+  backend/                  ← NestJS API
+    src/
+      auth/                 ← JWT auth, roles, LicenseService, TierGuard
+      demo/                 ← Demo-only code (loaded when DEMO_MODE=true)
+      [module]/             ← Feature modules (blogs, media, themes, …)
+    prisma/
+      schema.prisma         ← Main schema
+      modules/              ← Per-module schema fragments
+      seed-starter.ts       ← Minimal seed for new installs
+      seed-demo.ts          ← Demo seed (marketing branch only)
+  frontend/                 ← Next.js admin panel
+    src/app/(admin)/        ← Protected admin routes
+    src/components/         ← Shared UI components
+  themes/
+    blank/                  ← Built-in placeholder theme
+  tools/
+    issue-license.js        ← Internal CLI to generate LICENSE_KEY JWTs
+    keys/                   ← Private RSA key (gitignored — never commit)
+```
 
 ---
 
