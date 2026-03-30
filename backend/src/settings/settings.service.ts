@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 @Injectable()
 export class SettingsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private webhooksService: WebhooksService,
+    ) { }
 
     async findAll() {
         const settings = await (this.prisma as any).setting.findMany();
@@ -25,7 +29,9 @@ export class SettingsService {
         const updates = Object.entries(settings).map(([key, value]) =>
             this.update(key, value),
         );
-        return Promise.all(updates);
+        const result = await Promise.all(updates);
+        this.webhooksService.dispatch('settings.updated', { keys: Object.keys(settings) }).catch(() => { });
+        return result;
     }
 
     async clearThemeCache() {

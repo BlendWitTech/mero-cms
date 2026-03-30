@@ -6,7 +6,6 @@ import {
     Cog6ToothIcon,
     PhotoIcon,
     DocumentTextIcon,
-    MapPinIcon,
     UserGroupIcon,
     ChatBubbleLeftRightIcon,
     EnvelopeIcon,
@@ -29,7 +28,6 @@ import {
 
 const sections = [
     { id: 'overview', label: 'Overview', icon: BookOpenIcon },
-    { id: 'plots', label: 'Plots', icon: MapPinIcon },
     { id: 'blog', label: 'Blog', icon: DocumentTextIcon },
     { id: 'services', label: 'Services', icon: StarIcon },
     { id: 'team', label: 'Team', icon: UserGroupIcon },
@@ -184,7 +182,7 @@ export default function DocsPage() {
                         </div>
                         <div>
                             <h1 className="text-3xl font-extrabold text-slate-900">CMS Documentation</h1>
-                            <p className="text-slate-500 text-sm mt-0.5">KTM Plots — Complete admin reference guide</p>
+                            <p className="text-slate-500 text-sm mt-0.5">Mero CMS — Complete admin reference guide</p>
                         </div>
                     </div>
                     <div className="h-px bg-gradient-to-r from-violet-200 via-indigo-100 to-transparent mt-6" />
@@ -194,7 +192,7 @@ export default function DocsPage() {
                 <Card>
                     <SectionHeading id="overview" icon={BookOpenIcon} title="Overview" subtitle="What this CMS does and how it's structured" />
                     <p className="text-sm text-slate-700 leading-relaxed mb-4">
-                        The KTM Plots CMS is a full-stack content management system built with <strong>NestJS</strong> (backend), <strong>Next.js</strong> (admin dashboard), and a <strong>Next.js theme</strong> (public-facing website). It is designed specifically for a land plot real-estate business in the Kathmandu Valley.
+                        Mero CMS is a modular, self-hosted content management system built with <strong>NestJS</strong> (backend), <strong>Next.js</strong> (admin dashboard), and a <strong>Next.js theme</strong> (public-facing website).
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                         {[
@@ -209,45 +207,6 @@ export default function DocsPage() {
                         ))}
                     </div>
                     <Note type="tip">Start all three services at once with <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">npm run dev:all</code> from the project root. This also starts the PostgreSQL database and pgAdmin containers.</Note>
-                </Card>
-
-                {/* ── Plots ─────────────────────────────────────────────── */}
-                <Card>
-                    <SectionHeading id="plots" icon={MapPinIcon} title="Plots" subtitle="Manage land plot listings shown on the website" />
-                    <p className="text-sm text-slate-700 leading-relaxed mb-5">
-                        Plots are the core product of the site. Each plot has detailed specs, a gallery, categories, and SEO fields. Published plots appear on the <strong>/plots</strong> page and in the Featured Plots section on the homepage.
-                    </p>
-
-                    <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-widest">Key Fields</h3>
-                    <div className="mb-5">
-                        <Field name="Title" desc="The name of the plot listing. Shown as the main heading on the detail page." />
-                        <Field name="Slug" desc="URL-friendly identifier. Auto-generated from the title but can be edited. Example: ring-road-plot-1." />
-                        <Field name="Status" desc="DRAFT — not visible on the website. PUBLISHED — visible to all visitors. SOLD — still visible but marked as sold." />
-                        <Field name="Category" desc="Groups plots (e.g. Residential, Commercial). Categories appear as filters on the /plots page." />
-                        <Field name="Featured" desc="Toggle to show this plot in the Featured Plots carousel on the homepage." />
-                        <Field name="Price From / To" desc="Price range in NPR. Shown on the listing card and detail page. Leave blank if not disclosing price." />
-                        <Field name="Area From / To" desc="Land area range (e.g. 2 Anna – 4 Anna). Shown in the specifications section." />
-                        <Field name="Facing" desc="Direction the plot faces (North, South, East, West, etc.)." />
-                        <Field name="Road Access" desc="Road width or access type (e.g. 20 ft black-top road)." />
-                        <Field name="Location" desc="Human-readable address or locality (e.g. Budhanilkantha, Kathmandu)." />
-                        <Field name="Cover Image" desc="Main image shown on listing cards and at the top of the detail page." />
-                        <Field name="Gallery" desc="Additional images shown in the image carousel on the detail page." />
-                        <Field name="Description" desc="Short description shown on listing cards and the intro paragraph on the detail page." />
-                        <Field name="Content" desc="Full rich-text body of the plot detail page." />
-                        <Field name="SEO Title / Description" desc="Overrides the page <title> and meta description for this specific plot page." />
-                        <Field name="Attributes" desc="Flexible key-value pairs for extra specs (e.g. Water Supply: KUKL, Electricity: NEA)." />
-                    </div>
-
-                    <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-widest">How to Add a Plot</h3>
-                    <div className="flex flex-col gap-2 mb-4">
-                        <Step n={1} text="Go to Dashboard → Plots and click Add New Plot." />
-                        <Step n={2} text="Fill in the Title, Description, and Location. The slug auto-generates." />
-                        <Step n={3} text="Upload a Cover Image and optionally add Gallery images." />
-                        <Step n={4} text="Set Price, Area, Facing, and Road Access in the Specifications section." />
-                        <Step n={5} text="Assign a Category and toggle Featured if it should appear on the homepage." />
-                        <Step n={6} text="Set Status to PUBLISHED when ready. Save." />
-                    </div>
-                    <Note type="info">When a hero/cover image is set, the plot detail page shows a centered single-column layout with the image as a full-width hero. Without an image, a two-column layout with a sticky price/contact sidebar is used instead.</Note>
                 </Card>
 
                 {/* ── Blog ─────────────────────────────────────────────── */}
@@ -288,10 +247,10 @@ export default function DocsPage() {
                 <Card>
                     <SectionHeading id="services" icon={StarIcon} title="Services" subtitle="Services cards shown on the homepage and /services page" />
                     <p className="text-sm text-slate-700 leading-relaxed mb-5">
-                        Services highlight what KTM Plots offers (e.g. Plot Search, Legal Assistance, Documentation). They appear in a grid on the homepage Services section and on the dedicated <strong>/services</strong> page.
+                        Services appear in a grid on the homepage Services section and on the dedicated <strong>/services</strong> page.
                     </p>
                     <div className="mb-4">
-                        <Field name="Title" desc="Service name, e.g. Plot Search & Shortlisting." />
+                        <Field name="Title" desc="Service name, e.g. Web Design, Consulting, Support." />
                         <Field name="Description" desc="Short explanation shown on the service card." />
                         <Field name="Icon" desc="Click the visual icon picker to choose one of 6 icons that match the theme: Map Pin (location), File/Docs (legal), Eye (site visit), Trending Up (investment), Home (construction), Support (headphones). The selected icon is stored as a slug (e.g. map-pin) and rendered in the red icon box on the website." />
                         <Field name="Order" desc="Controls display order. Lower numbers appear first." />
@@ -332,14 +291,14 @@ export default function DocsPage() {
 
                 {/* ── Leads ─────────────────────────────────────────────── */}
                 <Card>
-                    <SectionHeading id="leads" icon={EnvelopeIcon} title="Leads" subtitle="Enquiries submitted through the website contact and plot forms" />
+                    <SectionHeading id="leads" icon={EnvelopeIcon} title="Leads" subtitle="Enquiries submitted through the website contact forms" />
                     <p className="text-sm text-slate-700 leading-relaxed mb-5">
-                        Whenever a visitor submits the <strong>Contact form</strong>, the <strong>Enquire button</strong> on a plot page, or the <strong>Request a Site Visit</strong> button, a lead is created here. Leads are read-only in the dashboard — they are for your reference.
+                        Whenever a visitor submits a contact or enquiry form, a lead is created here. Leads are read-only in the dashboard — they are for your reference.
                     </p>
                     <div className="mb-4">
                         <Field name="Name / Email / Phone" desc="Contact details provided by the visitor." />
                         <Field name="Message" desc="The message or enquiry text." />
-                        <Field name="Origin Page" desc="Which page or form the lead came from (e.g. /plots/ring-road-plot or Contact Page)." />
+                        <Field name="Origin Page" desc="Which page or form the lead came from (e.g. /contact or a specific content page)." />
                         <Field name="Status" desc="NEW → CONTACTED → QUALIFIED → CONVERTED → LOST. Update this as you progress through the sales pipeline." />
                         <Field name="Created At" desc="Timestamp of when the lead was submitted." />
                     </div>
@@ -372,7 +331,7 @@ export default function DocsPage() {
                 <Card>
                     <SectionHeading id="media" icon={PhotoIcon} title="Media Library" subtitle="Central store for all uploaded images and files" />
                     <p className="text-sm text-slate-700 leading-relaxed mb-4">
-                        Every image used in the CMS — plot cover photos, blog cover images, logos, about photos — is stored in the Media Library. Files are served directly from the backend at <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">/uploads/</code>.
+                        Every image used in the CMS — blog cover images, logos, team photos, and more — is stored in the Media Library. Files are served directly from the backend at <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">/uploads/</code>.
                     </p>
                     <div className="flex flex-col gap-2 mb-4">
                         <Step n={1} text="Go to Dashboard → Media. Click Upload or drag-and-drop images." />
@@ -392,10 +351,10 @@ export default function DocsPage() {
                     <div className="flex flex-col gap-2 mb-4">
                         <Step n={1} text="Go to Dashboard → Menus → New Menu." />
                         <Step n={2} text="Set the Slug to exactly main-nav (header) or footer-links (footer) to connect it to the theme." />
-                        <Step n={3} text="Add menu items: each has a Label and a URL (e.g. /plots or https://external.com)." />
+                        <Step n={3} text="Add menu items: each has a Label and a URL (e.g. /blog or https://external.com)." />
                         <Step n={4} text="Set Target to _blank for links that should open in a new tab (e.g. external URLs)." />
                     </div>
-                    <Note type="info">If you don't create a main-nav menu, the header shows the default navigation: Home, About, Plots, Services, Blog, Contact.</Note>
+                    <Note type="info">If you don't create a main-nav menu, the theme uses its own default navigation. Create a menu keyed <code className="text-xs bg-amber-50 px-1 rounded">main-nav</code> to override it.</Note>
                 </Card>
 
                 {/* ── Pages ─────────────────────────────────────────────── */}
@@ -450,7 +409,7 @@ export default function DocsPage() {
                         <Field name="Tagline" desc="Short tagline used in the header and as a default meta description." />
                         <Field name="Logo" desc="Upload a logo image via the Media Picker. Shown in the header. If not set, the Site Name text is shown instead." />
                         <Field name="Favicon" desc="Small icon shown in browser tabs. Should be a square image, ideally 32×32 or 64×64 px." />
-                        <Field name="Brand Primary Color" desc="The brand color applied live across the entire website — buttons, header border, active nav links, accents, and more. Defaults to #CC1414 (KTM red). Change this to instantly rebrand the site." />
+                        <Field name="Brand Primary Color" desc="The brand color applied live across the entire website — buttons, header border, active nav links, accents, and more. Change this to instantly rebrand the site." />
                         <Field name="Secondary Color" desc="Used for the mobile menu background and dark text/UI elements. Defaults to #1E1E1E (charcoal)." />
                         <Field name="Accent Color" desc="Light background used in select section backgrounds. Defaults to #F4F4F4." />
                         <Field name="Heading Font" desc="Font used for all h1–h6 headings on the website. Choose from: Poppins, Montserrat, Roboto, Nunito, Lato, Playfair Display, Raleway, Open Sans. Leave blank to use the default system font." />
@@ -502,14 +461,14 @@ export default function DocsPage() {
                         <Step n={2} text="Add and verify your sending domain in Resend → Domains (add the DNS records they give you)." />
                         <Step n={3} text="In Settings → Email Services, select Resend as the provider." />
                         <Step n={4} text="Paste the API key into the Resend API Key field." />
-                        <Step n={5} text="Set Sender Email to a verified address on your domain (e.g. noreply@ktmplots.com)." />
+                        <Step n={5} text="Set Sender Email to a verified address on your domain (e.g. noreply@yourdomain.com)." />
                         <Step n={6} text="Save. Submit a test lead from the website to confirm delivery." />
                     </div>
                     <div className="bg-slate-900 rounded-2xl p-4 mb-5 font-mono text-xs text-slate-300 leading-relaxed">
                         <p className="text-slate-500 mb-2"># Resend (alternative to dashboard config)</p>
                         <p>EMAIL_PROVIDER=resend</p>
                         <p>RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx</p>
-                        <p>SMTP_FROM=noreply@ktmplots.com</p>
+                        <p>SMTP_FROM=noreply@yourdomain.com</p>
                     </div>
                     <Note type="tip">Resend's free domain <strong>onboarding@resend.dev</strong> works for testing without domain verification — but you must use your own verified domain for production.</Note>
 
@@ -553,21 +512,21 @@ export default function DocsPage() {
                 <Card>
                     <SectionHeading id="seo" icon={MagnifyingGlassIcon} title="SEO" subtitle="Control how the site appears in search engines" />
                     <p className="text-sm text-slate-700 leading-relaxed mb-5">
-                        SEO settings work at three levels — site-wide defaults, per-page overrides, and per-plot/post overrides.
+                        SEO settings work at three levels — site-wide defaults, per-page overrides, and per-post overrides.
                     </p>
 
                     <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-widest">Site-Wide SEO</h3>
                     <div className="mb-5">
-                        <Field name="Site Name" desc="Appended to every page title as '— KTM Plots'." />
+                        <Field name="Site Name" desc="Appended to every page title as a suffix (e.g. '— My Site')." />
                         <Field name="Meta Description" desc="Set in Settings → Branding. Used as the fallback description for all pages." />
                         <Field name="Robots.txt" desc="Go to Dashboard → SEO → Robots to customise the robots.txt file that tells search engine crawlers what to index." />
                         <Field name="Redirects" desc="Go to Dashboard → SEO → Redirects to set up 301 or 302 redirects from old URLs to new ones." />
-                        <Field name="Sitemap" desc="Auto-generated at /sitemap.xml. Includes all published plots, blog posts, and standard pages." />
+                        <Field name="Sitemap" desc="Auto-generated at /sitemap.xml. Includes all published blog posts, pages, and standard routes." />
                     </div>
 
-                    <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-widest">Per-Plot / Per-Post SEO</h3>
+                    <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-widest">Per-Page / Per-Post SEO</h3>
                     <p className="text-sm text-slate-700 leading-relaxed mb-3">
-                        Each plot and blog post has its own <strong>SEO Title</strong> and <strong>SEO Description</strong> fields. When set, these override the site-wide defaults for that specific page.
+                        Each page and blog post has its own <strong>SEO Title</strong> and <strong>SEO Description</strong> fields. When set, these override the site-wide defaults for that specific page.
                     </p>
                     <Note type="tip">Keep meta descriptions between 120–160 characters for best display in Google search results. Page titles work best at 50–60 characters.</Note>
                 </Card>
@@ -590,7 +549,7 @@ export default function DocsPage() {
                 <Card>
                     <SectionHeading id="themes" icon={SwatchIcon} title="Themes" subtitle="Manage and switch the active public website theme" />
                     <p className="text-sm text-slate-700 leading-relaxed mb-4">
-                        The CMS supports multiple themes. The currently active theme (<strong>ktm-plots</strong>) is a purpose-built Next.js theme for land plot real estate in the Kathmandu Valley.
+                        The CMS supports multiple themes. Each theme is a standalone Next.js application that consumes the CMS API and renders the public-facing website.
                     </p>
                     <div className="mb-4">
                         <Field name="Active Theme" desc="The theme currently serving the public website. Only one theme can be active at a time." />
@@ -598,24 +557,14 @@ export default function DocsPage() {
                         <Field name="Site Pages" desc="Go to Dashboard → Site Pages to toggle sections on/off and edit their content for each page (Home, About, etc.)." />
                     </div>
 
-                    <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-widest">ktm-plots Theme — Pages & Sections</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {[
-                            { page: 'Home (/)', sections: 'Hero, Featured Plots, Services, About, CTA Strip, Testimonials, Blog Preview' },
-                            { page: 'About (/about)', sections: 'Hero, Mission, Team, Values, CTA' },
-                            { page: 'Plots (/plots)', sections: 'Listing grid with filters by category, search, status' },
-                            { page: 'Plot Detail (/plots/[slug])', sections: 'Hero image (or sidebar layout), gallery, specs, enquiry form' },
-                            { page: 'Services (/services)', sections: 'Full services listing with icons and descriptions' },
-                            { page: 'Blog (/blog)', sections: 'Post grid with pagination' },
-                            { page: 'Blog Post (/blog/[slug])', sections: 'Content, tags, author, comments & replies' },
-                            { page: 'Contact (/contact)', sections: 'Contact form, map, contact details' },
-                        ].map(r => (
-                            <div key={r.page} className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
-                                <p className="text-xs font-bold text-violet-600 mb-1 font-mono">{r.page}</p>
-                                <p className="text-xs text-slate-600 leading-relaxed">{r.sections}</p>
-                            </div>
-                        ))}
+                    <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-widest">How Themes Work</h3>
+                    <div className="flex flex-col gap-2 mb-4">
+                        <Step n={1} text="Fork the mero-cms-theme-starter repository to build a new theme." />
+                        <Step n={2} text="Build your design in the theme's Next.js app. Use theme.json to define pages, sections, and seed data." />
+                        <Step n={3} text="Deploy the theme to Vercel and set THEME_URL in your CMS backend env." />
+                        <Step n={4} text="In Dashboard → Themes, activate the theme. The setup wizard imports seed content." />
                     </div>
+                    <Note type="tip">Each theme declares which CMS modules it needs in its <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">theme.json</code> requiredModules array. The CMS auto-enables those modules on activation.</Note>
                 </Card>
 
             </div>

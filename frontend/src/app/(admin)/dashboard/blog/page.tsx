@@ -15,7 +15,9 @@ import {
     CloudArrowUpIcon,
     PhotoIcon,
     CalendarIcon,
-    ExclamationCircleIcon
+    ExclamationCircleIcon,
+    CheckIcon,
+    DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -79,6 +81,9 @@ function BlogPageContent() {
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+    const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
 
     useEffect(() => {
         fetchInitialData();
@@ -253,6 +258,58 @@ function BlogPageContent() {
         setDeleteConfirmation({ isOpen: true, id });
     };
 
+    const handleDuplicate = async (id: string) => {
+        try {
+            await apiRequest(`/blogs/${id}/duplicate`, { method: 'POST' });
+            showToast('Post duplicated as draft', 'success');
+            fetchInitialData();
+        } catch {
+            showToast('Failed to duplicate post', 'error');
+        }
+    };
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+    };
+
+    const toggleSelectAll = (visibleIds: string[]) => {
+        if (visibleIds.every(id => selectedIds.has(id))) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(visibleIds));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        setIsBulkDeleting(true);
+        try {
+            await apiRequest('/blogs/bulk/delete', { method: 'POST', body: { ids: Array.from(selectedIds) } });
+            showToast(`Deleted ${selectedIds.size} post(s)`, 'success');
+            setSelectedIds(new Set());
+            fetchInitialData();
+        } catch {
+            showToast('Bulk delete failed', 'error');
+        } finally {
+            setIsBulkDeleting(false);
+            setBulkDeleteConfirm(false);
+        }
+    };
+
+    const handleBulkStatus = async (status: string) => {
+        try {
+            const res = await apiRequest('/blogs/bulk/status', { method: 'POST', body: { ids: Array.from(selectedIds), status } });
+            showToast(`Updated ${(res as any).updated} post(s) to ${status}`, 'success');
+            setSelectedIds(new Set());
+            fetchInitialData();
+        } catch {
+            showToast('Bulk update failed', 'error');
+        }
+    };
+
     const confirmDelete = async () => {
         if (!deleteConfirmation.id) return;
         try {
@@ -324,11 +381,15 @@ function BlogPageContent() {
                         <select
                             value={formData.status}
                             disabled={isReadOnly}
-                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                            className="bg-slate-50 border-none text-xs font-bold text-slate-600 py-2.5 px-4 rounded-xl focus:ring-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            onChange={(e) => {
+                                const newStatus = e.target.value;
+                                setFormData({ ...formData, status: newStatus });
+                            }}
+                            className={`border-none text-xs font-bold py-2.5 px-4 rounded-xl focus:ring-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${formData.status === 'SCHEDULED' ? 'bg-violet-50 text-violet-700' : 'bg-slate-50 text-slate-600'}`}
                         >
                             <option value="DRAFT">Draft</option>
                             <option value="PUBLISHED">Published</option>
+                            <option value="SCHEDULED">Scheduled</option>
                             <option value="ARCHIVED">Archived</option>
                         </select>
                         <button 
@@ -577,24 +638,36 @@ function BlogPageContent() {
                         </div>
 
                         {/* Scheduling */}
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Publishing</h3>
+                        <div className={`rounded-2xl p-6 border shadow-sm space-y-4 transition-colors ${formData.status === 'SCHEDULED' ? 'bg-violet-50 border-violet-200' : 'bg-white border-slate-200'}`}>
+                            <h3 className={`text-xs font-black uppercase tracking-widest ${formData.status === 'SCHEDULED' ? 'text-violet-500' : 'text-slate-400'}`}>Publishing</h3>
                             <div>
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Publish Date</label>
+                                <label className={`text-[10px] font-bold uppercase tracking-widest ml-1 ${formData.status === 'SCHEDULED' ? 'text-violet-600' : 'text-slate-400'}`}>
+                                    {formData.status === 'SCHEDULED' ? 'Scheduled Date *' : 'Publish Date'}
+                                </label>
                                 <div className="relative">
-                                    <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                     <input
+                                    <CalendarIcon className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${formData.status === 'SCHEDULED' ? 'text-violet-400' : 'text-slate-400'}`} />
+                                    <input
                                         type="datetime-local"
                                         value={formData.publishedAt ? new Date(formData.publishedAt).toISOString().slice(0, 16) : ''}
                                         disabled={isReadOnly}
-                                        onChange={(e) => setFormData({ ...formData, publishedAt: e.target.value })}
-                                        className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const isFuture = val && new Date(val) > new Date();
+                                            setFormData({
+                                                ...formData,
+                                                publishedAt: val,
+                                                status: isFuture ? 'SCHEDULED' : formData.status === 'SCHEDULED' ? 'DRAFT' : formData.status,
+                                            });
+                                        }}
+                                        className={`w-full pl-9 pr-4 py-2 border rounded-xl text-xs font-bold focus:outline-none focus:ring-2 disabled:opacity-50 transition-colors ${formData.status === 'SCHEDULED' ? 'bg-white border-violet-300 focus:ring-violet-300/30 text-violet-800' : 'bg-slate-50 border-slate-200 focus:ring-blue-600/10'}`}
                                     />
                                 </div>
-                                <p className="text-[10px] text-slate-400 mt-2 ml-1">
-                                    {formData.publishedAt && new Date(formData.publishedAt) > new Date()
-                                        ? 'Post will be scheduled for this date.'
-                                        : 'Leave empty to publish immediately.'}
+                                <p className={`text-[10px] mt-2 ml-1 ${formData.status === 'SCHEDULED' ? 'text-violet-500 font-semibold' : 'text-slate-400'}`}>
+                                    {formData.status === 'SCHEDULED'
+                                        ? `Will auto-publish at the scheduled time.`
+                                        : formData.publishedAt && new Date(formData.publishedAt) > new Date()
+                                            ? 'Set status to Scheduled to auto-publish.'
+                                            : 'Leave empty to publish immediately.'}
                                 </p>
                             </div>
                         </div>
@@ -616,6 +689,16 @@ function BlogPageContent() {
                 onConfirm={confirmDelete}
                 onCancel={() => setDeleteConfirmation({ isOpen: false, id: null })}
             />
+            <AlertDialog
+                isOpen={bulkDeleteConfirm}
+                title={`Delete ${selectedIds.size} post(s)?`}
+                description="All selected posts will be permanently deleted. This action cannot be undone."
+                confirmLabel={isBulkDeleting ? 'Deleting...' : 'Delete All'}
+                cancelLabel="Cancel"
+                variant="danger"
+                onConfirm={handleBulkDelete}
+                onCancel={() => setBulkDeleteConfirm(false)}
+            />
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-2">
                 <div>
@@ -633,6 +716,45 @@ function BlogPageContent() {
                     </PermissionGuard>
                 </div>
             </div>
+
+            {/* Bulk action toolbar */}
+            {selectedIds.size > 0 && (
+                <div className="mx-2 flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-5 py-3 animate-in slide-in-from-top-2 duration-200">
+                    <span className="text-sm font-bold text-blue-700">{selectedIds.size} selected</span>
+                    <div className="flex items-center gap-2 ml-auto">
+                        <button
+                            onClick={() => handleBulkStatus('PUBLISHED')}
+                            className="px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
+                        >
+                            Publish
+                        </button>
+                        <button
+                            onClick={() => handleBulkStatus('DRAFT')}
+                            className="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors"
+                        >
+                            Set Draft
+                        </button>
+                        <button
+                            onClick={() => handleBulkStatus('ARCHIVED')}
+                            className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors"
+                        >
+                            Archive
+                        </button>
+                        <button
+                            onClick={() => setBulkDeleteConfirm(true)}
+                            className="px-3 py-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors"
+                        >
+                            Delete
+                        </button>
+                        <button
+                            onClick={() => setSelectedIds(new Set())}
+                            className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Posts List */}
             <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -670,6 +792,7 @@ function BlogPageContent() {
                                 <option value="">All Status</option>
                                 <option value="PUBLISHED">Published</option>
                                 <option value="DRAFT">Draft</option>
+                                <option value="SCHEDULED">Scheduled</option>
                                 <option value="ARCHIVED">Archived</option>
                             </select>
                         </div>
@@ -680,7 +803,28 @@ function BlogPageContent() {
                     <table className="w-full min-w-[700px] text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-100 bg-slate-50/30">
-                                <th className="pl-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Article</th>
+                                <th className="pl-5 py-4 w-10">
+                                    {canManageContent && (() => {
+                                        const visibleIds = posts
+                                            .filter(post => {
+                                                const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || post.slug.toLowerCase().includes(searchQuery.toLowerCase());
+                                                const matchesCategory = !categoryFilter || post.categories.some((c: any) => c.id === categoryFilter);
+                                                const matchesStatus = !statusFilter || post.status === statusFilter;
+                                                return matchesSearch && matchesCategory && matchesStatus;
+                                            })
+                                            .map((p: any) => p.id);
+                                        const allSelected = visibleIds.length > 0 && visibleIds.every(id => selectedIds.has(id));
+                                        return (
+                                            <button
+                                                onClick={() => toggleSelectAll(visibleIds)}
+                                                className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${allSelected ? 'bg-blue-600 border-blue-600' : 'border-slate-300 hover:border-blue-400'}`}
+                                            >
+                                                {allSelected && <CheckIcon className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
+                                            </button>
+                                        );
+                                    })()}
+                                </th>
+                                <th className="pl-3 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Article</th>
                                 <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
                                 <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Author</th>
                                 <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date</th>
@@ -711,8 +855,18 @@ function BlogPageContent() {
                                         return matchesSearch && matchesCategory && matchesStatus;
                                     })
                                     .map((post) => (
-                                        <tr key={post.id} className="group hover:bg-slate-50/50 transition-colors">
-                                            <td className="pl-8 py-5">
+                                        <tr key={post.id} className={`group hover:bg-slate-50/50 transition-colors ${selectedIds.has(post.id) ? 'bg-blue-50/40' : ''}`}>
+                                            <td className="pl-5 py-5 w-10">
+                                                {canManageContent && (
+                                                    <button
+                                                        onClick={() => toggleSelect(post.id)}
+                                                        className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${selectedIds.has(post.id) ? 'bg-blue-600 border-blue-600' : 'border-slate-300 hover:border-blue-400'}`}
+                                                    >
+                                                        {selectedIds.has(post.id) && <CheckIcon className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
+                                                    </button>
+                                                )}
+                                            </td>
+                                            <td className="pl-3 py-5">
                                                 <div className="flex items-center gap-4">
                                                     <div className="h-12 w-12 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0 relative">
                                                         {post.coverImage ? (
@@ -732,6 +886,7 @@ function BlogPageContent() {
                                             <td className="px-4 py-5">
                                                 <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ring-1 ring-inset ${post.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-600 ring-emerald-600/20' :
                                                     post.status === 'DRAFT' ? 'bg-amber-50 text-amber-600 ring-amber-600/20' :
+                                                    post.status === 'SCHEDULED' ? 'bg-violet-50 text-violet-600 ring-violet-600/20' :
                                                         'bg-slate-50 text-slate-600 ring-slate-600/20'
                                                     }`}>
                                                     {post.status}
@@ -749,10 +904,13 @@ function BlogPageContent() {
                                                         <Link href={`/dashboard/comments?postId=${post.id}`} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-emerald-500 hover:border-emerald-200 transition-all" title="View Comments">
                                                             <ChatBubbleLeftRightIcon className="h-4 w-4" />
                                                         </Link>
-                                                        <button onClick={() => handleEdit(post)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all">
+                                                        <button onClick={() => handleEdit(post)} title="Edit" className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all">
                                                             <PencilSquareIcon className="h-4 w-4" />
                                                         </button>
-                                                        <button onClick={() => handleDeleteClick(post.id)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 transition-all">
+                                                        <button onClick={() => handleDuplicate(post.id)} title="Duplicate to draft" className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-violet-600 hover:border-violet-200 transition-all">
+                                                            <DocumentDuplicateIcon className="h-4 w-4" />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteClick(post.id)} title="Delete" className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 transition-all">
                                                             <TrashIcon className="h-4 w-4" />
                                                         </button>
                                                     </div>

@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, SetMetadata } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, SetMetadata, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { LeadsService } from './leads.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
@@ -61,8 +62,18 @@ export class LeadsController {
 
     @Delete(':id')
     @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @RequirePermissions(Permission.LEADS_MANAGE) // Could use LEADS_DELETE if exists, relying on MANAGE for now per enum analysis
+    @RequirePermissions(Permission.LEADS_MANAGE)
     remove(@Param('id') id: string) {
         return this.leadsService.remove(id);
+    }
+
+    @Get('export/csv')
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
+    @RequirePermissions(Permission.LEADS_VIEW)
+    async exportCsv(@Res() res: Response, @Query('status') status?: string) {
+        const csv = await this.leadsService.exportCsv(status);
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename="leads.csv"');
+        res.send(csv);
     }
 }

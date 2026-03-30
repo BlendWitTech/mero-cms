@@ -6,6 +6,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { PrismaService } from '../prisma/prisma.service';
 import { SetupService } from '../setup/setup.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 const execAsync = promisify(exec);
 
@@ -26,6 +27,7 @@ export class ThemesService {
     constructor(
         private prisma: PrismaService,
         private setupService: SetupService,
+        private webhooksService: WebhooksService,
     ) {
         this.ensureDir(this.uploadPath);
         this.ensureDir(this.mediaUploadPath);
@@ -63,13 +65,45 @@ export class ThemesService {
         }
 
         const themeName = path.parse(file.originalname).name;
+
+        // Reject names with path traversal characters
+        if (/[/\\<>:"|?*\x00]/.test(themeName) || themeName.startsWith('.')) {
+            throw new BadRequestException('Invalid theme name in archive filename');
+        }
+
         const extractPath = path.join(this.uploadPath, themeName);
+        const extractPathNormalized = path.resolve(extractPath) + path.sep;
+
+        const MAX_FILES = 2000;
+        const MAX_UNZIPPED_BYTES = 100 * 1024 * 1024; // 100 MB
 
         try {
             const zip = new AdmZip(file.buffer);
+            const entries = zip.getEntries();
+
+            if (entries.length > MAX_FILES) {
+                throw new BadRequestException(`Theme archive contains too many files (max ${MAX_FILES})`);
+            }
+
+            let totalUnzipped = 0;
+            for (const entry of entries) {
+                // ZIP Slip: verify each entry resolves inside the target directory
+                const entryTarget = path.resolve(path.join(extractPath, entry.entryName));
+                if (!entryTarget.startsWith(extractPathNormalized)) {
+                    throw new BadRequestException(`Theme archive contains an unsafe path: ${entry.entryName}`);
+                }
+
+                // Size bomb: accumulate uncompressed sizes
+                totalUnzipped += entry.header.size;
+                if (totalUnzipped > MAX_UNZIPPED_BYTES) {
+                    throw new BadRequestException('Theme archive is too large when unzipped (max 100 MB)');
+                }
+            }
+
             zip.extractAllTo(extractPath, true);
             return { message: 'Theme uploaded and extracted successfully', themeName, path: extractPath };
         } catch (error) {
+            if (error instanceof BadRequestException) throw error;
             throw new BadRequestException(`Failed to extract theme: ${error.message}`);
         }
     }
@@ -115,7 +149,7 @@ export class ThemesService {
                 }
             }
 
-            await this.installDependencies(themePath);
+            this.installDependencies(themePath);
 
             // Track setup type in settings
             const setupType = clearPrevious ? 'FRESH' : 'LEGACY';
@@ -322,63 +356,6 @@ export class ThemesService {
 
 
 
-    private async setupPlotCategories(categories: any[]): Promise<number> {
-        let count = 0;
-        const activeTheme = await this.getActiveTheme();
-        for (const cat of categories) {
-            const existing = await (this.prisma as any).plotCategory.findUnique({ where: { slug: cat.slug } });
-            if (existing) continue;
-            await (this.prisma as any).plotCategory.create({
-                data: { name: cat.name, slug: cat.slug, description: cat.description || null, theme: activeTheme },
-            });
-            count++;
-        }
-        return count;
-    }
-
-    private async setupPlots(plots: any[]): Promise<number> {
-        let count = 0;
-        const activeTheme = await this.getActiveTheme();
-        for (const p of plots) {
-            const slug = p.slug || p.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-            const existing = await (this.prisma as any).plot.findUnique({ where: { slug } });
-            if (existing) continue;
-
-            let categoryId: string | null = null;
-            if (p.category && typeof p.category === 'string') {
-                const cat = await (this.prisma as any).plotCategory.findFirst({ where: { slug: p.category } });
-                categoryId = cat?.id ?? null;
-            } else if (p.categoryId) {
-                categoryId = p.categoryId;
-            }
-
-            await (this.prisma as any).plot.create({
-                data: {
-                    title:       p.title,
-                    slug,
-                    description: p.description || '',
-                    content:     p.content     || null,
-                    coverImage:  p.coverImage  || p.featuredImage || null,
-                    gallery:     p.gallery     || [],
-                    status:      p.status      || 'available',
-                    location:    p.location    || null,
-                    featured:    p.featured    ?? false,
-                    priceFrom:   p.priceFrom   || null,
-                    priceTo:     p.priceTo     || null,
-                    areaFrom:    p.areaFrom    || null,
-                    areaTo:      p.areaTo      || null,
-                    facing:      p.facing      || null,
-                    roadAccess:  p.roadAccess  || null,
-                    theme:       activeTheme,
-                    categoryId,
-                    attributes:  p.attributes  || {},
-                },
-            });
-            count++;
-        }
-        return count;
-    }
-
     private async setupTeam(team: any[]): Promise<number> {
         let count = 0;
         const activeTheme = await this.getActiveTheme();
@@ -479,12 +456,12 @@ export class ThemesService {
                 if (this.isModuleEnabled('blogs') && seed.posts?.length) results.posts = await this.setupPosts(seed.posts);
                 if (this.isModuleEnabled('pages') && seed.pages?.length) results.pages = await this.setupPages(seed.pages);
                 if (this.isModuleEnabled('menus') && seed.menus?.length) results.menus = await this.setupMenus(seed.menus);
-                // Seed project categories BEFORE projects so FK resolves
-                if (this.isModuleEnabled('plot-categories') && seed.plotCategories?.length) results.plotCategories = await this.setupPlotCategories(seed.plotCategories);
-                if (this.isModuleEnabled('plots') && seed.plots?.length) results.plots = await this.setupPlots(seed.plots);
                 if (this.isModuleEnabled('team') && seed.team?.length) results.team = await this.setupTeam(seed.team);
                 if (this.isModuleEnabled('testimonials') && seed.testimonials?.length) results.testimonials = await this.setupTestimonials(seed.testimonials);
                 if (this.isModuleEnabled('services') && seed.services?.length) results.services = await this.setupServices(seed.services);
+                if (this.isModuleEnabled('collections') && config.requiredCollections?.length) {
+                    results.collections = await this.setupRequiredCollections(config.requiredCollections, seed.collectionItems || {});
+                }
 
                 results.media = await this.setupMedia(themePath, seed.media || []);
 
@@ -506,6 +483,7 @@ export class ThemesService {
             } catch {}
         }
 
+        this.webhooksService.dispatch('theme.activated', { theme: themeName }).catch(() => { });
         return { message: `Theme "${themeName}" activated`, results };
     }
 
@@ -548,7 +526,7 @@ export class ThemesService {
             }
             
             // Purge other modules that support theme isolation
-            const dynamicModules = ['plot', 'plotCategory', 'teamMember', 'testimonial', 'service'];
+            const dynamicModules = ['teamMember', 'testimonial', 'service'];
             for (const mod of dynamicModules) {
                 try {
                     if ((this.prisma as any)[mod]) {
@@ -597,7 +575,7 @@ export class ThemesService {
 
     /**
      * Reset the CMS to its base state:
-     * - Wipes ALL content (pages, menus, plots, team, testimonials, services, posts, leads, media records)
+     * - Wipes ALL content (pages, menus, team, testimonials, services, posts, leads, media records)
      * - Removes theme-related settings (active_theme, all theme_setup_type_* and theme_url_* keys,
      *   and site-level settings that themes customise like primary_color, site_title etc.)
      * - Keeps: users, roles, system settings (enabled_modules, setup_complete, cms_*)
@@ -612,7 +590,6 @@ export class ThemesService {
             'teamMember',
             'testimonial',
             'service',
-            'plotCategory', 'plot',
             'lead',
             'notification',
             'seoMeta',
@@ -668,7 +645,7 @@ export class ThemesService {
         return config?.pageSchema || [];
     }
 
-    /** Return module aliases (e.g. { projects: 'Plots' }). */
+    /** Return module aliases (e.g. { team: 'Our Team' }). */
     async getModuleAliases(): Promise<Record<string, string>> {
         const config = await this.getActiveThemeConfig();
         return config?.moduleAliases || {};
@@ -688,6 +665,57 @@ export class ThemesService {
                 });
             }
         }
+    }
+
+    /**
+     * Upsert collection schemas declared in theme.json's requiredCollections array.
+     * Each entry: { name, slug, type, description?, fields[] }
+     * Also seeds initial items from collectionItems[slug][] if provided in seedData.
+     */
+    private async setupRequiredCollections(
+        requiredCollections: any[],
+        collectionItems: Record<string, any[]>,
+    ): Promise<number> {
+        let count = 0;
+        for (const colDef of requiredCollections) {
+            if (!colDef.slug || !colDef.name) continue;
+            const collection = await (this.prisma as any).collection.upsert({
+                where: { slug: colDef.slug },
+                create: {
+                    name: colDef.name,
+                    slug: colDef.slug,
+                    description: colDef.description || null,
+                    type: colDef.type || 'COLLECTION',
+                    fields: colDef.fields || [],
+                },
+                update: {
+                    name: colDef.name,
+                    description: colDef.description || null,
+                    type: colDef.type || 'COLLECTION',
+                    fields: colDef.fields || [],
+                },
+            });
+            count++;
+
+            // Seed initial items if provided (only if collection has no items yet)
+            const items: any[] = collectionItems[colDef.slug] || [];
+            if (items.length > 0) {
+                const existing = await (this.prisma as any).collectionItem.count({ where: { collectionId: collection.id } });
+                if (existing === 0) {
+                    for (const item of items) {
+                        await (this.prisma as any).collectionItem.create({
+                            data: {
+                                collectionId: collection.id,
+                                data: item.data || item,
+                                slug: item.slug || null,
+                                isPublished: item.isPublished !== false,
+                            },
+                        });
+                    }
+                }
+            }
+        }
+        return count;
     }
 
     /**

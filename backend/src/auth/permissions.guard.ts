@@ -2,42 +2,53 @@ import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PERMISSIONS_KEY } from './permissions.decorator';
 import { Permission } from './permissions.enum';
+import { AuditLogService } from '../audit-log/audit-log.service';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-    constructor(private reflector: Reflector) { }
+    constructor(
+        private reflector: Reflector,
+        private auditLogService: AuditLogService,
+    ) { }
 
-    canActivate(context: ExecutionContext): boolean {
+    async canActivate(context: ExecutionContext): Promise<boolean> {
         const requiredPermissions = this.reflector.getAllAndOverride<Permission[]>(PERMISSIONS_KEY, [
             context.getHandler(),
             context.getClass(),
         ]);
 
-        if (!requiredPermissions) {
-            return true;
-        }
+        if (!requiredPermissions) return true;
 
-        const { user } = context.switchToHttp().getRequest();
+        const request = context.switchToHttp().getRequest();
+        const { user } = request;
 
-        if (!user || !user.role) {
-            return false;
-        }
+        if (!user || !user.role) return false;
 
-        // 1. Super Admin bypass (Database level or hardcoded name)
-        if (user.role.name === 'Super Admin') {
-            return true;
-        }
+        // Super Admin bypass
+        if (user.role === 'Super Admin' || user.role?.name === 'Super Admin') return true;
 
-        // 2. 'all' permission bypass (JSON field in DB)
-        // Adjust this if your permissions JSON structure is different (e.g. array vs object)
-        // Assuming permissions is an object: { users_view: true, ... }
         const userPermissions = user.role.permissions || {};
 
-        if (userPermissions.all === true) {
-            return true;
+        // 'all' permission bypass
+        if (userPermissions.all === true) return true;
+
+        const granted = requiredPermissions.some(p => userPermissions[p] === true);
+
+        if (!granted && user.sub) {
+            // Fire-and-forget — never let audit logging block the request
+            this.auditLogService.log(
+                user.sub,
+                'PERMISSION_DENIED',
+                {
+                    required: requiredPermissions,
+                    role: user.role?.name ?? user.role,
+                    path: request.url,
+                    method: request.method,
+                },
+                'WARNING',
+            ).catch(() => { });
         }
 
-        // 3. Check for specific permissions
-        return requiredPermissions.some((permission) => userPermissions[permission] === true);
+        return granted;
     }
 }

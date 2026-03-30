@@ -11,26 +11,23 @@ export class SeoMetaService {
         };
 
         // 1. Count total content items that exist in this CMS
-        const [totalPosts, totalPages, totalPlots] = await Promise.all([
+        const [totalPosts, totalPages] = await Promise.all([
             safe(() => this.prisma.post.count()),
             safe(() => (this.prisma as any).page.count()),
-            safe(() => this.prisma.plot.count()),
         ]);
-        const combinedTotal = totalPosts + totalPages + totalPlots;
+        const combinedTotal = totalPosts + totalPages;
 
         // 2. Count items with SEO metadata
-        const [postsWithSeo, pagesWithSeo, plotsWithSeo] = await Promise.all([
+        const [postsWithSeo, pagesWithSeo] = await Promise.all([
             safe(() => (this.prisma as any).seoMeta.count({
                 where: { pageType: { in: ['post', 'POST'] }, pageId: { not: null } }
             })),
             safe(() => (this.prisma as any).seoMeta.count({
                 where: { pageType: { in: ['page', 'PAGE'] }, pageId: { not: null } }
             })),
-            // Plots store SEO as a JSON field directly on the Plot model
-            safe(() => (this.prisma as any).plot.count({ where: { seo: { not: null } } })),
         ]);
 
-        const itemsWithSeo = Math.min(combinedTotal, postsWithSeo + pagesWithSeo + plotsWithSeo);
+        const itemsWithSeo = Math.min(combinedTotal, postsWithSeo + pagesWithSeo);
 
         // 3. Count active redirects
         const activeRedirects = await safe(() => this.prisma.redirect.count({ where: { isActive: true } }));
@@ -48,17 +45,13 @@ export class SeoMetaService {
             try { return await fn(); } catch { return []; }
         };
 
-        const [posts, pages, plots] = await Promise.all([
+        const [posts, pages] = await Promise.all([
             safeFind(() => (this.prisma as any).post.findMany({
                 select: { id: true, title: true, slug: true, status: true },
                 orderBy: { updatedAt: 'desc' }
             })),
             safeFind(() => (this.prisma as any).page.findMany({
                 select: { id: true, title: true, slug: true, status: true },
-                orderBy: { updatedAt: 'desc' }
-            })),
-            safeFind(() => (this.prisma as any).plot.findMany({
-                select: { id: true, title: true, slug: true, status: true, seo: true },
                 orderBy: { updatedAt: 'desc' }
             })),
         ]);
@@ -92,14 +85,13 @@ export class SeoMetaService {
         const staticPages = [
             { id: 'static-home', title: 'Home', slug: '/', pageId: 'home' },
             { id: 'static-about', title: 'About Us', slug: '/about', pageId: 'about' },
-            { id: 'static-plots', title: 'Plots Listing', slug: '/plots', pageId: 'plots' },
             { id: 'static-services', title: 'Services', slug: '/services', pageId: 'services' },
             { id: 'static-blog', title: 'Blog Listing', slug: '/blog', pageId: 'blog' },
             { id: 'static-contact', title: 'Contact', slug: '/contact', pageId: 'contact' },
         ];
 
         // Slugs already covered by static pages — exclude to avoid duplicates
-        const reservedSlugs = new Set(['home', 'about', 'plots', 'services', 'blog', 'contact']);
+        const reservedSlugs = new Set(['home', 'about', 'services', 'blog', 'contact']);
         const filteredPages = pages.filter(p => !reservedSlugs.has(p.slug));
 
         return [
@@ -129,15 +121,6 @@ export class SeoMetaService {
                 type: 'post',
                 status: p.status,
                 seo: metaMap.get(`post:${p.id}`) || null,
-                lastModified: new Date(),
-            })),
-            ...plots.map(p => ({
-                id: p.id,
-                title: p.title,
-                slug: `/plots/${p.slug}`,
-                type: 'plot',
-                status: p.status,
-                seo: p.seo || null,
                 lastModified: new Date(),
             })),
         ];

@@ -1,4 +1,5 @@
 import { Controller, Request, Post, UseGuards, Body, Get, BadRequestException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -13,6 +14,7 @@ export class AuthController {
         private usersService: UsersService,
     ) { }
 
+    @Throttle({ default: { ttl: 60000, limit: 10 } })
     @UseGuards(LocalAuthGuard)
     @Post('login')
     async login(@Request() req, @Body() body: { rememberMe?: boolean }) {
@@ -124,6 +126,7 @@ export class AuthController {
     async changePassword(@Request() req, @Body('newPassword') newPass: string) {
         return this.authService.changePassword(req.user.id, newPass);
     }
+    @Throttle({ default: { ttl: 300000, limit: 3 } })
     @Post('forgot-password')
     async forgotPassword(@Body('email') email: string) {
         return this.authService.forgotPassword(email);

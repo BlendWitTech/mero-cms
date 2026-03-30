@@ -8,7 +8,6 @@ import {
     ExclamationCircleIcon,
     PencilIcon,
     MagnifyingGlassIcon,
-    MapPinIcon,
     HomeIcon,
     XMarkIcon,
     ArrowTopRightOnSquareIcon,
@@ -32,11 +31,6 @@ function TypeBadge({ type }: { type: string }) {
     if (type === 'page') return (
         <span className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-100">
             <GlobeAltIcon className="h-3 w-3" /> Page
-        </span>
-    );
-    if (type === 'plot') return (
-        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-            <MapPinIcon className="h-3 w-3" /> Plot
         </span>
     );
     return (
@@ -93,7 +87,7 @@ function InlineSeoEditor({
                             type="text"
                             value={meta.title || ''}
                             onChange={e => setMeta(m => ({ ...m, title: e.target.value }))}
-                            placeholder={`${item.title} | KTM Plots`}
+                            placeholder={`${item.title} | Site Name`}
                             className="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none transition-colors"
                         />
                     </div>
@@ -242,7 +236,7 @@ export default function MetaManagement() {
                         Meta <span className="text-blue-600">Management</span>
                     </h1>
                     <p className="mt-2 text-sm text-slate-600 font-medium">
-                        View and update SEO metadata for all pages, posts, and plots
+                        View and update SEO metadata for all pages and posts
                     </p>
                 </div>
                 <div className="relative w-full sm:w-auto">
@@ -324,8 +318,6 @@ export default function MetaManagement() {
                                                         href={
                                                             item.type === 'post'
                                                                 ? `/dashboard/blog?action=edit&id=${item.id}&from=seo`
-                                                                : item.type === 'plot'
-                                                                ? `/dashboard/plots?action=edit&id=${item.id}&from=seo`
                                                                 : `/dashboard/pages/${item.id}?from=seo`
                                                         }
                                                         className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-blue-600 transition-colors"

@@ -11,11 +11,11 @@ export class MailService {
     constructor(@Inject(forwardRef(() => SettingsService)) private settingsService: SettingsService) { }
 
     /**
-     * Wraps email content in a branded KTM Plots HTML template.
+     * Wraps email content in a branded HTML template.
      * Uses inline styles for maximum email client compatibility.
      */
     buildTemplate(settings: Record<string, any>, content: string, preheader?: string): string {
-        const siteTitle = settings['site_title'] || 'KTM Plots';
+        const siteTitle = settings['site_title'] || 'Mero CMS';
         const primaryColor = settings['primary_color'] || '#CC1414';
         const appBase = (process.env.APP_URL || `http://localhost:${process.env.PORT || 3001}`).replace(/\/$/, '');
         const rawLogoUrl = settings['logo_url'] || null;
@@ -26,7 +26,7 @@ export class MailService {
                 : `${appBase}${rawLogoUrl}`
             : null;
         const year = new Date().getFullYear();
-        const footerText = settings['footer_text'] || `${siteTitle} — Kathmandu Valley's Trusted Land Partner`;
+        const footerText = settings['footer_text'] || siteTitle;
         const copyrightText = settings['copyright_text'] || `© ${year} ${siteTitle}. All rights reserved.`;
         const contactEmail = settings['smtp_from'] || settings['smtp_user'] || '';
         const contactPhone = settings['contact_phone'] || '';
@@ -152,7 +152,7 @@ export class MailService {
         try {
             const settings = await this.settingsService.findAll();
             const provider = (settings['email_provider'] as string) || process.env.EMAIL_PROVIDER || 'smtp';
-            const siteTitle = settings['site_title'] || 'KTM Plots';
+            const siteTitle = settings['site_title'] || 'Mero CMS';
             const fromEmail = settings['smtp_from'] || settings['smtp_user'] || process.env.SMTP_FROM;
 
             if (!fromEmail) {

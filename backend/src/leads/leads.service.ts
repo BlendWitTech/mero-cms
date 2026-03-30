@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { SettingsService } from '../settings/settings.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 @Injectable()
 export class LeadsService {
@@ -11,6 +12,7 @@ export class LeadsService {
         private prisma: PrismaService,
         private mailService: MailService,
         private settingsService: SettingsService,
+        private webhooksService: WebhooksService,
     ) { }
 
     async create(createLeadDto: any) {
@@ -20,6 +22,9 @@ export class LeadsService {
         this.sendLeadNotification(lead).catch(err =>
             this.logger.warn(`Lead notification email failed: ${err.message}`)
         );
+
+        // Fire webhooks (fire-and-forget)
+        this.webhooksService.dispatch('lead.created', { id: lead.id, name: lead.name, email: lead.email, source: lead.originPage }).catch(() => { });
 
         return lead;
     }
@@ -128,6 +133,21 @@ export class LeadsService {
             where: { id },
             data: { status },
         });
+    }
+
+    async exportCsv(status?: string): Promise<string> {
+        const where: any = {};
+        if (status) where.status = status;
+        const leads = await this.prisma.lead.findMany({ where, orderBy: { createdAt: 'desc' } });
+        const headers = ['ID', 'Name', 'Email', 'Phone', 'Message', 'Source', 'Status', 'Created At'];
+        const escape = (v: any) => {
+            const s = v == null ? '' : String(v).replace(/"/g, '""');
+            return /[",\n\r]/.test(s) ? `"${s}"` : s;
+        };
+        const rows = leads.map(l =>
+            [l.id, l.name, l.email, (l as any).phone, (l as any).message, (l as any).originPage, l.status, l.createdAt.toISOString()].map(escape).join(',')
+        );
+        return [headers.join(','), ...rows].join('\r\n');
     }
 
     async getStats() {

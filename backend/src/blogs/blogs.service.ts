@@ -3,13 +3,16 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { SeoMetaService } from '../seo-meta/seo-meta.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
+import { sanitizeContent } from '../common/sanitize.util';
 
 @Injectable()
 export class BlogsService {
     constructor(
         private prisma: PrismaService,
         private seoMetaService: SeoMetaService,
-        private notificationsService: NotificationsService
+        private notificationsService: NotificationsService,
+        private webhooksService: WebhooksService,
     ) { }
 
     async create(authorId: string, createPostDto: any) {
@@ -19,7 +22,7 @@ export class BlogsService {
         const data: any = {
             title,
             slug,
-            content,
+            content: sanitizeContent(content),
             excerpt,
             coverImage,
             status: status || 'DRAFT',
@@ -63,6 +66,10 @@ export class BlogsService {
             link: `/dashboard/blog?edit=${post.id}`,
             targetRole: 'Admin'
         });
+
+        if (post.status === 'PUBLISHED') {
+            this.webhooksService.dispatch('post.published', { id: post.id, title: post.title, slug: post.slug }).catch(() => { });
+        }
 
         return post;
     }
@@ -133,7 +140,7 @@ export class BlogsService {
         const data: any = {
             title,
             slug,
-            content,
+            content: sanitizeContent(content),
             excerpt,
             coverImage,
             status,
@@ -179,6 +186,9 @@ export class BlogsService {
             targetRole: 'Admin'
         });
 
+        const event = post.status === 'PUBLISHED' ? 'post.published' : 'post.updated';
+        this.webhooksService.dispatch(event, { id: post.id, title: post.title, slug: post.slug, status: post.status }).catch(() => { });
+
         return post;
     }
 
@@ -193,8 +203,61 @@ export class BlogsService {
                 targetRole: 'Admin'
             });
         }
-        return (this.prisma as any).post.delete({
+        const deleted = await (this.prisma as any).post.delete({ where: { id } });
+        this.webhooksService.dispatch('post.deleted', { id, title: post?.title }).catch(() => { });
+        return deleted;
+    }
+
+    async bulkDelete(ids: string[]) {
+        // Clean up SEO meta for each post
+        for (const id of ids) {
+            await this.seoMetaService.deleteByPage('post', id).catch(() => { });
+        }
+        const result = await (this.prisma as any).post.deleteMany({ where: { id: { in: ids } } });
+        return { deleted: result.count };
+    }
+
+    async bulkUpdateStatus(ids: string[], status: string) {
+        const result = await (this.prisma as any).post.updateMany({
+            where: { id: { in: ids } },
+            data: {
+                status,
+                ...(status === 'PUBLISHED' ? { publishedAt: new Date() } : {}),
+            },
+        });
+        return { updated: result.count };
+    }
+
+    async duplicate(id: string, authorId: string) {
+        const post = await (this.prisma as any).post.findUnique({
             where: { id },
+            include: {
+                categories: { select: { id: true } },
+                tags: { select: { id: true } },
+            },
+        });
+        if (!post) throw new Error(`Post ${id} not found`);
+
+        const baseSlug = `${post.slug}-copy`;
+        let slug = baseSlug;
+        let suffix = 1;
+        while (await (this.prisma as any).post.findUnique({ where: { slug } })) {
+            slug = `${baseSlug}-${suffix++}`;
+        }
+
+        return (this.prisma as any).post.create({
+            data: {
+                title: `${post.title} (Copy)`,
+                slug,
+                content: post.content,
+                excerpt: post.excerpt,
+                coverImage: post.coverImage,
+                status: 'DRAFT',
+                featured: false,
+                authorId,
+                categories: { connect: post.categories.map((c: any) => ({ id: c.id })) },
+                tags: { connect: post.tags.map((t: any) => ({ id: t.id })) },
+            },
         });
     }
 

@@ -4,9 +4,10 @@ import { LeadsController } from './leads.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MailModule } from '../mail/mail.module';
 import { SettingsModule } from '../settings/settings.module';
+import { WebhooksModule } from '../webhooks/webhooks.module';
 
 @Module({
-    imports: [PrismaModule, MailModule, SettingsModule],
+    imports: [PrismaModule, MailModule, SettingsModule, WebhooksModule],
     controllers: [LeadsController],
     providers: [LeadsService],
     exports: [LeadsService],
