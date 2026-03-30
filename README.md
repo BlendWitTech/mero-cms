@@ -1,11 +1,7 @@
-> **Branch:** `develop` — active development. Unstable. Do not use for client deployments.
-> For stable agency use, see the [`main`](https://github.com/BlendWitTech/mero-cms/tree/main) branch.
-
----
-
-# Mero CMS — Developer Guide
+# Mero CMS
 
 **Mero CMS** is a modular, self-hosted CMS built by [Blendwit Tech](https://blendwit.com).
+See [`docs/onboarding.md`](docs/onboarding.md) for the full deployment guide.
 
 | Part | Stack | Default port |
 |------|-------|-------------|
