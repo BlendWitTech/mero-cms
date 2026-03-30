@@ -39,18 +39,8 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { ModuleEnabledGuard } from './setup/module-enabled.guard';
 import { TierGuard } from './auth/tier.guard';
 
-// ── DEMO MODE (optional) ──────────────────────────────────────────────────────
-// These two imports are the ONLY references to demo code outside src/demo/.
-// To ship a clean production build to agencies / clients:
-//   1. Delete the entire src/demo/ directory.
-//   2. Delete these two import lines below.
-//   3. Remove the conditional spread entries further down in this file.
-//   4. Delete frontend/src/components/demo/ and frontend/src/app/token-login/.
-import { DemoModule } from './demo/demo.module';
-import { DemoGuard } from './demo/demo.guard';
-// ─────────────────────────────────────────────────────────────────────────────
 
-const IS_DEMO = process.env.DEMO_MODE === 'true';
+const IS_DEMO = false;
 
 /**
  * Read ENABLED_MODULES once at startup.
@@ -84,7 +74,6 @@ function when(...keys: string[]) {
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     // ── Core modules — always loaded ──────────────────────────────────────────
     PrismaModule,
-    ...(IS_DEMO ? [DemoModule] : []),  // ← demo: remove this line when deleting src/demo/
     UsersModule,
     AccessControlModule,
     AuthModule,
@@ -130,7 +119,6 @@ function when(...keys: string[]) {
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
-    ...(IS_DEMO ? [{ provide: APP_GUARD, useClass: DemoGuard }] : []),  // ← demo: remove when deleting src/demo/
     { provide: APP_GUARD, useClass: TierGuard },
     { provide: APP_GUARD, useClass: ModuleEnabledGuard },
   ],
