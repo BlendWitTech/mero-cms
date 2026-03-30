@@ -29,7 +29,7 @@ All work happens on `develop`. When staging is stable, open a PR from `develop` 
 ```bash
 git clone https://github.com/BlendWitTech/blendwit-cms.git
 cd blendwit-cms
-git checkout develop
+git checkout main
 ```
 
 ### Step 2 — Backend setup

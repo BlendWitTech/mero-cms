@@ -1,14 +1,17 @@
 // Depends on: blogs (Post model), _core (User model)
 model Comment {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   content     String
   authorName  String
   authorEmail String
-  status      String   @default("PENDING")
+  status      String    @default("PENDING")
   postId      String
   userId      String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user        User?    @relation(fields: [userId], references: [id])
+  parentId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  post        Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id])
+  parent      Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     Comment[] @relation("CommentReplies")
 }

@@ -251,7 +251,7 @@ export default function AnalyticsPage() {
                         <div className="bg-white border-2 border-slate-200 rounded-2xl p-8">
                             <h2 className="text-xl font-black text-slate-900 mb-6">Top Content</h2>
                             <div className="overflow-hidden">
-                                <table className="w-full text-left">
+                                <table className="w-full min-w-[600px] text-left">
                                     <thead>
                                         <tr className="border-b border-slate-100">
                                             <th className="pb-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Page Path</th>
@@ -286,38 +286,38 @@ export default function AnalyticsPage() {
                 </div>
             ) : null}
 
-            {/* Sidebar Configuration Panel */}
+            {/* Centered Configuration Modal */}
             <div
-                className={`fixed inset-0 z-50 transition-opacity duration-300 ${isEditing ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 transition-all duration-300 ${isEditing ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
             >
                 {/* Backdrop */}
                 <div
-                    className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                    className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
                     onClick={handleCancel}
                 />
 
-                {/* Panel */}
+                {/* Modal Container */}
                 <div
-                    className={`absolute right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl transition-transform duration-300 transform ${isEditing ? 'translate-x-0' : 'translate-x-full'}`}
+                    className={`relative w-full max-w-3xl max-h-[90vh] flex flex-col bg-white rounded-[2rem] shadow-2xl transition-all duration-300 transform ${isEditing ? 'translate-y-0 scale-100' : 'translate-y-8 scale-95'}`}
                 >
-                    <div className="flex flex-col h-full">
-                        {/* Header */}
-                        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                            <div>
-                                <h2 className="text-xl font-black text-slate-900">Configuration</h2>
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Analytics & Tracking</p>
-                            </div>
-                            <button
-                                onClick={handleCancel}
-                                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                            >
-                                <XMarkIcon className="w-6 h-6 text-slate-600" />
-                            </button>
+                    {/* Header */}
+                    <div className="p-6 md:p-8 border-b border-slate-100 flex items-center justify-between shrink-0">
+                        <div>
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Configuration</h2>
+                            <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mt-1">Analytics Tracking Settings</p>
                         </div>
+                        <button
+                            onClick={handleCancel}
+                            className="p-2 bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-xl transition-all group"
+                        >
+                            <XMarkIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        </button>
+                    </div>
 
-                        {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-8">
-                            <section className="space-y-6">
+                    {/* Content */}
+                    <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 custom-scrollbar">
+                        <section className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-bold text-slate-900 mb-2">
                                         GA4 Measurement ID
@@ -326,117 +326,122 @@ export default function AnalyticsPage() {
                                         type="text"
                                         value={config.ga4MeasurementId || ''}
                                         onChange={(e) => setConfig({ ...config, ga4MeasurementId: e.target.value })}
-                                        placeholder="G-XXXXXXXXXX"
+                                        placeholder="G-XXXXXXX"
                                         className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-mono text-sm focus:outline-none focus:border-blue-600 bg-slate-50 focus:bg-white transition-all"
                                     />
                                     <p className="mt-2 text-[10px] text-slate-500 font-bold uppercase tracking-tight">
-                                        From Data Stream settings
+                                        Data Stream settings
                                     </p>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-bold text-slate-900 mb-2">
-                                            Property ID
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={config.ga4PropertyId || ''}
-                                            onChange={(e) => setConfig({ ...config, ga4PropertyId: e.target.value })}
-                                            className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-mono text-sm focus:outline-none focus:border-blue-600 bg-slate-50 focus:bg-white transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-slate-900 mb-2">
-                                            Service Email
-                                        </label>
-                                        <input
-                                            type="email"
-                                            value={config.serviceAccountEmail || ''}
-                                            onChange={(e) => setConfig({ ...config, serviceAccountEmail: e.target.value })}
-                                            className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-mono text-xs focus:outline-none focus:border-blue-600 bg-slate-50 focus:bg-white transition-all"
-                                        />
-                                    </div>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-bold text-slate-900 mb-2">
-                                        Private Key
+                                        Property ID
                                     </label>
-                                    <textarea
-                                        value={config.privateKey || ''}
-                                        onChange={(e) => setConfig({ ...config, privateKey: e.target.value })}
-                                        rows={12}
-                                        className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-mono text-[10px] focus:outline-none focus:border-blue-600 bg-slate-50 focus:bg-white transition-all shadow-inner"
-                                        placeholder="Paste the full -----BEGIN PRIVATE KEY----- block here..."
+                                    <input
+                                        type="text"
+                                        value={config.ga4PropertyId || ''}
+                                        onChange={(e) => setConfig({ ...config, ga4PropertyId: e.target.value })}
+                                        className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-mono text-sm focus:outline-none focus:border-blue-600 bg-slate-50 focus:bg-white transition-all"
+                                        placeholder="123456789"
                                     />
                                 </div>
+                            </div>
 
-                                <div className="pt-4 border-t border-slate-100">
-                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Integrations</h3>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-slate-900 mb-2 uppercase tracking-tight">Search Console URL</label>
-                                            <input
-                                                type="text"
-                                                value={config.gscPropertyUrl || ''}
-                                                onChange={(e) => setConfig({ ...config, gscPropertyUrl: e.target.value })}
-                                                className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-mono text-sm focus:outline-none focus:border-blue-600 bg-slate-50 focus:bg-white transition-all"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-slate-900 mb-2 uppercase tracking-tight">Facebook Pixel ID</label>
-                                            <input
-                                                type="text"
-                                                value={config.fbPixelId || ''}
-                                                onChange={(e) => setConfig({ ...config, fbPixelId: e.target.value })}
-                                                className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-mono text-sm focus:outline-none focus:border-blue-600 bg-slate-50 focus:bg-white transition-all"
-                                            />
-                                        </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-900 mb-2">
+                                    Service Email
+                                </label>
+                                <input
+                                    type="email"
+                                    value={config.serviceAccountEmail || ''}
+                                    onChange={(e) => setConfig({ ...config, serviceAccountEmail: e.target.value })}
+                                    className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-mono text-sm focus:outline-none focus:border-blue-600 bg-slate-50 focus:bg-white transition-all"
+                                    placeholder="analytics-service@project.iam.gserviceaccount.com"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-slate-900 mb-2 flex items-center justify-between">
+                                    <span>Private Key</span>
+                                    <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Secret</span>
+                                </label>
+                                <textarea
+                                    value={config.privateKey || ''}
+                                    onChange={(e) => setConfig({ ...config, privateKey: e.target.value })}
+                                    rows={6}
+                                    className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-mono text-[10px] focus:outline-none focus:border-blue-600 bg-slate-50 focus:bg-white transition-all shadow-inner"
+                                    placeholder="Paste the full -----BEGIN PRIVATE KEY----- block here..."
+                                />
+                            </div>
+
+                            <div className="pt-6 border-t border-slate-100">
+                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Integrations</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-900 mb-2 uppercase tracking-tight">Search Console URL</label>
+                                        <input
+                                            type="text"
+                                            value={config.gscPropertyUrl || ''}
+                                            onChange={(e) => setConfig({ ...config, gscPropertyUrl: e.target.value })}
+                                            className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-mono text-sm focus:outline-none focus:border-blue-600 bg-slate-50 focus:bg-white transition-all"
+                                            placeholder="https://example.com"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-900 mb-2 uppercase tracking-tight">Facebook Pixel ID</label>
+                                        <input
+                                            type="text"
+                                            value={config.fbPixelId || ''}
+                                            onChange={(e) => setConfig({ ...config, fbPixelId: e.target.value })}
+                                            className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl font-mono text-sm focus:outline-none focus:border-blue-600 bg-slate-50 focus:bg-white transition-all"
+                                            placeholder="Pixel ID"
+                                        />
                                     </div>
                                 </div>
-
-                                <div className="flex items-center gap-3 p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
-                                    <input
-                                        type="checkbox"
-                                        id="isActiveSidebar"
-                                        checked={config.isActive}
-                                        onChange={(e) => setConfig({ ...config, isActive: e.target.checked })}
-                                        className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-600"
-                                    />
-                                    <label htmlFor="isActiveSidebar" className="text-sm font-bold text-blue-900">
-                                        Enable live analytics tracking
-                                    </label>
-                                </div>
-                            </section>
-                        </div>
-
-                        {/* Footer */}
-                        <div className="p-6 border-t border-slate-100 bg-slate-50 space-y-4">
-                            <div className="flex gap-4">
-                                <button
-                                    onClick={handleSave}
-                                    disabled={isSaving}
-                                    className="flex-1 px-6 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 disabled:opacity-50"
-                                >
-                                    {isSaving ? 'Saving...' : 'Save Settings'}
-                                </button>
-                                <button
-                                    onClick={handleCancel}
-                                    disabled={isSaving}
-                                    className="px-6 py-4 bg-white border-2 border-slate-200 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all"
-                                >
-                                    Cancel
-                                </button>
                             </div>
-                            <button
-                                onClick={handleTestConnection}
-                                disabled={isTesting}
-                                className="w-full px-4 py-3 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all"
-                            >
-                                {isTesting ? 'Testing...' : 'Test GA4 Connection'}
-                            </button>
-                        </div>
+
+                            <div className="flex items-center gap-3 p-4 bg-blue-50/50 rounded-2xl border border-blue-100 mt-2">
+                                <input
+                                    type="checkbox"
+                                    id="isActiveSidebar"
+                                    checked={config.isActive}
+                                    onChange={(e) => setConfig({ ...config, isActive: e.target.checked })}
+                                    className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-600 bg-white"
+                                />
+                                <label htmlFor="isActiveSidebar" className="text-sm font-bold text-blue-900 cursor-pointer select-none">
+                                    Enable live analytics tracking globally
+                                </label>
+                            </div>
+                        </section>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="p-6 md:p-8 border-t border-slate-100 bg-slate-50 rounded-b-[2rem] flex flex-col sm:flex-row items-center gap-4 shrink-0">
+                        <button
+                            onClick={handleTestConnection}
+                            disabled={isTesting}
+                            className="w-full sm:w-auto px-6 py-4 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 disabled:opacity-50"
+                        >
+                            {isTesting ? 'Testing...' : 'Test GA4 Connection'}
+                        </button>
+                        
+                        <div className="flex-1" />
+                        
+                        <button
+                            onClick={handleCancel}
+                            disabled={isSaving}
+                            className="w-full sm:w-auto px-6 py-4 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all disabled:opacity-50"
+                        >
+                            Discard
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0"
+                        >
+                            {isSaving ? 'Saving...' : 'Save Settings'}
+                        </button>
                     </div>
                 </div>
             </div>

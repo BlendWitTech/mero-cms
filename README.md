@@ -1,205 +1,231 @@
 # Mero CMS
 
 **Mero CMS** is a modular, self-hosted content management system built by [Blendwit Tech](https://blendwit.com).
-Enable only the modules your project needs — blogs, services, team, testimonials, SEO, analytics, and more — then deploy a theme that automatically seeds its own demo content.
 
-> **License:** Commercial proprietary software. Access requires a paid license or approved contributor status.
-> Contact [hello@blendwit.com](mailto:hello@blendwit.com) or visit [blendwit.com/mero-cms/pricing](https://blendwit.com/mero-cms/pricing).
+It consists of three parts that are always deployed separately:
 
----
+| Part | What it is | Deployed on |
+|------|-----------|-------------|
+| **Backend** (`backend/`) | NestJS REST API + admin logic | Railway |
+| **Dashboard** (`frontend/`) | Next.js admin panel | Vercel |
+| **Theme** (separate repo) | Client's public-facing website | Vercel |
 
-## What It Does
-
-- **Modular backend** — enable/disable content modules without touching code
-- **Setup wizard** — first-run wizard creates the database, admin account, and seeds demo content
-- **Theme system** — upload ZIP themes; each theme declares its required modules and seeds its own data
-- **Role-based access control** — Super Admin, Admin, and custom roles with per-permission granularity
-- **Public API** — themes fetch all data from a single `/public/site-data` endpoint
-- **SEO toolkit** — per-page meta tags, sitemap, robots.txt, and URL redirects
-- **Analytics** — Google Analytics 4 dashboard embedded in the admin UI
-- **Media manager** — upload and manage images and files used across all content
-- **Demo playground** — visitors sign in with Google/GitHub/LinkedIn and explore the CMS before purchasing
+> The **theme is never part of this repo.** Fork [`mero-cms-theme-starter`](https://github.com/BlendWitTech/mero-cms-theme-starter) to build each client's theme separately.
 
 ---
 
-## Tech Stack
+## For Agencies — Delivering to a Client
 
-| Layer | Technology |
-|---|---|
-| Backend API | NestJS, Prisma ORM, PostgreSQL |
-| Admin UI | Next.js 15, React 19, Tailwind CSS |
-| Themes | Next.js 15 (standalone apps) |
-| Demo App | Next.js 15, NextAuth.js |
-| Authentication | JWT, bcrypt, 2FA (TOTP) |
-| Infrastructure | Docker, Railway (backend), Vercel (frontend + demo) |
-| CI/CD | GitHub Actions |
+There are three ways to deliver Mero CMS to a client. Pick the one that fits.
 
 ---
 
-## Project Structure
+### Model A — You manage everything (recommended)
+
+You host the CMS. Client gets a login and a live website. They never touch a server.
 
 ```
-blendwit-cms/
-├── backend/                        # NestJS REST API — port 3001
-│   ├── prisma/
-│   │   ├── modules/                # Per-module Prisma schema fragments
-│   │   └── schema.prisma           # Assembled schema (generated)
-│   ├── Dockerfile                  # Multi-stage Docker build for Railway
-│   └── src/
-│       ├── auth/                   # JWT auth, guards, 2FA
-│       ├── users/                  # User management
-│       ├── roles/                  # Roles and permissions
-│       ├── setup/                  # Setup wizard logic
-│       ├── themes/                 # Theme discovery, activation, ZIP upload
-│       ├── public/                 # Public read-only API for themes
-│       ├── blogs/                  # Blog posts
-│       ├── categories/             # Blog categories
-│       ├── tags/                   # Blog tags
-│       ├── comments/               # Reader comments
-│       ├── pages/                  # Static pages
-│       ├── menus/                  # Navigation menus
-│       ├── services/               # Service offerings
-│       ├── testimonials/           # Client testimonials
-│       ├── team/                   # Team member profiles
-│       ├── leads/                  # Contact form leads
-│       ├── media/                  # File/image uploads
-│       ├── seo-meta/               # Per-page SEO metadata
-│       ├── redirects/              # URL redirect rules
-│       ├── sitemap/                # Sitemap generation
-│       ├── robots/                 # robots.txt management
-│       ├── analytics/              # GA4 integration
-│       ├── notifications/          # In-app admin notifications
-│       ├── audit-log/              # Activity audit trail
-│       ├── invitations/            # Contributor invite system
-│       ├── mail/                   # Email (SMTP) service
-│       └── settings/               # Site-wide settings store
-├── frontend/                       # Next.js admin dashboard — port 3000
-│   └── src/
-│       ├── app/
-│       │   ├── setup/              # Setup wizard pages
-│       │   └── (admin)/dashboard/  # All dashboard pages
-│       ├── components/             # Shared UI components
-│       ├── lib/                    # API client, utilities
-│       └── context/                # Auth, modules, notifications context
-├── demo/                           # Demo playground app — port 3002
-│   └── src/
-│       ├── app/
-│       │   ├── api/auth/           # NextAuth.js OAuth handlers
-│       │   ├── playground/         # Live CMS demo tour
-│       │   └── pricing/            # Pricing page with lead capture
-│       └── components/
-├── themes/                         # Built-in themes (auto-discovered)
-│   └── cms-starter/                # CMS marketing website theme
-├── scripts/
-│   ├── build-schema.js             # Assembles Prisma schema from modules
-│   ├── zip-theme.js                # Packages a theme into a ZIP for upload
-│   └── dev-theme.js                # Starts a theme in dev mode
-├── .github/
-│   └── workflows/
-│       ├── ci.yml                  # Build validation on every push/PR
-│       ├── deploy-staging.yml      # Staging status on develop push
-│       └── deploy-production.yml   # Production approval gate on main push
-├── railway.json                    # Railway DOCKERFILE builder config
-├── LICENSE                         # Commercial proprietary license
-├── README.md                       # This file
-├── SETUP.md                        # Full deployment guide
-├── DEVELOPER_GUIDE.md              # Architecture and coding patterns
-├── CONTRIBUTING.md                 # Contributor rules
-└── PRICING.md                      # Pricing tiers and license terms
+You → Deploy backend on Railway        (mero-cms @ v1.1.0, root: backend/)
+You → Deploy dashboard on Vercel       (mero-cms @ v1.1.0, root: frontend/)
+You → Fork mero-cms-theme-starter      → build client design → deploy on Vercel
+You → Run setup wizard, seed content
+You → Hand client: dashboard URL + login + live site URL
 ```
 
----
+**Client gets:** A working CMS and live website. No server knowledge needed.
+**You manage:** Hosting, upgrades, backups. Charge a monthly retainer.
 
-## Available Modules
-
-Selected during setup wizard — toggle later in **Dashboard → Settings → Modules**.
-
-| Module | Description |
-|---|---|
-| Blogs | Blog posts with rich content |
-| Categories | Taxonomy for blog posts |
-| Tags | Tag-based blog post taxonomy |
-| Comments | Reader comments on blog posts |
-| Pages | Static page management |
-| Menus | Dynamic nested navigation menus |
-| Services | Service or product listings |
-| Testimonials | Client testimonials and reviews |
-| Team | Team member profiles |
-| Leads | Contact form submission capture |
-| Media | File and image upload management |
-| SEO Meta | Per-page title, description, OG tags |
-| Redirects | URL redirect rules |
-| Sitemap | Auto-generated XML sitemap |
-| Robots | Editable robots.txt |
-| Analytics | Google Analytics 4 dashboard |
-| Themes | Theme upload, activation, and management |
-
-> Specialty modules (e.g. real estate plots) are shipped inside individual themes, not in the base CMS.
+**To upgrade a client later:**
+- Railway → Service → Settings → Source → change tag `v1.1.0` → `v1.2.0`
+- Vercel → Settings → Git → update pinned tag → redeploy
+- Theme is unaffected (separate repo, separate deployment)
 
 ---
 
-## Theme System
+### Model B — Client self-hosts, you deploy
 
-Themes are standalone Next.js apps that call the CMS public API. Fully self-contained — each theme declares what it needs and seeds its own content.
+Client owns the Railway/Vercel accounts. You deploy on their behalf.
 
-**How a theme works:**
-1. `theme.json` declares slug, required modules, and seed data
-2. Backend auto-discovers themes in the `themes/` directory at startup
-3. Admin clicks **Setup** → backend seeds menus, posts, testimonials, services, etc.
-4. Admin clicks **Activate** → backend marks it as the active theme
-5. Theme fetches all data from `GET /public/site-data`
-
-**Packaging a custom theme for upload:**
-```bash
-node scripts/zip-theme.js cms-starter
-# Output: themes/cms-starter.zip
-# Then: Dashboard → Appearance → Themes → Upload Theme
+```
+Client → Creates Railway + Vercel accounts, gives you access
+You    → Deploy backend on their Railway   (mero-cms @ v1.1.0)
+You    → Deploy dashboard on their Vercel  (mero-cms @ v1.1.0)
+You    → Build and deploy theme on Vercel  (separate theme repo)
+You    → Run setup wizard → hand over credentials
+Client → Owns all infrastructure going forward
 ```
 
----
-
-## Environments
-
-| Environment | Branch | Backend | Frontend |
-|---|---|---|---|
-| Local Development | any | localhost:3001 | localhost:3000 |
-| Staging | `develop` | Railway (staging service) | Vercel preview URL |
-| Production | `main` | Railway (production service) | Vercel production domain |
+**Client gets:** Full ownership of hosting and code.
+**To upgrade:** Client (or you) updates the pinned tag and redeploys.
 
 ---
 
-## Quick Start (Local)
+### Model C — Client pulls and self-deploys
+
+For technical clients who want full control from day one.
+
+```
+Client → Clones mero-cms at tag v1.1.0
+Client → Deploys backend (Railway/VPS) + dashboard (Vercel) themselves
+You    → Build the theme → hand ZIP or separate repo to client
+Client → Uploads theme ZIP via dashboard → Setup → Activate
+Client → Manages hosting, upgrades, backups themselves
+```
+
+**Client gets:** Full source access and self-management.
+
+---
+
+## For Developers — Local Setup
+
+### Prerequisites
+- Node.js 20+
+- PostgreSQL (or Docker)
+
+### 1. Clone and install
 
 ```bash
-# 1. Clone (requires license or contributor access)
-git clone https://github.com/BlendWitTech/blendwit-cms.git
-cd blendwit-cms
-
-# 2. Backend
-cd backend
-cp .env.development.example .env
-# Edit .env: fill in DATABASE_URL and JWT_SECRET
+git clone https://github.com/BlendWitTech/mero-cms.git
+cd mero-cms
 npm install
-npx prisma migrate dev
-npm run start:dev
-
-# 3. Frontend (new terminal)
-cd frontend
-cp .env.development.example .env.local
-npm install
-npm run dev
-
-# 4. Open http://localhost:3000/setup and complete the wizard
 ```
 
-Full deployment guide → [SETUP.md](SETUP.md)
-Architecture and patterns → [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)
-Pricing → [PRICING.md](PRICING.md)
+### 2. Configure environment
+
+```bash
+cp backend/.env.example backend/.env
+# Edit: DATABASE_URL, JWT_SECRET, SMTP settings
+
+cp frontend/.env.local.example frontend/.env.local
+# Edit: NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+### 3. Database
+
+```bash
+npm run db:migrate    # Run migrations
+npm run db:seed       # Seed default roles (optional)
+```
+
+### 4. Start dev servers
+
+```bash
+npm run dev           # Backend on :3001 + Dashboard on :3000
+```
+
+Open `http://localhost:3000` → complete the setup wizard.
+
+### 5. Run a theme locally
+
+```bash
+# In a separate terminal, inside your theme repo:
+CMS_API_URL=http://localhost:3001 npm run dev
+# Theme runs on http://localhost:3002
+```
 
 ---
 
-## License
+## Architecture
 
-Commercial proprietary software — Copyright (c) 2024–2026 Blendwit Tech. All rights reserved.
-Unauthorized use, cloning, or distribution is prohibited without a valid license.
-See [LICENSE](LICENSE) for full terms.
+```
+mero-cms/                        ← This repo (engine)
+  backend/                       ← NestJS API  → Railway
+  frontend/                      ← Admin dashboard → Vercel
+  themes/
+    blank/                       ← Minimal built-in placeholder (always present)
+  demo/                          ← Shared demo site (ONE deployment, never per client)
+
+mero-cms-theme-starter/          ← Fork this for every new client theme
+  src/lib/cms.ts                 ← CMS data fetching (do not modify)
+  src/app/                       ← Pages: Home, Blog, [slug]
+  src/app/api/revalidate/        ← Cache invalidation endpoint
+  theme.json                     ← Theme metadata + seed data
+
+mero-cms-client-starter/         ← Fork this for every new client onboarding
+  SETUP.md                       ← Step-by-step deployment checklist
+  client.md                      ← Client contacts, deployment URLs, notes
+  .env.backend.example           ← All Railway backend env vars
+  .env.frontend.example          ← Vercel dashboard env vars
+  .env.theme.example             ← Vercel theme env vars
+```
+
+---
+
+## Environment Variables
+
+### Backend (Railway)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `JWT_SECRET` | Yes | Long random string for auth tokens |
+| `FRONTEND_URL` | Yes | Dashboard Vercel URL (for invite emails) |
+| `CORS_ORIGINS` | Yes | Comma-separated allowed origins |
+| `CORS_VERCEL_PROJECT` | No | Vercel project name (allows all preview URLs) |
+| `THEME_URL` | Yes | Client's deployed theme Vercel URL |
+| `REVALIDATE_SECRET` | Yes | Shared secret for cache invalidation |
+| `EMAIL_PROVIDER` | No | `smtp` (default) or `resend` |
+| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | For SMTP | Gmail or any SMTP |
+| `RESEND_API_KEY` | For Resend | Resend.com API key |
+
+### Dashboard (Vercel)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_API_URL` | Yes | Backend Railway public URL |
+
+### Theme (Vercel)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `CMS_API_URL` | Yes | Backend Railway public URL |
+| `NEXT_PUBLIC_SITE_URL` | Yes | Theme's own public URL |
+| `REVALIDATE_SECRET` | Yes | Must match backend's `REVALIDATE_SECRET` |
+
+---
+
+## Stable Releases
+
+| Tag | Status | Use for |
+|-----|--------|---------|
+| `v1.1.0` | Current stable | All new client deployments |
+| `v1.0.0` | Initial release | — |
+
+Always pin client deployments to a specific tag in Railway and Vercel.
+**Never point a client's production deployment to `main`.**
+
+---
+
+## Modules
+
+Enable only what each client needs via `ENABLED_MODULES` env var on Railway:
+
+```
+ENABLED_MODULES=blogs,services,testimonials,team,leads,seo,analytics,themes,menus,categories,comments,redirects,robots,sitemap
+```
+
+---
+
+## Onboarding a New Client (Quick Reference)
+
+```
+1. Fork mero-cms-client-starter  → client-[name]  (private repo)
+2. Follow SETUP.md in that repo
+3. Fork mero-cms-theme-starter   → [name]-theme
+4. Build client design → fill theme.json → deploy to Vercel
+5. Set THEME_URL in Railway backend env → redeploy
+6. Open dashboard → Setup wizard → connect theme → done
+```
+
+Full checklist: [mero-cms-client-starter/SETUP.md](https://github.com/BlendWitTech/mero-cms-client-starter)
+
+---
+
+## Demo Site
+
+`demo/` is deployed **once** as a shared sales/demo site.
+**Never deploy it per client.** See [`demo/DEMO-ONLY.md`](demo/DEMO-ONLY.md).
+
+---
+
+Built by [Blendwit Tech](https://blendwit.com)

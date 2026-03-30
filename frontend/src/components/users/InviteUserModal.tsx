@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
 import { apiRequest } from '@/lib/api';
 import {
@@ -64,16 +65,17 @@ export default function InviteUserModal({ isOpen, onClose, onInvite }: InviteUse
             try {
                 const [rolesData, userData] = await Promise.all([
                     apiRequest('/roles'),
-                    apiRequest('/users/profile')
+                    apiRequest('/auth/profile'),
                 ]);
 
                 setCurrentUser(userData);
 
+                const isSuperAdmin = userData?.role?.name === 'Super Admin' || userData?.role?.level === 0;
+                const currentLevel = userData?.role?.level ?? 99;
                 const filteredRoles = Array.isArray(rolesData) ? rolesData.filter((r: any) => {
-                    if (userData.role.level === 0) {
-                        return r.level !== 0;
-                    }
-                    return r.level > userData.role.level;
+                    if (isSuperAdmin) return r.name !== 'Super Admin'; // super admin assigns any non-super-admin role
+                    if (r.level == null) return true;
+                    return r.level > currentLevel; // others can only assign strictly lower privilege roles
                 }) : [];
 
                 setRoles(filteredRoles);
@@ -98,8 +100,6 @@ export default function InviteUserModal({ isOpen, onClose, onInvite }: InviteUse
     }, [isOpen]);
 
     if (!isOpen || !mounted) return null;
-
-    const { createPortal } = require('react-dom');
 
     const modalContent = (
         <React.Fragment>
@@ -145,20 +145,29 @@ export default function InviteUserModal({ isOpen, onClose, onInvite }: InviteUse
 
                     <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-6">
                         {/* Role Selection */}
-                        <div className="grid grid-cols-2 gap-3 p-1.5 bg-slate-50 rounded-2xl border border-slate-100 max-h-48 overflow-y-auto">
-                            {roles.map((r) => (
-                                <button
-                                    key={r.id}
-                                    type="button"
-                                    onClick={() => setRoleId(r.id)}
-                                    className={`px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${roleId === r.id
-                                        ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200'
-                                        : 'text-slate-500 hover:text-slate-900'
-                                        }`}
-                                >
-                                    {r.name}
-                                </button>
-                            ))}
+                        <div>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Assign Role <span className="text-red-500">*</span></label>
+                            {roles.length === 0 ? (
+                                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs font-semibold text-amber-700">
+                                    No assignable roles available. Please create a role first before sending invitations.
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-3 p-1.5 bg-slate-50 rounded-2xl border border-slate-100 max-h-48 overflow-y-auto">
+                                    {roles.map((r) => (
+                                        <button
+                                            key={r.id}
+                                            type="button"
+                                            onClick={() => setRoleId(r.id)}
+                                            className={`px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${roleId === r.id
+                                                ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200'
+                                                : 'text-slate-500 hover:text-slate-900'
+                                                }`}
+                                        >
+                                            {r.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Email Input */}
@@ -240,7 +249,8 @@ export default function InviteUserModal({ isOpen, onClose, onInvite }: InviteUse
 
                         <button
                             type="submit"
-                            className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-[0.2em] shadow-xl shadow-slate-900/20 hover:bg-blue-600 hover:shadow-blue-600/20 transition-all hover:-translate-y-0.5 active:translate-y-0 group"
+                            disabled={!roleId || !email.trim()}
+                            className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-[0.2em] shadow-xl shadow-slate-900/20 hover:bg-blue-600 hover:shadow-blue-600/20 transition-all hover:-translate-y-0.5 active:translate-y-0 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:bg-slate-900"
                         >
                             <span className="flex items-center justify-center gap-2">
                                 Send Invite

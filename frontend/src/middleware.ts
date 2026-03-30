@@ -8,8 +8,6 @@ const PROTECTED_PATHS = ['/dashboard', '/settings'];
 /** Routes accessible only when setup is NOT complete. */
 const SETUP_ONLY_PATH = '/setup';
 
-/** Routes always allowed (no auth, no setup gate). */
-const PUBLIC_PATHS = ['/', '/register'];
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
@@ -45,10 +43,34 @@ export async function middleware(request: NextRequest) {
     // Auth cookie set by setAuthToken() in @/lib/auth
     const token = request.cookies.get('cms_token')?.value;
 
-    // Protected routes: require login
     const isProtected = PROTECTED_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'));
-    if (isProtected && !token) {
-        return NextResponse.redirect(new URL('/', request.url));
+
+    if (isProtected) {
+        // No token at all → login
+        if (!token) {
+            return NextResponse.redirect(new URL('/', request.url));
+        }
+
+        // Validate token with the backend
+        let tokenValid = false;
+        try {
+            const authRes = await fetch(`${API_URL}/auth/profile`, {
+                headers: { Authorization: `Bearer ${token}` },
+                cache: 'no-store',
+                signal: AbortSignal.timeout(3000),
+            });
+            tokenValid = authRes.ok;
+        } catch {
+            // Backend unreachable — fail-open so dashboard still loads when backend restarts
+            tokenValid = true;
+        }
+
+        if (!tokenValid) {
+            // Expired / invalid token — clear cookie and send to login
+            const res = NextResponse.redirect(new URL('/', request.url));
+            res.cookies.set('cms_token', '', { path: '/', maxAge: 0 });
+            return res;
+        }
     }
 
     // Login page: redirect already-authenticated users to dashboard

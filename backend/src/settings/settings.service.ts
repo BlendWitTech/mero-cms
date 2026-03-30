@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 @Injectable()
 export class SettingsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private webhooksService: WebhooksService,
+    ) { }
 
     async findAll() {
         const settings = await (this.prisma as any).setting.findMany();
@@ -25,6 +29,27 @@ export class SettingsService {
         const updates = Object.entries(settings).map(([key, value]) =>
             this.update(key, value),
         );
-        return Promise.all(updates);
+        const result = await Promise.all(updates);
+        this.webhooksService.dispatch('settings.updated', { keys: Object.keys(settings) }).catch(() => { });
+        return result;
+    }
+
+    async clearThemeCache() {
+        const themeUrl = process.env.THEME_URL || 'http://localhost:3002';
+        const secret = process.env.REVALIDATE_SECRET || '';
+        const url = `${themeUrl}/api/revalidate`;
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: secret ? { 'x-revalidate-secret': secret } : {},
+            });
+            if (!res.ok) {
+                const body = await res.text();
+                throw new Error(`Theme responded with ${res.status}: ${body}`);
+            }
+            return { success: true, message: 'Theme cache cleared successfully.' };
+        } catch (err: any) {
+            throw new Error(`Failed to clear theme cache: ${err.message}`);
+        }
     }
 }

@@ -8,7 +8,6 @@ import { RequireModule } from '../setup/require-module.decorator';
 
 @RequireModule('comments')
 @Controller('comments')
-@UseGuards(PermissionsGuard)
 export class CommentsController {
     constructor(private readonly commentsService: CommentsService) { }
 
@@ -22,14 +21,14 @@ export class CommentsController {
         return this.commentsService.findAll(postId);
     }
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @Patch(':id/status')
     @RequirePermissions(Permission.CONTENT_EDIT)
     updateStatus(@Param('id') id: string, @Body('status') status: string) {
         return this.commentsService.updateStatus(id, status);
     }
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @Delete(':id')
     @RequirePermissions(Permission.CONTENT_DELETE)
     remove(@Param('id') id: string) {

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
 import {
     ArrowLeftIcon,
     PaperAirplaneIcon,
@@ -11,6 +10,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { apiRequest } from '@/lib/api';
 import { useNotification } from '@/context/NotificationContext';
+import { SERVICE_ICONS } from '@/lib/service-icons';
+import { useForm } from 'react-hook-form';
 
 interface ServiceFormData {
     title: string;
@@ -23,7 +24,7 @@ export default function NewServicePage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { showToast } = useNotification();
     const router = useRouter();
-    const { register, handleSubmit, formState: { errors } } = useForm<ServiceFormData>({
+    const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<ServiceFormData>({
         defaultValues: {
             order: 0
         }
@@ -73,7 +74,7 @@ export default function NewServicePage() {
             </div>
 
             {/* Form */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 shadow-xl shadow-slate-200/20 p-8">
+            <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200 p-8">
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     <div className="space-y-5">
                         <div className="space-y-1.5">
@@ -109,20 +110,42 @@ export default function NewServicePage() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-6">
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                                    Icon Class
-                                </label>
-                                <input
-                                    type="text"
-                                    {...register('icon')}
-                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10"
-                                    placeholder="e.g. pencil-circle"
-                                />
-                                <p className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">Phosphor Icons class name</p>
+                        <input type="hidden" {...register('icon')} />
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Icon</label>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.5rem' }}>
+                                {SERVICE_ICONS.map(ic => {
+                                    const selected = watch('icon') === ic.name;
+                                    return (
+                                        <button
+                                            key={ic.name}
+                                            type="button"
+                                            title={ic.label}
+                                            onClick={() => setValue('icon', ic.name, { shouldDirty: true })}
+                                            style={{
+                                                padding: '0.75rem 0.5rem',
+                                                borderRadius: '12px',
+                                                border: selected ? '2px solid #3B82F6' : '2px solid #E2E8F0',
+                                                background: selected ? '#EFF6FF' : '#F8FAFC',
+                                                color: selected ? '#3B82F6' : '#94A3B8',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '0.35rem',
+                                                transition: 'all 0.15s',
+                                            }}
+                                        >
+                                            <ic.icon className="w-7 h-7 stroke-[1.75]" />
+                                            <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: 1 }}>{ic.label}</span>
+                                        </button>
+                                    );
+                                })}
                             </div>
+                        </div>
 
+                        <div className="grid grid-cols-1 gap-6">
                             <div className="space-y-1.5">
                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
                                     Sort Order

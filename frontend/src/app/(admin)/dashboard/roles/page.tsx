@@ -292,7 +292,7 @@ function RolesPageContent() {
 
                 <div className="flex items-center gap-4">
                     {/* View Toggle */}
-                    <div className="flex items-center p-1 bg-slate-100/80 backdrop-blur-sm rounded-xl border border-slate-200/60">
+                    <div className="flex items-center p-1 bg-slate-100/80 backdrop-blur-sm rounded-xl border border-slate-200">
                         <button
                             onClick={() => setViewMode('grid')}
                             className={classNames(
@@ -337,7 +337,7 @@ function RolesPageContent() {
                             const isSystemRole = role.name === 'Super Admin' || role.name === 'Admin';
 
                             return (
-                                <div key={role.id} className="group relative overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-sm border border-slate-200/50 hover:shadow-xl hover:shadow-slate-200/20 hover:-translate-y-1 transition-all duration-500">
+                                <div key={role.id} className="group relative overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-sm border border-slate-200 hover:shadow-xl hover:shadow-slate-200 hover:-translate-y-1 transition-all duration-500">
                                     <div className="flex items-start justify-between mb-6">
                                         <div className={classNames(
                                             "p-4 rounded-2xl border transition-all duration-500",
@@ -345,7 +345,7 @@ function RolesPageContent() {
                                         )}>
                                             <RoleIcon className="h-6 w-6" />
                                         </div>
-                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 relative z-10">
+                                        <div className="flex items-center gap-2 relative z-10">
                                             <button
                                                 onClick={() => handleEdit(role)}
                                                 className="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"
@@ -396,9 +396,9 @@ function RolesPageContent() {
                 </div>
             ) : (
                 /* List View */
-                <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden">
+                <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full min-w-[700px] text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50/50 border-b border-slate-100">
                                     <th className="pl-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Role Name</th>
@@ -445,7 +445,7 @@ function RolesPageContent() {
                                                 </div>
                                             </td>
                                             <td className="pr-8 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="flex items-center justify-end gap-2">
                                                     <button
                                                         onClick={() => handleEdit(role)}
                                                         className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"

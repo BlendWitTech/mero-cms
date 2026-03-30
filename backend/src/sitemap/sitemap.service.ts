@@ -27,15 +27,6 @@ export class SitemapService {
             },
         });
 
-        // Get all published projects
-        const projects = await (this.prisma as any).project.findMany({
-            where: { status: 'PUBLISHED' },
-            select: {
-                slug: true,
-                updatedAt: true,
-            },
-        });
-
         // Get all categories
         const categories = await this.prisma.category.findMany({
             select: {
@@ -65,17 +56,6 @@ export class SitemapService {
             if (page.slug !== 'home') {
                 xml += this.createUrlEntry(loc, page.updatedAt, 'monthly', '0.8');
             }
-        });
-
-        // Projects
-        xml += this.createUrlEntry(`${baseUrl}/projects`, new Date(), 'daily', '0.9');
-        projects.forEach(project => {
-            xml += this.createUrlEntry(
-                `${baseUrl}/projects/${project.slug}`,
-                project.updatedAt,
-                'weekly',
-                '0.8'
-            );
         });
 
         // Blog index

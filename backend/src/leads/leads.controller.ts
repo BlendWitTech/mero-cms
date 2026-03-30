@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, SetMetadata, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { LeadsService } from './leads.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Permission } from '../auth/permissions.enum';
-import { RequireModule } from '../setup/require-module.decorator';
+import { RequireModule, REQUIRE_MODULE_KEY } from '../setup/require-module.decorator';
 
 @RequireModule('leads')
 @Controller('leads')
@@ -12,6 +13,7 @@ export class LeadsController {
     constructor(private readonly leadsService: LeadsService) { }
 
     @Post('public/submit')
+    @SetMetadata(REQUIRE_MODULE_KEY, null) // bypass class-level @RequireModule so public submissions always work
     createPublic(@Body() createLeadDto: any) {
         return this.leadsService.create(createLeadDto);
     }
@@ -60,8 +62,18 @@ export class LeadsController {
 
     @Delete(':id')
     @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @RequirePermissions(Permission.LEADS_MANAGE) // Could use LEADS_DELETE if exists, relying on MANAGE for now per enum analysis
+    @RequirePermissions(Permission.LEADS_MANAGE)
     remove(@Param('id') id: string) {
         return this.leadsService.remove(id);
+    }
+
+    @Get('export/csv')
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
+    @RequirePermissions(Permission.LEADS_VIEW)
+    async exportCsv(@Res() res: Response, @Query('status') status?: string) {
+        const csv = await this.leadsService.exportCsv(status);
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename="leads.csv"');
+        res.send(csv);
     }
 }

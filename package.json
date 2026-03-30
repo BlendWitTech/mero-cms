@@ -1,24 +1,25 @@
 {
-  "name": "blendwit-base-cms",
+  "name": "mero-cms",
   "version": "1.0.0",
   "private": true,
   "workspaces": [
     "backend",
-    "frontend",
-    "demo"
+    "frontend"
   ],
   "scripts": {
     "dev:backend": "npm run start:dev -w backend",
     "dev:frontend": "npm run dev -w frontend",
-    "dev:demo": "npm run dev -w demo",
     "dev:theme": "node scripts/dev-theme.js",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:demo\"",
+    "dev:db": "docker compose up db -d",
+    "dev": "concurrently --restart-tries 5 --restart-after 1500 \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:theme\"",
+    "dev:all": "concurrently --restart-tries 5 --restart-after 1500 \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:theme\"",
     "build": "npm run build -w backend && npm run build -w frontend",
     "install:all": "npm install",
     "setup": "powershell -ExecutionPolicy Bypass -File ./scripts/setup.ps1",
     "reset": "powershell -ExecutionPolicy Bypass -File ./scripts/reset.ps1",
     "db:init": "npx prisma migrate dev -w backend",
+    "db:migrate": "npx prisma migrate dev -w backend",
+    "db:push": "npx prisma db push -w backend",
     "db:seed": "npm run seed -w backend",
     "start": "node ./scripts/start.js",
     "start:prod": "node backend/dist/main",

@@ -22,6 +22,7 @@ model Plot {
   roadAccess  String?
   theme       String?
   attributes  Json?
+  seo         Json?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }

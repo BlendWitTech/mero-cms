@@ -14,19 +14,27 @@ import {
     PhotoIcon,
     Squares2X2Icon,
 } from '@heroicons/react/24/outline';
+import dynamic from 'next/dynamic';
 import { apiRequest } from '@/lib/api';
 import { useNotification } from '@/context/NotificationContext';
 import MediaPickerModal from '@/components/ui/MediaPickerModal';
+import EmojiPicker from 'emoji-picker-react';
+import { SERVICE_ICONS } from '@/lib/service-icons';
+
+const PostEditor = dynamic(() => import('@/components/blog/PostEditor'), { ssr: false });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface FieldDef {
     key: string;
     label: string;
-    type: 'text' | 'textarea' | 'richtext' | 'image' | 'number' | 'toggle' | 'button' | 'buttons' | 'url' | 'stats';
+    type: 'text' | 'textarea' | 'richtext' | 'image' | 'number' | 'toggle' | 'button' | 'buttons' | 'url' | 'stats' | 'select' | 'emoji' | 'icon' | 'divider';
     placeholder?: string;
     description?: string;
     max?: number;
+    options?: string[];
+    /** When true, the stats field shows an emoji picker instead of a text input for the value column */
+    emojiPicker?: boolean;
     /** Settings table key to seed from when no page section data exists */
     settingsKey?: string;
     /** Hard-coded fallback shown when neither page data nor settings has a value */
@@ -53,6 +61,81 @@ interface SectionData {
 
 interface PageSections {
     [sectionId: string]: SectionData;
+}
+
+// ─── Emoji and Icon pickers  ────────────────────────────────────────────────────────
+
+function IconValueField({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled: boolean }) {
+    const [open, setOpen] = useState(false);
+    
+    // Find selected icon
+    const selectedIcon = SERVICE_ICONS.find(ic => ic.name === value);
+
+    return (
+        <div className="relative">
+            <button
+                type="button"
+                disabled={disabled}
+                onClick={() => setOpen(!open)}
+                className="w-16 h-10 border border-slate-200 rounded-xl flex items-center justify-center bg-white hover:border-blue-300 transition-all disabled:opacity-50 shadow-sm"
+                title="Click to pick an icon"
+            >
+                {selectedIcon ? <selectedIcon.icon className="w-5 h-5 text-slate-700" /> : <span className="text-slate-300 text-xs font-bold">Pick</span>}
+            </button>
+            {open && (
+                <>
+                    <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+                    <div className="absolute z-20 top-full mt-2 left-0 bg-white border border-slate-200 rounded-2xl shadow-2xl p-3 w-80 max-h-80 overflow-y-auto custom-scrollbar">
+                        <div className="grid grid-cols-5 gap-2">
+                            {SERVICE_ICONS.map(ic => {
+                                const isSelected = value === ic.name;
+                                return (
+                                    <button
+                                        key={ic.name}
+                                        type="button"
+                                        title={ic.label}
+                                        onClick={() => { onChange(ic.name); setOpen(false); }}
+                                        className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center justify-center gap-1 ${isSelected ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-100 hover:border-slate-300 text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        <ic.icon className="w-6 h-6 stroke-[1.5]" />
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
+function EmojiValueField({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled: boolean }) {
+    const [open, setOpen] = useState(false);
+    return (
+        <div className="relative">
+            <button
+                type="button"
+                disabled={disabled}
+                onClick={() => setOpen(!open)}
+                className="w-full h-10 border border-slate-200 rounded-xl text-xl flex items-center justify-center bg-white hover:border-red-300 transition-all disabled:opacity-50 shadow-sm"
+                title="Click to pick an emoji"
+            >
+                {value ? <span>{value}</span> : <span className="text-slate-300 text-xs font-bold">Pick</span>}
+            </button>
+            {open && (
+                <>
+                    <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+                    <div className="absolute z-20 top-full mt-1 left-0 rounded-2xl overflow-hidden shadow-2xl">
+                        <EmojiPicker 
+                            onEmojiClick={(emojiData) => { onChange(emojiData.emoji); setOpen(false); }} 
+                            width={320} 
+                            height={400} 
+                        />
+                    </div>
+                </>
+            )}
+        </div>
+    );
 }
 
 // ─── Image field (own component so useState is always called at top level) ────
@@ -112,15 +195,29 @@ function FieldEditor({ field, value, onChange, disabled }: {
 }) {
     const base = 'w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white disabled:opacity-50';
 
-    if (field.type === 'textarea' || field.type === 'richtext') {
+    if (field.type === 'divider') {
+        return null; // rendered inline by SectionCard, not here
+    }
+
+    if (field.type === 'richtext') {
+        return (
+            <div className={disabled ? 'opacity-50 pointer-events-none' : ''}>
+                <PostEditor content={value || ''} onChange={onChange} />
+            </div>
+        );
+    }
+
+    if (field.type === 'textarea') {
+        const lineCount = (value || '').split('\n').length;
+        const rows = Math.max(2, Math.min(lineCount + 1, 10));
         return (
             <textarea
-                rows={3}
+                rows={rows}
                 disabled={disabled}
                 value={value || ''}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={field.placeholder}
-                className={base + ' resize-y'}
+                className={base + ' resize-none leading-relaxed'}
             />
         );
     }
@@ -144,7 +241,7 @@ function FieldEditor({ field, value, onChange, disabled }: {
     if (field.type === 'button') {
         const btn = value || { text: '', url: '' };
         return (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input type="text" disabled={disabled} value={btn.text || ''} onChange={(e) => onChange({ ...btn, text: e.target.value })} placeholder="Button label" className={base} />
                 <input type="text" disabled={disabled} value={btn.url || ''} onChange={(e) => onChange({ ...btn, url: e.target.value })} placeholder="/path or URL" className={base} />
             </div>
@@ -184,9 +281,17 @@ function FieldEditor({ field, value, onChange, disabled }: {
                 )}
                 {items.map((stat, i) => (
                     <div key={i} className="flex gap-2 items-center">
-                        <div className="flex flex-col gap-1 w-28 shrink-0">
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Value</span>
-                            <input type="text" disabled={disabled} value={stat.value || ''} onChange={(e) => { const ns = [...items]; ns[i] = { ...ns[i], value: e.target.value }; onChange(ns); }} placeholder="500+" className={base + ' text-center font-bold'} />
+                        <div className="flex flex-col gap-1 w-16 shrink-0">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{field.emojiPicker ? 'Emoji' : 'Value'}</span>
+                            {field.emojiPicker ? (
+                                <EmojiValueField
+                                    value={stat.value || ''}
+                                    onChange={(v) => { const ns = [...items]; ns[i] = { ...ns[i], value: v }; onChange(ns); }}
+                                    disabled={disabled}
+                                />
+                            ) : (
+                                <input type="text" disabled={disabled} value={stat.value || ''} onChange={(e) => { const ns = [...items]; ns[i] = { ...ns[i], value: e.target.value }; onChange(ns); }} placeholder="500+" className={base + ' text-center font-bold'} />
+                            )}
                         </div>
                         <div className="flex flex-col gap-1 flex-1">
                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Label</span>
@@ -202,6 +307,37 @@ function FieldEditor({ field, value, onChange, disabled }: {
                         <PlusIcon className="w-4 h-4" /> Add Stat
                     </button>
                 )}
+            </div>
+        );
+    }
+
+    if (field.type === 'select' && field.options) {
+        return (
+            <select
+                disabled={disabled}
+                value={value || field.options[0] || ''}
+                onChange={(e) => onChange(e.target.value)}
+                className={base + ' cursor-pointer'}
+            >
+                {field.options.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                ))}
+            </select>
+        );
+    }
+
+    if (field.type === 'emoji') {
+        return (
+            <div className="w-20">
+                <EmojiValueField value={value || ''} onChange={onChange} disabled={disabled} />
+            </div>
+        );
+    }
+
+    if (field.type === 'icon') {
+        return (
+            <div className="w-24">
+                <IconValueField value={value || ''} onChange={onChange} disabled={disabled} />
             </div>
         );
     }
@@ -232,9 +368,9 @@ function SectionCard({ sectionDef, sectionData, onToggle, onDataChange, saving }
     const hasFields = sectionDef.fields.length > 0;
 
     return (
-        <div className={`border rounded-2xl overflow-hidden transition-all ${enabled ? 'border-slate-200' : 'border-slate-100 opacity-60'}`}>
+        <div className={`border rounded-2xl transition-all ${enabled ? 'border-slate-200' : 'border-slate-100 opacity-60'}`}>
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 bg-white">
+            <div className="flex items-center justify-between px-5 py-4 bg-white rounded-t-2xl">
                 <div className="flex items-center gap-3">
                     <div className={`w-2.5 h-2.5 rounded-full ${enabled ? 'bg-green-500' : 'bg-slate-300'}`} />
                     <div>
@@ -269,18 +405,31 @@ function SectionCard({ sectionDef, sectionData, onToggle, onDataChange, saving }
             {/* Editable fields */}
             {expanded && hasFields && (
                 <div className="bg-slate-50 border-t border-slate-100 px-5 py-4 space-y-4">
-                    {sectionDef.fields.map((field) => (
-                        <div key={field.key}>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{field.label}</label>
-                            {field.description && <p className="text-xs text-slate-400 mb-1.5">{field.description}</p>}
-                            <FieldEditor
-                                field={field}
-                                value={sectionData.data?.[field.key]}
-                                onChange={(v) => onDataChange(field.key, v)}
-                                disabled={saving || !enabled}
-                            />
-                        </div>
-                    ))}
+                    {sectionDef.fields.map((field) => {
+                        if (field.type === 'divider') {
+                            return (
+                                <div key={field.key} className="flex items-center gap-3 pt-1">
+                                    <div className="h-px bg-slate-200 flex-1" />
+                                    {field.label && (
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{field.label}</span>
+                                    )}
+                                    <div className="h-px bg-slate-200 flex-1" />
+                                </div>
+                            );
+                        }
+                        return (
+                            <div key={field.key}>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{field.label}</label>
+                                {field.description && <p className="text-xs text-slate-400 mb-1.5">{field.description}</p>}
+                                <FieldEditor
+                                    field={field}
+                                    value={sectionData.data?.[field.key]}
+                                    onChange={(v) => onDataChange(field.key, v)}
+                                    disabled={saving || !enabled}
+                                />
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>
@@ -448,8 +597,8 @@ export default function SitePagesPage() {
 
     return (
         <div className="max-w-5xl mx-auto pb-20">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8 px-1">
+            {/* Header — sticky so Save button stays reachable while scrolling */}
+            <div className="sticky top-0 z-10 flex items-center justify-between -mx-8 px-8 py-4 mb-4 bg-[#F8FAFC]/95 backdrop-blur-sm border-b border-slate-100">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
                         Site <span className="text-red-600">Pages</span>
@@ -465,10 +614,11 @@ export default function SitePagesPage() {
                 </button>
             </div>
 
-            <div className="flex gap-6">
-                {/* Page sidebar */}
-                <div className="w-52 shrink-0 space-y-1.5">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2 mb-3">Pages</p>
+            <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+                {/* Page sidebar — horizontal scroll on mobile, sticky sidebar on desktop */}
+                <div className="md:w-52 md:shrink-0">
+                    <div className="md:sticky md:top-0 flex md:flex-col flex-row flex-wrap gap-1.5 md:gap-0 md:space-y-1.5 pt-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2 mb-3 w-full">Pages</p>
                     {pageSchema.map((pageDef) => {
                         const sections = pagesData[pageDef.slug] || {};
                         const enabledCount = Object.values(sections).filter((s) => s.enabled).length;
@@ -487,6 +637,7 @@ export default function SitePagesPage() {
                             </button>
                         );
                     })}
+                    </div>
                 </div>
 
                 {/* Sections editor */}

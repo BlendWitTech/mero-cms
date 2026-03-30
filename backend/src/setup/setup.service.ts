@@ -12,12 +12,12 @@ export const CORE_MODULES = [
 ];
 
 // Modules selectable in the setup wizard — generic CMS features not tied to any theme.
-// Theme-specific modules (team, services, testimonials, leads, plots, etc.) are auto-enabled
+// Theme-specific modules (team, services, testimonials, leads, etc.) are auto-enabled
 // when a theme that requires them is activated via its theme.json requiredModules list.
 export const OPTIONAL_MODULES = [
     'blogs', 'categories', 'tags', 'comments',
     'seo', 'redirects', 'analytics', 'sitemap', 'robots',
-    'menus', 'pages', 'themes',
+    'menus', 'pages', 'themes', 'forms',
 ];
 
 export const MODULE_LABELS: Record<string, { label: string; description: string; group: string }> = {
@@ -28,6 +28,7 @@ export const MODULE_LABELS: Record<string, { label: string; description: string;
     menus: { label: 'Navigation Menus', description: 'Dynamic nested menu management', group: 'Site' },
     pages: { label: 'Static Pages', description: 'Custom page management', group: 'Site' },
     themes: { label: 'Themes', description: 'Upload and manage website themes', group: 'Site' },
+    forms: { label: 'Forms', description: 'Form builder with submission management', group: 'Content' },
     seo: { label: 'SEO Tools', description: 'Meta tags, redirects, robots.txt, sitemap', group: 'SEO & Analytics' },
     redirects: { label: 'URL Redirects', description: 'Manage 301/302 redirects', group: 'SEO & Analytics' },
     analytics: { label: 'Analytics', description: 'Google Analytics 4 integration and dashboard', group: 'SEO & Analytics' },

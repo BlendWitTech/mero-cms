@@ -13,9 +13,12 @@ import {
     ArrowDownTrayIcon,
     ClipboardDocumentIcon,
     FolderIcon,
+    FolderOpenIcon,
+    FolderPlusIcon,
     MagnifyingGlassIcon,
     VideoCameraIcon,
     CheckIcon,
+    PencilIcon,
 } from '@heroicons/react/24/outline';
 import { apiRequest } from '@/lib/api';
 import AlertDialog from '@/components/ui/AlertDialog';
@@ -58,6 +61,12 @@ export default function MediaLibrary({
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<'all' | 'images' | 'videos' | 'docs'>('all');
+    const [folders, setFolders] = useState<string[]>([]);
+    const [activeFolder, setActiveFolder] = useState<string | null>(null);
+    const [newFolderName, setNewFolderName] = useState('');
+    const [showNewFolderInput, setShowNewFolderInput] = useState(false);
+    const [renamingFolder, setRenamingFolder] = useState<string | null>(null);
+    const [renameFolderValue, setRenameFolderValue] = useState('');
     const [editAlt, setEditAlt] = useState('');
     const [isSavingAlt, setIsSavingAlt] = useState(false);
     const [selectedVersion, setSelectedVersion] = useState<{ url: string, size: string | null }>({ url: '', size: null });
@@ -108,13 +117,65 @@ export default function MediaLibrary({
     const fetchMedia = async () => {
         setIsLoading(true);
         try {
-            const data = await apiRequest('/media');
+            const [data, folderData] = await Promise.all([
+                apiRequest('/media'),
+                apiRequest('/media/folders'),
+            ]);
             setMedia(Array.isArray(data) ? data : []);
+            setFolders(Array.isArray(folderData) ? folderData : []);
         } catch (error) {
             console.error('Failed to fetch media', error);
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleCreateFolder = async () => {
+        const name = newFolderName.trim();
+        if (!name || folders.includes(name)) return;
+        setFolders(prev => [...prev, name].sort());
+        setNewFolderName('');
+        setShowNewFolderInput(false);
+        setActiveFolder(name);
+    };
+
+    const handleRenameFolder = async (oldName: string) => {
+        const newName = renameFolderValue.trim();
+        if (!newName || newName === oldName) { setRenamingFolder(null); return; }
+        try {
+            await apiRequest('/media/folders/rename', { method: 'PATCH', body: { oldName, newName } });
+            setMedia(prev => prev.map(m => m.folder === oldName ? { ...m, folder: newName } : m));
+            setFolders(prev => prev.map(f => f === oldName ? newName : f).sort());
+            if (activeFolder === oldName) setActiveFolder(newName);
+            showToast('Folder renamed', 'success');
+        } catch {
+            showToast('Failed to rename folder', 'error');
+        } finally {
+            setRenamingFolder(null);
+        }
+    };
+
+    const handleDeleteFolder = (name: string) => {
+        setAlertConfig({
+            isOpen: true,
+            title: `Delete folder "${name}"?`,
+            description: 'All items in this folder will be moved to root. The files themselves will not be deleted.',
+            variant: 'danger',
+            confirmLabel: 'Move to Root & Delete Folder',
+            onConfirm: async () => {
+                try {
+                    await apiRequest(`/media/folders/${encodeURIComponent(name)}`, { method: 'DELETE' });
+                    setMedia(prev => prev.map(m => m.folder === name ? { ...m, folder: 'root' } : m));
+                    setFolders(prev => prev.filter(f => f !== name));
+                    if (activeFolder === name) setActiveFolder(null);
+                    closeAlert();
+                    showToast('Folder deleted', 'success');
+                } catch {
+                    closeAlert();
+                    showToast('Failed to delete folder', 'error');
+                }
+            },
+        });
     };
 
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -414,7 +475,9 @@ export default function MediaLibrary({
             || (activeTab === 'videos' && isVideo)
             || (activeTab === 'docs' && !isImage && !isVideo);
 
-        return matchesSearch && matchesTab;
+        const matchesFolder = !activeFolder || item.folder === activeFolder;
+
+        return matchesSearch && matchesTab && matchesFolder;
     });
 
     const genericAlert = (
@@ -463,7 +526,7 @@ export default function MediaLibrary({
             </div>
 
             {/* Toolbar Row */}
-            <div className="flex-shrink-0 px-8 py-4 grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-slate-200/60 bg-white/50 backdrop-blur-sm z-10 sticky top-0">
+            <div className="flex-shrink-0 px-8 py-4 grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-slate-200 bg-white/50 backdrop-blur-sm z-10 sticky top-0">
                 <div className="relative group w-full">
                     <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                     <input
@@ -475,7 +538,7 @@ export default function MediaLibrary({
                     />
                 </div>
 
-                <div className="flex items-center gap-1 p-1 bg-slate-100/50 rounded-[2rem] border border-slate-200/50 backdrop-blur-sm">
+                <div className="flex items-center gap-1 p-1 bg-slate-100/50 rounded-[2rem] border border-slate-200 backdrop-blur-sm">
                     {[
                         { id: 'all', label: 'All', icon: FolderIcon },
                         { id: 'images', label: 'Images', icon: PhotoIcon },
@@ -486,7 +549,7 @@ export default function MediaLibrary({
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex-1 flex items-center justify-center gap-2 px-2 py-3 rounded-[1.75rem] text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === tab.id
-                                ? 'bg-white text-blue-600 shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/50'
+                                ? 'bg-white text-blue-600 shadow-xl shadow-slate-200 ring-1 ring-slate-200/50'
                                 : 'text-slate-500 hover:text-slate-900'
                                 }`}
                         >
@@ -498,6 +561,80 @@ export default function MediaLibrary({
             </div>
 
             <div className="flex-1 flex overflow-hidden">
+                {/* Folder Sidebar */}
+                <div className="w-48 flex-shrink-0 border-r border-slate-200 bg-white flex flex-col overflow-y-auto">
+                    <div className="p-3 flex items-center justify-between border-b border-slate-100">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Folders</span>
+                        <button
+                            onClick={() => setShowNewFolderInput(true)}
+                            className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="New folder"
+                        >
+                            <FolderPlusIcon className="h-4 w-4" />
+                        </button>
+                    </div>
+
+                    {showNewFolderInput && (
+                        <div className="p-2 border-b border-slate-100">
+                            <input
+                                autoFocus
+                                value={newFolderName}
+                                onChange={e => setNewFolderName(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') handleCreateFolder(); if (e.key === 'Escape') { setShowNewFolderInput(false); setNewFolderName(''); } }}
+                                placeholder="Folder name"
+                                className="w-full px-2 py-1.5 text-xs border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                            />
+                            <div className="flex gap-1 mt-1">
+                                <button onClick={handleCreateFolder} className="flex-1 text-[10px] font-bold py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Create</button>
+                                <button onClick={() => { setShowNewFolderInput(false); setNewFolderName(''); }} className="flex-1 text-[10px] font-bold py-1 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200">Cancel</button>
+                            </div>
+                        </div>
+                    )}
+
+                    <button
+                        onClick={() => setActiveFolder(null)}
+                        className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold transition-colors ${!activeFolder ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                    >
+                        <FolderOpenIcon className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">All Files</span>
+                        <span className="ml-auto text-[10px] text-slate-400">{media.length}</span>
+                    </button>
+
+                    {folders.filter(f => f !== 'root').map(folder => (
+                        <div key={folder} className={`group flex items-center gap-1 px-2 py-2 transition-colors ${activeFolder === folder ? 'bg-blue-50' : 'hover:bg-slate-50'}`}>
+                            {renamingFolder === folder ? (
+                                <input
+                                    autoFocus
+                                    value={renameFolderValue}
+                                    onChange={e => setRenameFolderValue(e.target.value)}
+                                    onKeyDown={e => { if (e.key === 'Enter') handleRenameFolder(folder); if (e.key === 'Escape') setRenamingFolder(null); }}
+                                    onBlur={() => handleRenameFolder(folder)}
+                                    className="flex-1 min-w-0 px-1.5 py-0.5 text-xs border border-blue-300 rounded focus:outline-none"
+                                />
+                            ) : (
+                                <button
+                                    onClick={() => setActiveFolder(folder)}
+                                    className={`flex-1 flex items-center gap-2 min-w-0 text-xs font-semibold text-left ${activeFolder === folder ? 'text-blue-700' : 'text-slate-600'}`}
+                                >
+                                    <FolderIcon className="h-4 w-4 flex-shrink-0" />
+                                    <span className="truncate">{folder}</span>
+                                    <span className="ml-auto text-[10px] text-slate-400">{media.filter(m => m.folder === folder).length}</span>
+                                </button>
+                            )}
+                            {renamingFolder !== folder && (
+                                <div className="hidden group-hover:flex items-center gap-0.5 flex-shrink-0">
+                                    <button onClick={() => { setRenamingFolder(folder); setRenameFolderValue(folder); }} className="p-0.5 text-slate-400 hover:text-blue-600 rounded">
+                                        <PencilIcon className="h-3 w-3" />
+                                    </button>
+                                    <button onClick={() => handleDeleteFolder(folder)} className="p-0.5 text-slate-400 hover:text-red-600 rounded">
+                                        <TrashIcon className="h-3 w-3" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
                 {/* Main Content Area - Grid */}
                 <div className="flex-1 flex flex-col bg-slate-50/50 overflow-hidden relative min-w-0" {...getRootProps()}>
                     <input {...getInputProps()} />

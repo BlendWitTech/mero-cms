@@ -3,6 +3,8 @@ import DefaultHomePage from '@/components/themes/default/HomePage';
 import BlendwitHomePage from '@/components/themes/blendwit/HomePage';
 import { notFound } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 // Fetch Active Theme
 async function getActiveTheme() {
     try {

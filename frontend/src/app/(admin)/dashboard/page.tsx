@@ -127,10 +127,10 @@ const AuditDetailModal = ({ onClose, log }: { isOpen: boolean, onClose: () => vo
 };
 
 const initialStats = [
-    { name: 'Total Blogs', value: '...', change: '0%', icon: DocumentIcon, color: 'text-blue-600', glow: 'group-hover:bg-blue-500/20', iconBg: 'bg-blue-100', bg: 'bg-blue-50/50', border: 'border-blue-200/50' },
-    { name: 'Active Users', value: '...', change: '0%', icon: UserIcon, color: 'text-emerald-600', glow: 'group-hover:bg-emerald-500/20', iconBg: 'bg-emerald-100', bg: 'bg-emerald-50/50', border: 'border-emerald-200/50' },
-    { name: 'Media files', value: '...', change: '0%', icon: PhotoIcon, color: 'text-indigo-600', glow: 'group-hover:bg-indigo-500/20', iconBg: 'bg-indigo-100', bg: 'bg-indigo-50/50', border: 'border-indigo-200/50' },
-    { name: 'Cloud Server', value: 'Online', change: '99.9%', icon: BoltIcon, color: 'text-violet-600', glow: 'group-hover:bg-violet-500/20', iconBg: 'bg-violet-100', bg: 'bg-violet-50/50', border: 'border-violet-200/50' },
+    { name: 'Total Blogs', value: '...', change: '0%', icon: DocumentIcon, color: 'text-blue-600', glow: 'bg-blue-500/10', iconBg: 'bg-blue-100', bg: 'bg-white', border: 'border-blue-200' },
+    { name: 'Active Users', value: '...', change: '0%', icon: UserIcon, color: 'text-emerald-600', glow: 'bg-emerald-500/10', iconBg: 'bg-emerald-100', bg: 'bg-white', border: 'border-emerald-200' },
+    { name: 'Media files', value: '...', change: '0%', icon: PhotoIcon, color: 'text-indigo-600', glow: 'bg-indigo-500/10', iconBg: 'bg-indigo-100', bg: 'bg-white', border: 'border-indigo-200' },
+    { name: 'Cloud Server', value: 'Online', change: '99.9%', icon: BoltIcon, color: 'text-violet-600', glow: 'bg-violet-500/10', iconBg: 'bg-violet-100', bg: 'bg-white', border: 'border-violet-200' },
 ];
 
 export default function DashboardPage() {
@@ -209,7 +209,7 @@ export default function DashboardPage() {
                     {checkPermission(permissions, 'analytics_view') && (
                         <Link
                             href="/dashboard/analytics"
-                            className="px-6 py-2.5 rounded-xl bg-white border border-slate-200 shadow-lg shadow-slate-200/50 text-slate-900 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 hover:-translate-y-0.5 transition-all active:translate-y-0 flex items-center justify-center"
+                            className="px-6 py-2.5 rounded-xl bg-white border border-slate-200 shadow-lg shadow-slate-200 text-slate-900 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 hover:-translate-y-0.5 transition-all active:translate-y-0 flex items-center justify-center"
                         >
                             Report
                         </Link>
@@ -233,7 +233,7 @@ export default function DashboardPage() {
                         className={classNames(
                             stat.bg,
                             stat.border,
-                            "relative group overflow-hidden rounded-[2.5rem] p-8 border backdrop-blur-md hover:scale-[1.02] hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 ease-out cursor-default"
+                            "relative group overflow-hidden rounded-[2.5rem] p-8 border shadow-sm hover:scale-[1.02] hover:shadow-lg transition-all duration-500 ease-out cursor-default"
                         )}
                     >
                         <div className="flex items-center justify-between relative z-10">
@@ -251,7 +251,7 @@ export default function DashboardPage() {
                             </dd>
                         </div>
                         <div className={classNames(
-                            "absolute -bottom-4 -right-4 w-24 h-24 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700",
+                            "absolute -bottom-4 -right-4 w-24 h-24 rounded-full blur-3xl transition-all duration-700",
                             stat.glow
                         )}></div>
                         <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-white/20 rounded-full transition-colors duration-500"></div>
@@ -259,27 +259,27 @@ export default function DashboardPage() {
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 px-2">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 px-2">
                 {/* Activity Feed */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="md:col-span-2 lg:col-span-2 space-y-6">
                     <div className="flex items-center justify-between px-4">
                         <h2 className="text-xl font-bold text-slate-900 tracking-tight">
                             {checkPermission(permissions, 'audit_view') ? 'Recent Activity' : 'My Recent Activity'}
                         </h2>
                         <button className="text-[10px] font-bold text-blue-600 hover:text-blue-700 uppercase tracking-widest transition-colors">Details</button>
                     </div>
-                    <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/50 shadow-2xl shadow-slate-200/40 p-2">
+                    <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm p-2">
                         {activity.map((item, idx) => (
                             <div key={item.id} className={classNames(
-                                "group p-6 flex items-center justify-between rounded-[2rem] transition-all duration-300 hover:bg-white hover:shadow-lg hover:shadow-slate-200/30",
+                                "group p-4 sm:p-6 flex items-center justify-between rounded-[2rem] transition-all duration-300 hover:bg-white hover:shadow-lg hover:shadow-slate-200",
                                 idx !== activity.length - 1 ? "mb-1" : ""
                             )}>
-                                <div className="flex items-center gap-6">
-                                    <div className="h-12 w-12 rounded-2xl bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner ring-1 ring-black/5">
+                                <div className="flex items-center gap-3 sm:gap-6 min-w-0">
+                                    <div className="h-9 w-9 sm:h-12 sm:w-12 shrink-0 rounded-2xl bg-slate-100 flex items-center justify-center text-sm sm:text-lg font-bold text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner ring-1 ring-black/5">
                                         {item.user?.name ? item.user.name.charAt(0).toUpperCase() : 'U'}
                                     </div>
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-bold text-slate-900 leading-tight">
+                                    <div className="space-y-0.5 min-w-0">
+                                        <p className="text-sm font-bold text-slate-900 leading-tight truncate max-w-[160px] sm:max-w-none">
                                             {item.user?.name || 'Unknown User'} <span className="text-slate-400 font-medium font-sans lowercase"> {humanizeAction(item.action, item.metadata)}</span>
                                         </p>
                                         <div className="flex items-center gap-3 mt-1.5">
@@ -323,7 +323,7 @@ export default function DashboardPage() {
                     <div className="space-y-5">
                         <button
                             onClick={() => setCreateModalOpen(true)}
-                            className="group relative w-full overflow-hidden flex items-center justify-between p-7 rounded-[2.5rem] bg-slate-900 text-white shadow-2xl shadow-slate-900/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-500"
+                            className="group relative w-full overflow-hidden flex items-center justify-between p-4 sm:p-7 rounded-[2.5rem] bg-slate-900 text-white shadow-2xl shadow-slate-900/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-500"
                         >
                             <span className="flex items-center gap-4 font-bold uppercase tracking-widest text-xs relative z-10 font-display">
                                 <div className="p-3 bg-white/10 rounded-2xl ring-1 ring-white/20 group-hover:bg-blue-600 transition-all duration-500">
@@ -335,7 +335,7 @@ export default function DashboardPage() {
                             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/20 rounded-full blur-3xl pointer-events-none group-hover:bg-blue-600/40 transition-colors"></div>
                         </button>
 
-                        <Link href="/dashboard/media" className="group w-full flex items-center justify-between p-7 rounded-[2.5rem] bg-white/80 backdrop-blur-xl border border-slate-200/60 shadow-2xl shadow-slate-200/30 text-slate-900 hover:border-blue-600/30 hover:text-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all duration-500">
+                        <Link href="/dashboard/media" className="group w-full flex items-center justify-between p-4 sm:p-7 rounded-[2.5rem] bg-white border border-slate-200 shadow-2xl shadow-slate-200 text-slate-900 hover:border-blue-600/30 hover:text-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all duration-500">
                             <span className="flex items-center gap-4 font-bold uppercase tracking-widest text-xs text-slate-500 group-hover:text-blue-600 transition-all duration-500 font-display">
                                 <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-blue-50 transition-colors">
                                     <PhotoIcon className="h-5 w-5" />

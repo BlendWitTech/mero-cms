@@ -371,7 +371,7 @@ export default function RoleForm({ initialData, onSave, isLoading: externalLoadi
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Basic Info */}
                 <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/50">
+                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Role Details</h3>
 
                         <div className="space-y-6">
@@ -446,7 +446,7 @@ export default function RoleForm({ initialData, onSave, isLoading: externalLoadi
                         const isAllSelected = sectionKeys.every(k => permissions[k as keyof typeof permissions]);
 
                         return (
-                            <div key={sIdx} className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200/50">
+                            <div key={sIdx} className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200">
                                 <div className="mb-8">
                                     <div className="flex items-center justify-between">
                                         <div>

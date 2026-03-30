@@ -17,6 +17,8 @@ import { useForm } from '@/context/FormContext';
 import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
 import AlertDialog from '@/components/ui/AlertDialog';
 import ThemeCompatibilityBanner, { useThemeCompatibility } from '@/components/ui/ThemeCompatibilityBanner';
+import MediaPickerModal from '@/components/ui/MediaPickerModal';
+import { ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 
 
 interface Testimonial {
@@ -25,7 +27,7 @@ interface Testimonial {
     clientRole: string;
     content: string;
     rating: number;
-    image: string;
+    clientPhoto: string;
     updatedAt: string;
 }
 
@@ -50,13 +52,14 @@ function TestimonialsPageContent() {
         clientRole: '',
         content: '',
         rating: 0,
-        image: ''
+        clientPhoto: ''
     };
 
     const [formData, setFormData] = useState<any>(defaultFormData);
     const [initialState, setInitialState] = useState<any>(defaultFormData);
     const [currentId, setCurrentId] = useState<string | null>(null);
     const [showUnsavedAlert, setShowUnsavedAlert] = useState(false);
+    const [isMediaOpen, setIsMediaOpen] = useState(false);
     const [hoverRating, setHoverRating] = useState(0);
     const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; id: string | null }>({
         isOpen: false,
@@ -89,7 +92,7 @@ function TestimonialsPageContent() {
                         clientRole: testimonial.clientRole || '',
                         content: testimonial.content,
                         rating: testimonial.rating || 5,
-                        image: testimonial.image || ''
+                        clientPhoto: testimonial.clientPhoto || ''
                     };
                     setFormData(data);
                     setInitialState(data);
@@ -198,7 +201,7 @@ function TestimonialsPageContent() {
 
                 <ThemeCompatibilityBanner moduleName="testimonials" />
 
-                <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 shadow-xl shadow-slate-200/20 p-8">
+                <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200 p-8">
                     <form onSubmit={handleSave} className="space-y-6">
                         <div className="space-y-5">
                             <div className="grid grid-cols-2 gap-6">
@@ -295,17 +298,32 @@ function TestimonialsPageContent() {
 
                             <div className="space-y-1.5">
                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                                    Client Image URL
+                                    Client Image
                                 </label>
-                                 <input
-                                    type="text"
-                                    value={formData.image}
-                                    disabled={!isSupported}
-                                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium transition-all focus:border-blue-500 focus:ring-blue-500/10 disabled:opacity-50"
-                                    placeholder="https://..."
+                                <div
+                                    onClick={() => { if (isSupported) setIsMediaOpen(true); }}
+                                    className={`aspect-square max-w-[160px] bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 ${isSupported ? 'hover:bg-slate-100/50 hover:border-blue-400 hover:text-blue-500 cursor-pointer' : 'opacity-50 cursor-not-allowed'} transition-all group overflow-hidden relative`}
+                                >
+                                    {formData.clientPhoto ? (
+                                        <img src={formData.clientPhoto} className="w-full h-full object-cover" alt="" />
+                                    ) : (
+                                        <>
+                                            <ArrowUpTrayIcon className="h-6 w-6 mb-1 group-hover:scale-110 transition-transform" />
+                                            <span className="text-[10px] font-bold">Select Photo</span>
+                                        </>
+                                    )}
+                                </div>
+                                {formData.clientPhoto && isSupported && (
+                                    <button type="button" onClick={() => setFormData({ ...formData, clientPhoto: '' })} className="text-[10px] font-bold text-red-500 hover:text-red-600 uppercase tracking-widest transition-colors">
+                                        Remove
+                                    </button>
+                                )}
+                                <MediaPickerModal
+                                    isOpen={isMediaOpen}
+                                    onClose={() => setIsMediaOpen(false)}
+                                    onSelect={(url) => { setFormData({ ...formData, clientPhoto: url }); setIsMediaOpen(false); }}
+                                    current={formData.clientPhoto}
                                 />
-                                <p className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">Enter the URL of the image from your media library</p>
                             </div>
                         </div>
 
@@ -392,7 +410,7 @@ function TestimonialsPageContent() {
             <ThemeCompatibilityBanner moduleName="testimonials" />
 
             {/* List */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 shadow-xl shadow-slate-200/20 overflow-hidden">
+            <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200 overflow-hidden">
                 {isLoading ? (
                     <div className="p-12 flex justify-center">
                         <div className="w-8 h-8 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
@@ -403,7 +421,7 @@ function TestimonialsPageContent() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full min-w-[700px] text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-slate-100 bg-slate-50/50">
                                     <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-full">Client</th>
@@ -418,8 +436,8 @@ function TestimonialsPageContent() {
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden shrink-0 ring-2 ring-white shadow-sm">
-                                                    {testimonial.image ? (
-                                                        <img src={testimonial.image} alt={testimonial.clientName} className="w-full h-full object-cover" />
+                                                    {testimonial.clientPhoto ? (
+                                                        <img src={testimonial.clientPhoto} alt={testimonial.clientName} className="w-full h-full object-cover" />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold text-xs uppercase">
                                                             {testimonial.clientName.charAt(0)}
@@ -446,7 +464,7 @@ function TestimonialsPageContent() {
                                             </p>
                                         </td>
                                         <td className="px-8 py-6 text-right">
-                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => handleEdit(testimonial)}
                                                     className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"

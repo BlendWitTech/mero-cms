@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -26,19 +27,34 @@ import { TeamModule } from './team/team.module';
 import { ServicesModule } from './services/services.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { LeadsModule } from './leads/leads.module';
-import { PlotsModule } from './plots/plots.module';
-import { PlotCategoriesModule } from './plot-categories/plot-categories.module';
 import { PagesModule } from './pages/pages.module';
 import { ThemesModule } from './themes/themes.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { TasksModule } from './tasks/tasks.module';
 import { SetupModule } from './setup/setup.module';
 import { PublicModule } from './public/public.module';
+import { CollectionsModule } from './collections/collections.module';
+import { FormsModule } from './forms/forms.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 import { ModuleEnabledGuard } from './setup/module-enabled.guard';
+import { TierGuard } from './auth/tier.guard';
+
+// ── DEMO MODE (optional) ──────────────────────────────────────────────────────
+// These two imports are the ONLY references to demo code outside src/demo/.
+// To ship a clean production build to agencies / clients:
+//   1. Delete the entire src/demo/ directory.
+//   2. Delete these two import lines below.
+//   3. Remove the conditional spread entries further down in this file.
+//   4. Delete frontend/src/components/demo/ and frontend/src/app/token-login/.
+import { DemoModule } from './demo/demo.module';
+import { DemoGuard } from './demo/demo.guard';
+// ─────────────────────────────────────────────────────────────────────────────
+
+const IS_DEMO = process.env.DEMO_MODE === 'true';
 
 /**
  * Read ENABLED_MODULES once at startup.
- * Format: comma-separated optional module keys, e.g. "blogs,plots,team"
+ * Format: comma-separated optional module keys, e.g. "blogs,team,services"
  * Core modules (auth, users, roles, settings, media, etc.) are always loaded.
  *
  * Selective loading only applies when BOTH:
@@ -65,8 +81,10 @@ function when(...keys: string[]) {
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     // ── Core modules — always loaded ──────────────────────────────────────────
     PrismaModule,
+    ...(IS_DEMO ? [DemoModule] : []),  // ← demo: remove this line when deleting src/demo/
     UsersModule,
     AccessControlModule,
     AuthModule,
@@ -80,6 +98,13 @@ function when(...keys: string[]) {
     TasksModule,
     SetupModule,
     PublicModule,
+    // Theme system and navigation are fundamental CMS infrastructure
+    ThemesModule,
+    MenusModule,
+    PagesModule,
+    CollectionsModule,
+    WebhooksModule,
+    ...when('forms')(FormsModule),
 
     // ── Optional modules — loaded only when ENABLED_MODULES contains the key ──
 
@@ -90,18 +115,10 @@ function when(...keys: string[]) {
     ...when('blogs', 'tags')(TagsModule),
     ...when('blogs', 'comments')(CommentsModule),
 
-    // Plots ecosystem: land plot listings
-    ...when('plots', 'plot-categories')(PlotsModule),
-    ...when('plots', 'plot-categories')(PlotCategoriesModule),
-
     ...when('team')(TeamModule),
     ...when('services')(ServicesModule),
     ...when('testimonials')(TestimonialsModule),
-
-    ...when('menus')(MenusModule),
-    ...when('pages')(PagesModule),
     ...when('leads')(LeadsModule),
-    ...when('themes')(ThemesModule),
 
     ...when('seo')(SeoMetaModule),
     ...when('redirects')(RedirectsModule),
@@ -112,10 +129,10 @@ function when(...keys: string[]) {
   controllers: [AppController],
   providers: [
     AppService,
-    {
-      provide: APP_GUARD,
-      useClass: ModuleEnabledGuard,
-    },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    ...(IS_DEMO ? [{ provide: APP_GUARD, useClass: DemoGuard }] : []),  // ← demo: remove when deleting src/demo/
+    { provide: APP_GUARD, useClass: TierGuard },
+    { provide: APP_GUARD, useClass: ModuleEnabledGuard },
   ],
 })
 export class AppModule { }

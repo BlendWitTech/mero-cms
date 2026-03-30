@@ -9,11 +9,13 @@ import { JwtStrategy } from './jwt.strategy';
 
 import { SecurityService } from './security.service';
 import { AccessControlService } from './access-control.service';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
+    MailModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'secret',
       signOptions: { expiresIn: '1d' },

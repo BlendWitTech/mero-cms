@@ -1,4 +1,5 @@
 import { Controller, Request, Post, UseGuards, Body, Get, BadRequestException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -13,6 +14,7 @@ export class AuthController {
         private usersService: UsersService,
     ) { }
 
+    @Throttle({ default: { ttl: 60000, limit: 10 } })
     @UseGuards(LocalAuthGuard)
     @Post('login')
     async login(@Request() req, @Body() body: { rememberMe?: boolean }) {
@@ -30,6 +32,19 @@ export class AuthController {
         await (this.usersService as any).updateTwoFactorSecret(user.id, secret);
 
         return { qrCode, secret };
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('2fa/enable')
+    async enable2fa(@Body() body: { token: string }, @Request() req) {
+        const userDetails = await this.usersService.findOne(req.user.email);
+        if (!userDetails || !userDetails.twoFactorSecret) {
+            return { success: false, message: '2FA not initialized. Generate QR code first.' };
+        }
+        const isValid = this.securityService.verifyToken(body.token, userDetails.twoFactorSecret);
+        if (!isValid) return { success: false, message: 'Invalid token' };
+        await (this.usersService as any).enableTwoFactor(req.user.id);
+        return { success: true };
     }
 
     @Post('2fa/verify')
@@ -111,6 +126,7 @@ export class AuthController {
     async changePassword(@Request() req, @Body('newPassword') newPass: string) {
         return this.authService.changePassword(req.user.id, newPass);
     }
+    @Throttle({ default: { ttl: 300000, limit: 3 } })
     @Post('forgot-password')
     async forgotPassword(@Body('email') email: string) {
         return this.authService.forgotPassword(email);

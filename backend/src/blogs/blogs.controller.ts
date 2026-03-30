@@ -39,6 +39,18 @@ export class BlogsController {
         return post;
     }
 
+    @Post('bulk/delete')
+    @RequirePermissions(Permission.CONTENT_DELETE)
+    bulkDelete(@Body('ids') ids: string[]) {
+        return this.blogsService.bulkDelete(ids);
+    }
+
+    @Post('bulk/status')
+    @RequirePermissions(Permission.CONTENT_EDIT)
+    bulkUpdateStatus(@Body('ids') ids: string[], @Body('status') status: string) {
+        return this.blogsService.bulkUpdateStatus(ids, status);
+    }
+
     @Get()
     @RequirePermissions(Permission.CONTENT_VIEW)
     findAll(
@@ -78,6 +90,15 @@ export class BlogsController {
         const updated = await this.blogsService.update(id, updatePostDto);
         await this.auditLog.log(user.id, 'BLOG_UPDATE', { id, title: updated.title });
         return updated;
+    }
+
+    @Post(':id/duplicate')
+    @RequirePermissions(Permission.CONTENT_CREATE)
+    async duplicate(@Request() req, @Param('id') id: string) {
+        const user = await this.usersService.findOne(req.user.email);
+        const post = await this.blogsService.duplicate(id, user.id);
+        await this.auditLog.log(user.id, 'BLOG_DUPLICATE', { originalId: id, newId: post.id });
+        return post;
     }
 
     @Delete(':id')

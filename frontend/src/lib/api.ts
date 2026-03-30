@@ -36,6 +36,15 @@ export async function apiRequest(endpoint: string, options: RequestOptions = {})
         }
 
         if (!response.ok) {
+            // 401 Unauthorized — token expired or invalid; clear session and boot to login
+            if (response.status === 401 && typeof window !== 'undefined') {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                document.cookie = 'cms_token=; path=/; max-age=0; SameSite=Lax';
+                window.location.href = '/';
+                throw new Error('Session expired. Please log in again.');
+            }
+
             const errorMessage = data.message || 'An unexpected error occurred';
 
             // Check for revoked access and trigger immediate boot-out

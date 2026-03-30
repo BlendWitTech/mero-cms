@@ -1,0 +1,28 @@
+# Backend Dockerfile — Local / Docker Compose
+# Used by docker-compose.yml for local development and self-hosted installs.
+# Build context = repo root:  docker compose up --build
+
+FROM node:20-bookworm-slim
+RUN apt-get update -y && apt-get install -y openssl libssl-dev && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install backend dependencies (uses local node_modules only)
+COPY backend/package*.json ./
+RUN npm install
+
+# Copy backend source
+COPY backend/ .
+
+# Built-in themes mounted as volume in compose; copy for standalone docker run
+COPY themes/ /themes/
+
+ARG DATABASE_URL=postgresql://ci:ci@localhost:5432/ci
+RUN DATABASE_URL=${DATABASE_URL} npx prisma generate
+RUN npm run build
+RUN test -f dist/main.js || (echo "ERROR: dist/main.js not found" && exit 1)
+
+EXPOSE 3001
+
+# Push schema in background → start immediately (health check passes fast)
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss > /tmp/dbpush.log 2>&1 & npm run start:prod"]

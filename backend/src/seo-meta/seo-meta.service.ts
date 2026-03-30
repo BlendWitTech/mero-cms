@@ -6,41 +6,31 @@ export class SeoMetaService {
     constructor(private prisma: PrismaService) { }
 
     async getDashboardStats() {
-        // 1. Count total posts, pages and projects
-        const totalPosts = await (this.prisma as any).post.count();
-        const totalPages = await (this.prisma as any).page.count();
-        const totalProjects = await (this.prisma as any).project.count();
-        const combinedTotal = totalPosts + totalPages + totalProjects;
+        const safe = async (fn: () => Promise<number>): Promise<number> => {
+            try { return await fn(); } catch { return 0; }
+        };
 
-        // 2. Count items with SEO metadata (only those that actually exist in their respective tables)
-        const [postsWithSeo, pagesWithSeo, projectsWithSeo] = await Promise.all([
-            (this.prisma as any).seoMeta.count({
-                where: {
-                    pageType: { in: ['post', 'POST'] },
-                    pageId: { not: null },
-                }
-            }),
-            (this.prisma as any).seoMeta.count({
-                where: {
-                    pageType: { in: ['page', 'PAGE'] },
-                    pageId: { not: null }
-                }
-            }),
-            (this.prisma as any).seoMeta.count({
-                where: {
-                    pageType: { in: ['project', 'PROJECT', 'Project'] }
-                }
-            })
+        // 1. Count total content items that exist in this CMS
+        const [totalPosts, totalPages] = await Promise.all([
+            safe(() => this.prisma.post.count()),
+            safe(() => (this.prisma as any).page.count()),
+        ]);
+        const combinedTotal = totalPosts + totalPages;
+
+        // 2. Count items with SEO metadata
+        const [postsWithSeo, pagesWithSeo] = await Promise.all([
+            safe(() => (this.prisma as any).seoMeta.count({
+                where: { pageType: { in: ['post', 'POST'] }, pageId: { not: null } }
+            })),
+            safe(() => (this.prisma as any).seoMeta.count({
+                where: { pageType: { in: ['page', 'PAGE'] }, pageId: { not: null } }
+            })),
         ]);
 
-        // To be 100% accurate, we should count occurrences in metaMap
-        // But for dashboard stats, we'll cap it at the total content count to avoid score > 100
-        const itemsWithSeo = Math.min(combinedTotal, postsWithSeo + pagesWithSeo + projectsWithSeo);
+        const itemsWithSeo = Math.min(combinedTotal, postsWithSeo + pagesWithSeo);
 
         // 3. Count active redirects
-        const activeRedirects = await (this.prisma as any).redirect.count({
-            where: { isActive: true }
-        });
+        const activeRedirects = await safe(() => this.prisma.redirect.count({ where: { isActive: true } }));
 
         return {
             totalPosts: combinedTotal,
@@ -51,30 +41,29 @@ export class SeoMetaService {
     }
 
     async getContentList() {
-        const posts = await (this.prisma as any).post.findMany({
-            select: { id: true, title: true, slug: true, status: true },
-            orderBy: { updatedAt: 'desc' }
-        });
+        const safeFind = async (fn: () => Promise<any[]>): Promise<any[]> => {
+            try { return await fn(); } catch { return []; }
+        };
 
-        const pages = await (this.prisma as any).page.findMany({
-            select: { id: true, title: true, slug: true, status: true },
-            orderBy: { updatedAt: 'desc' }
-        });
+        const [posts, pages] = await Promise.all([
+            safeFind(() => (this.prisma as any).post.findMany({
+                select: { id: true, title: true, slug: true, status: true },
+                orderBy: { updatedAt: 'desc' }
+            })),
+            safeFind(() => (this.prisma as any).page.findMany({
+                select: { id: true, title: true, slug: true, status: true },
+                orderBy: { updatedAt: 'desc' }
+            })),
+        ]);
 
-        const projects = await (this.prisma as any).project.findMany({
-            select: { id: true, title: true, slug: true, status: true },
-            orderBy: { updatedAt: 'desc' }
-        });
-
-        const allMeta = await (this.prisma as any).seoMeta.findMany({
+        const allMeta = await safeFind(() => (this.prisma as any).seoMeta.findMany({
             where: {
                 OR: [
                     { pageType: { in: ['post', 'POST'] } },
                     { pageType: { in: ['page', 'PAGE'] } },
-                    { pageType: { in: ['project', 'PROJECT', 'Project'] } }
                 ]
             }
-        });
+        }));
 
         const metaMap = new Map();
         allMeta.forEach(m => {
@@ -83,8 +72,40 @@ export class SeoMetaService {
             }
         });
 
+        // Fetch SEO meta for static theme pages (keyed by slug, no pageId)
+        const staticMeta = await safeFind(() => (this.prisma as any).seoMeta.findMany({
+            where: { pageType: { in: ['static', 'STATIC'] } }
+        }));
+        const staticMetaMap = new Map();
+        staticMeta.forEach(m => {
+            if (m.pageId) staticMetaMap.set(m.pageId, m); // pageId holds the slug for static pages
+        });
+
+        // Static theme pages (always present regardless of DB content)
+        const staticPages = [
+            { id: 'static-home', title: 'Home', slug: '/', pageId: 'home' },
+            { id: 'static-about', title: 'About Us', slug: '/about', pageId: 'about' },
+            { id: 'static-services', title: 'Services', slug: '/services', pageId: 'services' },
+            { id: 'static-blog', title: 'Blog Listing', slug: '/blog', pageId: 'blog' },
+            { id: 'static-contact', title: 'Contact', slug: '/contact', pageId: 'contact' },
+        ];
+
+        // Slugs already covered by static pages — exclude to avoid duplicates
+        const reservedSlugs = new Set(['home', 'about', 'services', 'blog', 'contact']);
+        const filteredPages = pages.filter(p => !reservedSlugs.has(p.slug));
+
         return [
-            ...pages.map(p => ({
+            // Static theme pages first
+            ...staticPages.map(p => ({
+                id: p.id,
+                title: p.title,
+                slug: p.slug,
+                type: 'static',
+                status: 'PUBLISHED',
+                seo: staticMetaMap.get(p.pageId) || null,
+                lastModified: new Date(),
+            })),
+            ...filteredPages.map(p => ({
                 id: p.id,
                 title: p.title,
                 slug: p.slug === 'home' ? '/' : `/${p.slug}`,
@@ -102,15 +123,6 @@ export class SeoMetaService {
                 seo: metaMap.get(`post:${p.id}`) || null,
                 lastModified: new Date(),
             })),
-            ...projects.map(p => ({
-                id: p.id,
-                title: p.title,
-                slug: `/projects/${p.slug}`,
-                type: 'project',
-                status: p.status,
-                seo: metaMap.get(`project:${p.id}`) || null,
-                lastModified: new Date(),
-            }))
         ];
     }
 

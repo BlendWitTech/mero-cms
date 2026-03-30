@@ -14,8 +14,14 @@ import {
     Bars3Icon,
     SwatchIcon,
     RectangleStackIcon,
+    CircleStackIcon,
+    ClipboardDocumentListIcon,
+    BoltIcon,
     UsersIcon,
-    InboxArrowDownIcon
+    InboxArrowDownIcon,
+    NewspaperIcon,
+    ChatBubbleLeftRightIcon,
+    PencilSquareIcon,
 } from '@heroicons/react/24/outline';
 import { apiRequest } from '@/lib/api';
 import { useSettings } from '@/context/SettingsContext';
@@ -39,10 +45,22 @@ const initialNavigation = [
         icon: DocumentTextIcon,
         requiredPermission: ['content_view', 'content_create', 'content_edit'],
         children: [
+            { name: 'Collections', href: '/dashboard/collections', icon: CircleStackIcon, requiredPermission: ['content_view', 'content_create'] },
+            { name: 'Forms', href: '/dashboard/forms', icon: ClipboardDocumentListIcon, requiredPermission: ['content_view', 'content_create'], requiresModule: 'forms' },
             { name: 'Menus', href: '/dashboard/menus', icon: Bars3Icon, requiredPermission: 'content_edit', requiresModule: 'menus' },
             { name: 'Services', href: '/dashboard/services', requiredPermission: ['content_view', 'content_create'], requiresModule: 'services' },
-            { name: 'Blogs', href: '/dashboard/blog', requiredPermission: ['content_view', 'content_create'], requiresModule: 'blogs' },
             { name: 'Categories', href: '/dashboard/categories', requiredPermission: ['content_view', 'content_create'], requiresModule: 'categories' },
+        ]
+    },
+    {
+        name: 'Blog',
+        icon: NewspaperIcon,
+        requiredPermission: ['content_view', 'content_create'],
+        requiresModule: 'blogs',
+        children: [
+            { name: 'All Posts', href: '/dashboard/blog', icon: DocumentTextIcon, requiredPermission: ['content_view', 'content_create'] },
+            { name: 'New Post', href: '/dashboard/blog?action=new', icon: PencilSquareIcon, requiredPermission: 'content_create' },
+            { name: 'Comments', href: '/dashboard/comments', icon: ChatBubbleLeftRightIcon, requiredPermission: ['content_view', 'content_edit'], requiresModule: 'comments' },
         ]
     },
     { name: 'Media', href: '/dashboard/media', icon: PhotoIcon, requiredPermission: 'media_view' },
@@ -66,6 +84,8 @@ const initialNavigation = [
     },
     { name: 'Leads', href: '/dashboard/leads', icon: ChartBarIcon, requiredPermission: 'leads_view', requiresModule: 'leads' },
     { name: 'Theme', href: '/dashboard/themes', icon: SwatchIcon, requiredPermission: 'settings_edit', requiresModule: 'themes' },
+    { name: 'Webhooks', href: '/dashboard/webhooks', icon: BoltIcon, requiredPermission: 'settings_edit' },
+    { name: 'Audit Log', href: '/dashboard/audit-log', icon: ClipboardDocumentListIcon, requiredPermission: 'audit_view' },
     { name: 'Settings', href: '/dashboard/settings', icon: Cog6ToothIcon, requiredPermission: 'settings_edit', id: 'settings' },
 ];
 
@@ -273,7 +293,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                         if (item.name === 'Content' && item.children) {
                             const currentChildren = [...item.children];
                             const dynamicModules = [
-                                { key: 'plots', name: 'Plots', href: '/dashboard/plots', icon: RectangleStackIcon },
                                 { key: 'team', name: 'Team', href: '/dashboard/team', icon: UserGroupIcon },
                                 { key: 'testimonials', name: 'Testimonials', href: '/dashboard/testimonials', icon: RectangleStackIcon },
                             ];
@@ -344,7 +363,9 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     }, [onToggle]);
 
     const handleNavigation = (href: string) => {
-        if (href === pathname || href === '#') return;
+        const currentSearch = typeof window !== 'undefined' ? window.location.search : '';
+        const currentUrl = pathname + currentSearch;
+        if (href === currentUrl || href === '#') return;
         if (isDirty) {
             setPendingNavigation(href);
             setShowDiscardAlert(true);
@@ -379,7 +400,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     };
 
     return (
-        <div className="relative flex grow flex-col border-r border-slate-200/40 bg-white/70 backdrop-blur-3xl transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-[1px_0_10px_rgba(0,0,0,0.02)] isolate">
+        <div className="relative flex grow flex-col min-h-0 border-r border-slate-200/40 bg-white/70 backdrop-blur-3xl transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-[1px_0_10px_rgba(0,0,0,0.02)] isolate">
             <UnsavedChangesAlert
                 isOpen={showDiscardAlert}
                 onSaveAndExit={saveHandler ? handleSaveAndExit : undefined}

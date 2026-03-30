@@ -27,6 +27,7 @@ interface ThemeDetails {
     previewUrl: string | null;
     deployedUrl: string;
     setupType?: 'FRESH' | 'LEGACY' | null;
+    builtIn?: boolean;
 }
 
 export default function ThemesPage() {
@@ -43,6 +44,8 @@ export default function ThemesPage() {
     // Modal states
     const [setupModalTheme, setSetupModalTheme] = useState<string | null>(null);
     const [activateModalTheme, setActivateModalTheme] = useState<string | null>(null);
+    const [deleteModalTheme, setDeleteModalTheme] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [showResetModal, setShowResetModal] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
 
@@ -226,6 +229,21 @@ export default function ThemesPage() {
         }
     };
 
+    const handleDeleteTheme = async () => {
+        if (!deleteModalTheme) return;
+        setIsDeleting(true);
+        try {
+            await apiRequest(`/themes/${deleteModalTheme}`, { method: 'DELETE' });
+            showToast(`Theme "${deleteModalTheme}" deleted.`, 'success');
+            setDeleteModalTheme(null);
+            fetchThemes();
+        } catch (e: any) {
+            showToast(e?.message || 'Failed to delete theme', 'error');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     const getDisabledModules = (requiredModules: string[]) =>
         requiredModules.filter(m => !isModuleEnabled(m));
 
@@ -273,7 +291,7 @@ export default function ThemesPage() {
             </div>
 
             {/* Theme Grid */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 shadow-xl shadow-slate-200/20 overflow-hidden">
+            <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200 overflow-hidden">
                 {isLoading ? (
                     <div className="p-12 flex justify-center">
                         <div className="w-8 h-8 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin" />
@@ -414,6 +432,16 @@ export default function ThemesPage() {
                                                 )}
                                                 {isActive ? 'Active' : isActivating === theme.slug ? (isRestarting ? 'Restarting...' : 'Activating...') : 'Activate'}
                                             </button>
+                                            {!isActive && (
+                                                <button
+                                                    onClick={() => setDeleteModalTheme(theme.slug)}
+                                                    disabled={isBusy}
+                                                    className="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all disabled:opacity-50"
+                                                    title="Delete theme"
+                                                >
+                                                    <TrashIcon className="h-4 w-4" />
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -591,6 +619,42 @@ export default function ThemesPage() {
                                 className="px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 shadow-lg shadow-red-600/20 transition-all text-sm"
                             >
                                 Yes, Reset Everything
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Theme Modal */}
+            {deleteModalTheme && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+                        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                            <h2 className="text-base font-black text-slate-900">Delete Theme</h2>
+                            <button onClick={() => setDeleteModalTheme(null)} className="p-2 -mr-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors">
+                                <XMarkIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-sm text-slate-600">
+                                Are you sure you want to delete <strong>{deleteModalTheme}</strong>? The theme files will be permanently removed.
+                            </p>
+                            <p className="text-xs text-slate-400">Content and settings are not affected — only the theme files are deleted.</p>
+                        </div>
+                        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                            <button
+                                onClick={() => setDeleteModalTheme(null)}
+                                className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDeleteTheme}
+                                disabled={isDeleting}
+                                className="px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 shadow-lg shadow-red-600/20 transition-all text-sm disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {isDeleting && <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                                Delete Theme
                             </button>
                         </div>
                     </div>

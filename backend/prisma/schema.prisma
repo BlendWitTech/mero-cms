@@ -19,8 +19,10 @@ model User {
   ipWhitelist         String[]      @default([])
   twoFactorEnabled    Boolean       @default(false)
   twoFactorSecret     String?
-  failedLoginAttempts Int           @default(0)
-  lockoutUntil        DateTime?
+  failedLoginAttempts  Int           @default(0)
+  lockoutUntil         DateTime?
+  passwordResetToken   String?
+  passwordResetExpiry  DateTime?
   preferences         Json?
   avatar              String?
   bio                 String?
@@ -146,6 +148,17 @@ model FormSubmission {
   form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
 }
 
+model Webhook {
+  id        String   @id @default(uuid())
+  name      String
+  url       String
+  events    String[] // e.g. ["post.published", "page.updated"]
+  secret    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model AnalyticsConfig {
   id                  String   @id @default(uuid())
   ga4MeasurementId    String?
@@ -201,17 +214,20 @@ model Tag {
 
 // Depends on: blogs (Post model), _core (User model)
 model Comment {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   content     String
   authorName  String
   authorEmail String
-  status      String   @default("PENDING")
+  status      String    @default("PENDING")
   postId      String
   userId      String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user        User?    @relation(fields: [userId], references: [id])
+  parentId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  post        Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id])
+  parent      Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     Comment[] @relation("CommentReplies")
 }
 
 model Lead {
@@ -268,45 +284,6 @@ model Page {
   updatedAt     DateTime @updatedAt
 }
 
-// Land plot listings — dedicated module for real-estate plot themes
-// Separate from the Project model which is for construction/portfolio themes
-
-model Plot {
-  id          String        @id @default(uuid())
-  title       String
-  slug        String        @unique
-  description String        @db.Text
-  content     String?       @db.Text
-  coverImage  String?
-  gallery     String[]
-  status      String        @default("available")
-  categoryId  String?
-  category    PlotCategory? @relation(fields: [categoryId], references: [id])
-  location    String?
-  featured    Boolean       @default(false)
-  priceFrom   String?
-  priceTo     String?
-  areaFrom    String?
-  areaTo      String?
-  facing      String?
-  roadAccess  String?
-  theme       String?
-  attributes  Json?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-}
-
-model PlotCategory {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  slug        String   @unique
-  description String?
-  theme       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  plots       Plot[]
-}
-
 model Redirect {
   id        String   @id @default(uuid())
   fromPath  String   @unique
@@ -338,6 +315,7 @@ model SeoMeta {
   ogTitle            String?
   ogDescription      String?
   ogImage            String?
+  ogImages           String[]
   twitterCard        String?  @default("summary_large_image")
   twitterTitle       String?
   twitterDescription String?
@@ -386,7 +364,7 @@ model Testimonial {
   clientCompany String?
   clientPhoto   String?
   content       String   @db.Text
-  rating        Int      @default(5)
+  rating        Float    @default(5)
   theme         String?
   attributes    Json?
   createdAt     DateTime @default(now())
