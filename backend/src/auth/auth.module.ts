@@ -10,6 +10,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { SecurityService } from './security.service';
 import { AccessControlService } from './access-control.service';
 import { MailModule } from '../mail/mail.module';
+import { LicenseService } from './license.service';
 
 @Module({
   imports: [
@@ -21,8 +22,8 @@ import { MailModule } from '../mail/mail.module';
       signOptions: { expiresIn: '1d' },
     }),
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy, SecurityService],
+  providers: [AuthService, LocalStrategy, JwtStrategy, SecurityService, LicenseService],
   controllers: [AuthController],
-  exports: [AuthService, SecurityService],
+  exports: [AuthService, SecurityService, LicenseService],
 })
 export class AuthModule { }

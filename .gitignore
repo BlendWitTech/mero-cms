@@ -48,3 +48,6 @@ backend/node_modules/.prisma/
 themes/*/node_modules/
 themes/*/.next/
 themes/*/out/
+
+# Blendwit internal license signing keys — NEVER commit
+tools/keys/
