@@ -10,7 +10,14 @@ It consists of three parts that are always deployed separately:
 | **Dashboard** (`frontend/`) | Next.js admin panel | Vercel |
 | **Theme** (separate repo) | Client's public-facing website | Vercel |
 
-> The **theme is never part of this repo.** Fork [`mero-cms-theme-starter`](https://github.com/BlendWitTech/mero-cms-theme-starter) to build each client's theme separately.
+### Branch Strategy
+
+| Branch | Purpose | Purchase/Deploy |
+| :--- | :--- | :--- |
+| `main` | **Clean Base Version**. Stripped of all demo code. | For clean agency/client purchases. |
+| `stable` | **Production Version**. Code used by live clients. | For `ktm-plots` and current client setups. |
+| `marketing` | **Demo Version**. Includes showcase/demo logic. | For `demo.merocms.com`. |
+| `develop` | **Internal Development**. Where new features are merged. | For developers and team testing. |
 
 ---
 
@@ -184,15 +191,15 @@ mero-cms-client-starter/         ← Fork this for every new client onboarding
 
 ---
 
-## Stable Releases
-
-| Tag | Status | Use for |
-|-----|--------|---------|
-| `v1.1.0` | Current stable | All new client deployments |
-| `v1.0.0` | Initial release | — |
+| Tag Suffix | Use Case | Example |
+| :--- | :--- | :--- |
+| (None) | Clean `main` branch releases | `v1.1.0` |
+| `-stable` | Production client releases | `v1.1.0-stable` |
+| `-marketing` | Demo/Showcase site releases | `v1.1.0-marketing` |
+| `-develop` | Internal development snapshots | `v1.1.0-develop` |
 
 Always pin client deployments to a specific tag in Railway and Vercel.
-**Never point a client's production deployment to `main`.**
+**Never point a client's production deployment to `main` (clean) or `develop`.**
 
 ---
 
