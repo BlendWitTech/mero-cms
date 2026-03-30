@@ -1,0 +1,40 @@
+# docker-compose.demo.yml — Public demo deployment (marketing branch only)
+# Extends docker-compose.yml with demo-specific overrides.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.demo.yml up -d
+#
+# What this adds over the standard compose:
+#   - DEMO_MODE=true on the backend (activates DemoGuard + DemoTasksService)
+#   - NEXT_PUBLIC_DEMO_MODE=true on the frontend (shows DemoBanner)
+#   - Auto-runs seed:demo instead of seed:starter after db push
+#   - Removes pgadmin (not needed in public demo)
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DEMO_MODE:       "true"
+      # Demo resets every 2h — no persistent license needed
+      LICENSE_KEY:     ""
+      # All modules enabled in demo
+      ENABLED_MODULES: "blogs,categories,tags,comments,team,services,testimonials,leads,seo,redirects,analytics,sitemap,robots,forms,webhooks"
+      SETUP_COMPLETE:  "true"
+    # Override CMD to use demo seed
+    command: >
+      sh -c "npx prisma db push --accept-data-loss &&
+             npx ts-node prisma/seed-demo.ts 2>/dev/null || true;
+             node dist/main"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL:   ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+        NEXT_PUBLIC_DEMO_MODE: "true"
+    environment:
+      NEXT_PUBLIC_API_URL:    ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      NEXT_PUBLIC_DEMO_MODE:  "true"

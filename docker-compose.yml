@@ -1,66 +1,89 @@
+# docker-compose.yml — Standard agency/client deployment
+# Copy .env.example → .env and fill in the required values before running.
+#
+# Usage:
+#   docker compose up -d          # start all services
+#   docker compose logs -f        # tail logs
+#   docker compose down -v        # stop and remove volumes
+
 services:
   db:
     image: postgres:15-alpine
     container_name: ${ORG_NAME:-mero}-cms-db
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER:-admin}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-password123}
-      POSTGRES_DB: ${DB_NAME:-mero_cms}
-    ports:
-      - "5432:5432"
+      POSTGRES_USER:     ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB:       ${DB_NAME:-mero_cms}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d ${DB_NAME:-mero_cms}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
     container_name: ${ORG_NAME:-mero}-cms-backend
-    restart: always
+    restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "${BACKEND_PORT:-3001}:3001"
     environment:
-      DATABASE_URL: postgresql://${DB_USER:-admin}:${DB_PASSWORD:-password123}@db:5432/${DB_NAME:-mero_cms}?schema=public
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
-      PORT: 3001
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3002}
-      # Set by setup wizard on first run — leave empty initially
+      DATABASE_URL:  postgresql://${DB_USER:-admin}:${DB_PASSWORD:-changeme}@db:5432/${DB_NAME:-mero_cms}?schema=public
+      JWT_SECRET:    ${JWT_SECRET:?JWT_SECRET is required}
+      PORT:          3001
+      NODE_ENV:      production
+      CORS_ORIGINS:  ${CORS_ORIGINS:-http://localhost:3000}
+
+      # Licensing — obtain LICENSE_KEY from Blendwit
+      LICENSE_KEY:   ${LICENSE_KEY:-}
+
+      # Module selection — set by setup wizard on first run
       ENABLED_MODULES: ${ENABLED_MODULES:-}
-      SETUP_COMPLETE: ${SETUP_COMPLETE:-false}
-      # Docker volume paths — themes/ and scripts/ are mounted as read-only
-      THEMES_DIR: /themes
+      SETUP_COMPLETE:  ${SETUP_COMPLETE:-false}
+
+      # Storage paths (mounted below)
+      THEMES_DIR:  /themes
       SCRIPTS_DIR: /scripts
+
+      # Optional: mail
+      MAIL_HOST:     ${MAIL_HOST:-}
+      MAIL_PORT:     ${MAIL_PORT:-587}
+      MAIL_USER:     ${MAIL_USER:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM:     ${MAIL_FROM:-}
     volumes:
       - ./themes:/themes:ro
       - ./scripts:/scripts:ro
       - backend_uploads:/app/uploads
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL:    ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+        NEXT_PUBLIC_DEMO_MODE:  "false"
     container_name: ${ORG_NAME:-mero}-cms-frontend
-    restart: always
+    restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
     depends_on:
-      - backend
-
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: ${ORG_NAME:-mero}-cms-pgadmin
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-password123}
-    ports:
-      - "5050:80"
-    depends_on:
-      - db
+      backend:
+        condition: service_healthy
 
 volumes:
   postgres_data:

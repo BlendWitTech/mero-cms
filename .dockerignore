@@ -10,3 +10,7 @@ node_modules/
 themes/*/node_modules/
 themes/*/.next/
 themes/*/package-lock.json
+# Never include license signing key in any Docker build
+tools/keys/
+.env
+.env.local
