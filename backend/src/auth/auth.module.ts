@@ -11,6 +11,7 @@ import { SecurityService } from './security.service';
 import { AccessControlService } from './access-control.service';
 import { MailModule } from '../mail/mail.module';
 import { LicenseService } from './license.service';
+import { LicenseController } from './license.controller';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { LicenseService } from './license.service';
     }),
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy, SecurityService, LicenseService],
-  controllers: [AuthController],
+  controllers: [AuthController, LicenseController],
   exports: [AuthService, SecurityService, LicenseService],
 })
 export class AuthModule { }

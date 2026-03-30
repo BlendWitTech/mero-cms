@@ -38,9 +38,8 @@ import { FormsModule } from './forms/forms.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { ModuleEnabledGuard } from './setup/module-enabled.guard';
 import { TierGuard } from './auth/tier.guard';
+import { LicenseService } from './auth/license.service';
 
-
-const IS_DEMO = false;
 
 /**
  * Read ENABLED_MODULES once at startup.
@@ -118,6 +117,7 @@ function when(...keys: string[]) {
   controllers: [AppController],
   providers: [
     AppService,
+    LicenseService,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: TierGuard },
     { provide: APP_GUARD, useClass: ModuleEnabledGuard },
