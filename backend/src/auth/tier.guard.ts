@@ -1,19 +1,21 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { TIER_KEY } from './require-tier.decorator';
-import { Tier, getActiveTier } from './tier.enum';
+import { Tier } from './tier.enum';
+import { LicenseService } from './license.service';
 
 /**
  * Blocks access to endpoints decorated with @RequireTier() when the active
- * deployment tier is below the required level.
+ * deployment tier (from the verified LICENSE_KEY) is below the required level.
  *
- * Register globally in AppModule or apply per-controller as needed.
- * The active tier is read from the TIER env var at request time so it can be
- * changed without restart (useful for license key validation in Track D).
+ * Registered globally in AppModule as an APP_GUARD.
  */
 @Injectable()
 export class TierGuard implements CanActivate {
-    constructor(private reflector: Reflector) { }
+    constructor(
+        private reflector: Reflector,
+        private licenseService: LicenseService,
+    ) {}
 
     canActivate(context: ExecutionContext): boolean {
         const required = this.reflector.getAllAndOverride<Tier>(TIER_KEY, [
@@ -21,15 +23,15 @@ export class TierGuard implements CanActivate {
             context.getClass(),
         ]);
 
-        if (!required) return true; // No tier restriction on this endpoint
+        if (!required) return true;
 
-        const active = getActiveTier();
+        const { tier } = this.licenseService.getLicenseStatus();
 
-        if (active < required) {
+        if (tier < required) {
             const tierName = Tier[required];
             throw new ForbiddenException(
                 `This feature requires the ${tierName} tier or higher. ` +
-                `Upgrade your license to access it.`,
+                `Upgrade your Mero CMS license to access it.`,
             );
         }
 
