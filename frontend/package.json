@@ -51,7 +51,7 @@
     "@tiptap/extensions": "3.20.1",
     "@tiptap/pm": "3.20.1",
     "@tiptap/react": "3.20.1",
-    "@tiptap/starter-kit": "3.20.1",
+    "@tiptap/starter-kit": "3.21.0",
     "@types/uuid": "^10.0.0",
     "date-fns": "^2.30.0",
     "emoji-picker-react": "^4.18.0",
