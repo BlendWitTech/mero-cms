@@ -21,7 +21,7 @@ interface PageItem {
     id: string;
     title: string;
     slug: string;
-    type: 'theme' | 'content' | 'category' | 'tag' | 'plot-category';
+    type: 'theme' | 'content' | 'category' | 'tag';
     lastUpdated?: string;
     seo?: any;
     editableContent?: boolean; // content pages (privacy, terms etc.) can be fully edited
@@ -46,12 +46,11 @@ export default function PagesIndex() {
     const fetchPages = async () => {
         setIsLoading(true);
         try {
-            const [pageSchema, dynamicPages, categories, tags, plotCategories, themeConfig] = await Promise.all([
+            const [pageSchema, dynamicPages, categories, tags, themeConfig] = await Promise.all([
                 apiRequest('/themes/active/page-schema', { skipNotification: true }).catch(() => []),
                 apiRequest('/pages', { skipNotification: true }).catch(() => []),
                 apiRequest('/categories', { skipNotification: true }).catch(() => []),
                 apiRequest('/tags', { skipNotification: true }).catch(() => []),
-                apiRequest('/plot-categories', { skipNotification: true }).catch(() => []),
                 apiRequest('/themes/active/config', { skipNotification: true }).catch(() => ({})),
             ]);
             setThemeBaseUrl(themeConfig?.deployedUrl || 'http://localhost:3002');
@@ -99,13 +98,6 @@ export default function PagesIndex() {
                     type: 'tag' as const,
                     lastUpdated: t.updatedAt,
                 })) : []),
-                ...(Array.isArray(plotCategories) ? plotCategories.map((c: any) => ({
-                    id: c.id,
-                    title: `Plot Category: ${c.name}`,
-                    slug: `/plots/category/${c.slug}`,
-                    type: 'plot-category' as const,
-                    lastUpdated: c.updatedAt,
-                })) : []),
             ];
 
             setPages(allPages);
@@ -125,7 +117,7 @@ export default function PagesIndex() {
         try {
             const pageType = page.type === 'theme' ? 'static'
                 : page.type === 'content' ? 'page'
-                : page.type === 'category' || page.type === 'plot-category' ? 'category'
+                : page.type === 'category' ? 'category'
                 : 'tag';
 
             const seo = await apiRequest(`/seo-meta/${pageType}/${page.id}`, { skipNotification: true });
@@ -145,7 +137,7 @@ export default function PagesIndex() {
         try {
             const pageType = editingPage.type === 'theme' ? 'static'
                 : editingPage.type === 'content' ? 'page'
-                : editingPage.type === 'category' || editingPage.type === 'plot-category' ? 'category'
+                : editingPage.type === 'category' ? 'category'
                 : 'tag';
 
             await apiRequest('/seo-meta', {
@@ -189,7 +181,6 @@ export default function PagesIndex() {
         content:        { label: 'Content Page',    bg: 'bg-emerald-50', text: 'text-emerald-600', icon: <DocumentTextIcon className="h-5 w-5" /> },
         category:       { label: 'Blog Category',   bg: 'bg-amber-50',  text: 'text-amber-600',  icon: <Square3Stack3DIcon className="h-5 w-5" /> },
         tag:            { label: 'Tag',             bg: 'bg-purple-50', text: 'text-purple-600', icon: <HashtagIcon className="h-5 w-5" /> },
-        'plot-category':{ label: 'Plot Category',   bg: 'bg-orange-50', text: 'text-orange-600', icon: <Square3Stack3DIcon className="h-5 w-5" /> },
     };
 
     return (

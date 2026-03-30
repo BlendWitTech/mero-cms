@@ -75,7 +75,7 @@ export default function SEODashboard() {
                         ) : stats.totalPosts === 0 ? (
                             <div>
                                 <p className="text-2xl font-black opacity-80">No content yet</p>
-                                <p className="mt-2 text-sm opacity-75">Add blog posts, plots, or pages to start tracking SEO</p>
+                                <p className="mt-2 text-sm opacity-75">Add blog posts or pages to start tracking SEO</p>
                             </div>
                         ) : (
                             <>

@@ -7,7 +7,8 @@ import {
     EnvelopeIcon,
     PhoneIcon,
     UserIcon,
-    FunnelIcon
+    FunnelIcon,
+    ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
 import { useNotification } from '@/context/NotificationContext';
 import { apiRequest } from '@/lib/api';
@@ -121,6 +122,14 @@ export default function LeadsPage() {
                             <option value="ARCHIVED">Archived</option>
                         </select>
                     </div>
+                    <a
+                        href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/leads/export/csv${statusFilter ? `?status=${statusFilter}` : ''}`}
+                        download="leads.csv"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all whitespace-nowrap"
+                    >
+                        <ArrowDownTrayIcon className="h-4 w-4" />
+                        Export CSV
+                    </a>
                 </div>
 
                 <div className="overflow-x-auto">

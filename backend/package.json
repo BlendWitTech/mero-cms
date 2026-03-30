@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "0.0.1",
+  "version": "1.2.0",
   "description": "",
   "author": "",
   "private": true,
@@ -19,7 +19,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed": "prisma db seed"
+    "seed": "prisma db seed",
+    "seed:demo": "ts-node prisma/seed-demo.ts",
+    "seed:starter": "ts-node prisma/seed-starter.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.980.0",
@@ -33,10 +35,13 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/schedule": "^6.1.1",
     "@nestjs/serve-static": "^5.0.4",
+    "@nestjs/swagger": "^11.2.6",
+    "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "^6.19.2",
     "@types/fluent-ffmpeg": "^2.1.28",
     "@types/multer": "^2.0.0",
     "@types/nodemailer": "^7.0.9",
+    "@types/sanitize-html": "^2.16.1",
     "@types/sharp": "^0.31.1",
     "adm-zip": "^0.5.16",
     "bcrypt": "^6.0.0",
@@ -46,6 +51,7 @@
     "ffmpeg-static": "^5.3.0",
     "ffprobe-static": "^3.1.0",
     "fluent-ffmpeg": "^2.1.3",
+    "helmet": "^8.1.0",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.13",
     "otpauth": "^9.4.1",
@@ -56,6 +62,7 @@
     "reflect-metadata": "^0.2.2",
     "resend": "^6.9.4",
     "rxjs": "^7.8.1",
+    "sanitize-html": "^2.17.2",
     "sharp": "^0.34.5"
   },
   "devDependencies": {

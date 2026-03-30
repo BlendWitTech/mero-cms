@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
 import * as sharp from 'sharp';
@@ -109,7 +109,56 @@ export class MediaService {
         return `https://${s3Config.bucket}.s3.amazonaws.com/uploads/${filename}`;
     }
 
+    /**
+     * Read the first 12 bytes of an uploaded file and compare against known
+     * magic-byte signatures to catch MIME-type spoofing (e.g. a .php file
+     * renamed to .jpg and uploaded with image/jpeg content-type).
+     */
+    private validateMagicBytes(filePath: string, declaredMime: string): void {
+        const buf = Buffer.alloc(12);
+        const fd = fs.openSync(filePath, 'r');
+        fs.readSync(fd, buf, 0, 12, 0);
+        fs.closeSync(fd);
+
+        const hex = buf.toString('hex');
+
+        const SIGNATURES: Array<{ mime: string | RegExp; magic: string; offset?: number }> = [
+            { mime: 'image/jpeg', magic: 'ffd8ff' },
+            { mime: 'image/png',  magic: '89504e47' },
+            { mime: 'image/gif',  magic: '474946' },
+            { mime: 'image/webp', magic: '52494646' },      // RIFF…WEBP
+            { mime: 'image/avif', magic: '0000' },          // ftyp-based; skip deep check
+            { mime: 'application/pdf', magic: '25504446' }, // %PDF
+            { mime: /^video\/mp4/, magic: '0000' },         // ftyp-based; skip deep check
+        ];
+
+        for (const sig of SIGNATURES) {
+            const mimeMatches = typeof sig.mime === 'string'
+                ? declaredMime === sig.mime
+                : sig.mime.test(declaredMime);
+
+            if (!mimeMatches) continue;
+
+            // Skip trivial signatures we can't validate cheaply
+            if (sig.magic === '0000') return;
+
+            if (!hex.startsWith(sig.magic)) {
+                fs.unlinkSync(filePath); // remove unsafe file
+                throw new BadRequestException(
+                    `Uploaded file content does not match declared type "${declaredMime}"`,
+                );
+            }
+            return; // signature matched
+        }
+        // No signature rule for this mime type — pass through (e.g. SVG, GLB)
+    }
+
     async create(file: Express.Multer.File) {
+        // Validate magic bytes against the browser-declared MIME type
+        if (fs.existsSync(file.path)) {
+            this.validateMagicBytes(file.path, file.mimetype);
+        }
+
         const isImage = file.mimetype.startsWith('image/');
         const isVideo = file.mimetype.startsWith('video/');
         const filename = path.parse(file.filename).name;
@@ -334,6 +383,25 @@ export class MediaService {
         }
         return (this.prisma as any).media.delete({
             where: { id },
+        });
+    }
+
+    async listFolders(): Promise<string[]> {
+        const items = await (this.prisma as any).media.findMany({ select: { folder: true }, distinct: ['folder'] });
+        return items.map((i: any) => i.folder).filter(Boolean).sort();
+    }
+
+    async renameFolder(oldName: string, newName: string) {
+        return (this.prisma as any).media.updateMany({
+            where: { folder: oldName },
+            data: { folder: newName },
+        });
+    }
+
+    async deleteFolder(name: string) {
+        return (this.prisma as any).media.updateMany({
+            where: { folder: name },
+            data: { folder: 'root' },
         });
     }
 

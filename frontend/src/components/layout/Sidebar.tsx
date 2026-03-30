@@ -14,6 +14,9 @@ import {
     Bars3Icon,
     SwatchIcon,
     RectangleStackIcon,
+    CircleStackIcon,
+    ClipboardDocumentListIcon,
+    BoltIcon,
     UsersIcon,
     InboxArrowDownIcon,
     NewspaperIcon,
@@ -42,6 +45,8 @@ const initialNavigation = [
         icon: DocumentTextIcon,
         requiredPermission: ['content_view', 'content_create', 'content_edit'],
         children: [
+            { name: 'Collections', href: '/dashboard/collections', icon: CircleStackIcon, requiredPermission: ['content_view', 'content_create'] },
+            { name: 'Forms', href: '/dashboard/forms', icon: ClipboardDocumentListIcon, requiredPermission: ['content_view', 'content_create'], requiresModule: 'forms' },
             { name: 'Menus', href: '/dashboard/menus', icon: Bars3Icon, requiredPermission: 'content_edit', requiresModule: 'menus' },
             { name: 'Services', href: '/dashboard/services', requiredPermission: ['content_view', 'content_create'], requiresModule: 'services' },
             { name: 'Categories', href: '/dashboard/categories', requiredPermission: ['content_view', 'content_create'], requiresModule: 'categories' },
@@ -79,6 +84,8 @@ const initialNavigation = [
     },
     { name: 'Leads', href: '/dashboard/leads', icon: ChartBarIcon, requiredPermission: 'leads_view', requiresModule: 'leads' },
     { name: 'Theme', href: '/dashboard/themes', icon: SwatchIcon, requiredPermission: 'settings_edit', requiresModule: 'themes' },
+    { name: 'Webhooks', href: '/dashboard/webhooks', icon: BoltIcon, requiredPermission: 'settings_edit' },
+    { name: 'Audit Log', href: '/dashboard/audit-log', icon: ClipboardDocumentListIcon, requiredPermission: 'audit_view' },
     { name: 'Settings', href: '/dashboard/settings', icon: Cog6ToothIcon, requiredPermission: 'settings_edit', id: 'settings' },
 ];
 
@@ -286,7 +293,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                         if (item.name === 'Content' && item.children) {
                             const currentChildren = [...item.children];
                             const dynamicModules = [
-                                { key: 'plots', name: 'Plots', href: '/dashboard/plots', icon: RectangleStackIcon },
                                 { key: 'team', name: 'Team', href: '/dashboard/team', icon: UserGroupIcon },
                                 { key: 'testimonials', name: 'Testimonials', href: '/dashboard/testimonials', icon: RectangleStackIcon },
                             ];

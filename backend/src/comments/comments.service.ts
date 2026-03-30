@@ -45,7 +45,7 @@ export class CommentsService {
             return;
         }
 
-        const siteTitle = settings['site_title'] || 'KTM Plots';
+        const siteTitle = settings['site_title'] || 'Mero CMS';
         const postTitle = comment.post?.title || 'a blog post';
         const isReply = !!comment.parentId;
         const subject = isReply

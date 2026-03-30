@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Param, Query, HttpCode, HttpStatus, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, HttpCode, HttpStatus, NotFoundException, Req } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
 import { SetupService } from '../setup/setup.service';
@@ -132,22 +133,6 @@ export class PublicController {
 
 
 
-        if (enabledModules.includes('plots')) {
-            fetches.push(
-                (this.prisma as any).plot.findMany({
-                    where: { featured: true, ...(activeTheme ? { theme: activeTheme } : {}) },
-                    include: { category: true },
-                    orderBy: { createdAt: 'desc' },
-                    take: 20,
-                }).then((plots: any[]) => {
-                    data.plots = plots.map((p: any) => ({
-                        ...p,
-                        featuredImageUrl: p.coverImage || null,
-                        images: p.gallery || [],
-                    }));
-                }),
-            );
-        }
         if (enabledModules.includes('team')) {
             fetches.push(
                 (this.prisma as any).teamMember.findMany({
@@ -203,7 +188,27 @@ export class PublicController {
             );
         }
 
+        // Collections is always-on (core module) — always include
+        fetches.push(
+            (this.prisma as any).collection.findMany({
+                include: {
+                    items: {
+                        where: { isPublished: true },
+                        orderBy: { createdAt: 'asc' },
+                    },
+                },
+                orderBy: { createdAt: 'asc' },
+            }).then((collections: any[]) => { data.collections = collections; }),
+        );
+
         await Promise.all(fetches);
+
+        // Expose demo reset time when running in demo mode
+        if (process.env.DEMO_MODE === 'true') {
+            const resetSetting = await (this.prisma as any).setting.findUnique({ where: { key: 'demo_next_reset' } });
+            data.demoNextReset = resetSetting?.value || null;
+        }
+
         return data;
     }
 
@@ -248,8 +253,41 @@ export class PublicController {
     }
 
 
+    // ── Public collections ────────────────────────────────────────────────────
+
+    @Get('collections/:slug')
+    async getCollection(@Param('slug') slug: string) {
+        const collection = await (this.prisma as any).collection.findUnique({
+            where: { slug },
+            include: {
+                items: {
+                    where: { isPublished: true },
+                    orderBy: { createdAt: 'asc' },
+                },
+            },
+        });
+        if (!collection) throw new NotFoundException(`Collection '${slug}' not found`);
+        return collection;
+    }
+
+    @Get('collections/:slug/items/:itemSlug')
+    async getCollectionItem(
+        @Param('slug') slug: string,
+        @Param('itemSlug') itemSlug: string,
+    ) {
+        const collection = await (this.prisma as any).collection.findUnique({ where: { slug } });
+        if (!collection) throw new NotFoundException(`Collection '${slug}' not found`);
+
+        const item = await (this.prisma as any).collectionItem.findFirst({
+            where: { collectionId: collection.id, slug: itemSlug, isPublished: true },
+        });
+        if (!item) throw new NotFoundException(`Item '${itemSlug}' not found in collection '${slug}'`);
+        return item;
+    }
+
     // ── Lead capture ──────────────────────────────────────────────────────────
 
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     @Post('leads')
     @HttpCode(HttpStatus.CREATED)
     async submitLead(@Body() body: {
@@ -270,17 +308,45 @@ export class PublicController {
                     email: body.email,
                     phone: body.phone || null,
                     message: body.message,
-                    source: body.source || 'website',
+                    originPage: body.source || null,
                     status: 'NEW',
                 },
             });
             return { success: true, id: lead.id, message: 'Thank you! Your message has been sent successfully.' };
         } catch (error) {
             console.error('Lead submission error:', error);
-            return { 
-                success: false, 
-                message: 'We are currently unable to process your request. Please try again later.' 
+            return {
+                success: false,
+                message: 'We are currently unable to process your request. Please try again later.'
             };
+        }
+    }
+
+    // ── Public form submission ────────────────────────────────────────────────
+
+    @Throttle({ default: { ttl: 60000, limit: 10 } })
+    @Post('forms/:id/submit')
+    @HttpCode(HttpStatus.CREATED)
+    async submitForm(
+        @Param('id') id: string,
+        @Body() data: Record<string, any>,
+        @Req() req: any,
+    ) {
+        const form = await (this.prisma as any).form.findUnique({ where: { id } });
+        if (!form) throw new NotFoundException(`Form not found`);
+        try {
+            const submission = await (this.prisma as any).formSubmission.create({
+                data: {
+                    formId: id,
+                    data,
+                    ip: req.ip || null,
+                    userAgent: req.headers?.['user-agent'] || null,
+                },
+            });
+            return { success: true, id: submission.id };
+        } catch (error) {
+            console.error('Form submission error:', error);
+            return { success: false, message: 'Submission failed. Please try again.' };
         }
     }
 }

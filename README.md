@@ -201,7 +201,7 @@ Always pin client deployments to a specific tag in Railway and Vercel.
 Enable only what each client needs via `ENABLED_MODULES` env var on Railway:
 
 ```
-ENABLED_MODULES=blogs,services,testimonials,team,leads,seo,analytics,themes,menus,categories,comments
+ENABLED_MODULES=blogs,services,testimonials,team,leads,seo,analytics,themes,menus,categories,comments,redirects,robots,sitemap
 ```
 
 ---

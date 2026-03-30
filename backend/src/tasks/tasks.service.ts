@@ -1,52 +1,49 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class TasksService {
     private readonly logger = new Logger(TasksService.name);
 
-    constructor(
-        private prisma: PrismaService,
-        private notificationsService: NotificationsService
-    ) { }
+    constructor(private prisma: PrismaService) { }
 
-    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-    async handleProjectStatusUpdates() {
-        this.logger.log('Running daily project status check...');
-
+    /**
+     * Every minute: publish any posts whose publishedAt has passed
+     * but are still in SCHEDULED status.
+     */
+    @Cron(CronExpression.EVERY_MINUTE)
+    async publishScheduledPosts() {
         const now = new Date();
-
-        const projectsToUpdate = await (this.prisma as any).project.findMany({
+        const result = await (this.prisma as any).post.updateMany({
             where: {
-                status: 'IN_PROGRESS',
-                completionDate: {
-                    lte: now
-                }
-            }
+                status: 'SCHEDULED',
+                publishedAt: { lte: now },
+            },
+            data: { status: 'PUBLISHED' },
         });
-
-        if (projectsToUpdate.length === 0) {
-            this.logger.log('No projects to update.');
-            return;
+        if (result.count > 0) {
+            this.logger.log(`Auto-published ${result.count} scheduled post(s).`);
         }
+    }
 
-        for (const project of projectsToUpdate) {
-            await (this.prisma as any).project.update({
-                where: { id: project.id },
-                data: { status: 'COMPLETED' }
-            });
-
-            await this.notificationsService.create({
-                type: 'SUCCESS',
-                title: 'Project Completed',
-                message: `Project "${project.title}" has been automatically marked as COMPLETED based on its completion date.`,
-                link: `/dashboard/projects?edit=${project.id}`,
-                targetRole: 'Admin' // Adjust based on who should see this
-            });
-
-            this.logger.log(`Project "${project.title}" (${project.id}) marked as completed.`);
+    /**
+     * Daily at midnight: clean up expired password reset tokens.
+     */
+    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+    async handleDailyMaintenance() {
+        const result = await (this.prisma as any).user.updateMany({
+            where: {
+                passwordResetExpiry: { lt: new Date() },
+                passwordResetToken: { not: null },
+            },
+            data: {
+                passwordResetToken: null,
+                passwordResetExpiry: null,
+            },
+        });
+        if (result.count > 0) {
+            this.logger.log(`Cleared ${result.count} expired password reset token(s).`);
         }
     }
 }

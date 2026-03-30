@@ -9,6 +9,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import HelpFAB from '@/components/ui/HelpFAB';
+import DemoBanner from '@/components/demo/DemoBanner';
 import { PermissionsProvider } from '@/context/PermissionsContext';
 import { FormProvider } from '@/context/FormContext';
 import { ModulesProvider } from '@/context/ModulesContext';
@@ -48,7 +49,8 @@ export default function AdminLayout({
         <ModulesProvider>
         <PermissionsProvider>
             <FormProvider>
-                <div className="min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+                <div className="min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-blue-100 selection:text-blue-900 flex flex-col">
+                    {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && <DemoBanner />}
                     {/* Soft Ambient Glows */}
                     <div className="fixed top-[-5%] left-[-5%] w-[40%] h-[40%] bg-blue-400/5 rounded-full blur-[100px] pointer-events-none"></div>
                     <div className="fixed bottom-[-5%] right-[-5%] w-[35%] h-[35%] bg-indigo-400/5 rounded-full blur-[100px] pointer-events-none"></div>

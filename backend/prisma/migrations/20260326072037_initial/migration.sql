@@ -294,47 +294,6 @@ CREATE TABLE "Page" (
 );
 
 -- CreateTable
-CREATE TABLE "Plot" (
-    "id" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "slug" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "content" TEXT,
-    "coverImage" TEXT,
-    "gallery" TEXT[],
-    "status" TEXT NOT NULL DEFAULT 'available',
-    "categoryId" TEXT,
-    "location" TEXT,
-    "featured" BOOLEAN NOT NULL DEFAULT false,
-    "priceFrom" TEXT,
-    "priceTo" TEXT,
-    "areaFrom" TEXT,
-    "areaTo" TEXT,
-    "facing" TEXT,
-    "roadAccess" TEXT,
-    "theme" TEXT,
-    "attributes" JSONB,
-    "seo" JSONB,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Plot_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "PlotCategory" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "slug" TEXT NOT NULL,
-    "description" TEXT,
-    "theme" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "PlotCategory_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "Redirect" (
     "id" TEXT NOT NULL,
     "fromPath" TEXT NOT NULL,
@@ -517,15 +476,6 @@ CREATE UNIQUE INDEX "Menu_slug_key" ON "Menu"("slug");
 CREATE UNIQUE INDEX "Page_slug_key" ON "Page"("slug");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Plot_slug_key" ON "Plot"("slug");
-
--- CreateIndex
-CREATE UNIQUE INDEX "PlotCategory_name_key" ON "PlotCategory"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "PlotCategory_slug_key" ON "PlotCategory"("slug");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Redirect_fromPath_key" ON "Redirect"("fromPath");
 
 -- CreateIndex
@@ -569,9 +519,6 @@ ALTER TABLE "MenuItem" ADD CONSTRAINT "MenuItem_menuId_fkey" FOREIGN KEY ("menuI
 
 -- AddForeignKey
 ALTER TABLE "MenuItem" ADD CONSTRAINT "MenuItem_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "MenuItem"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Plot" ADD CONSTRAINT "Plot_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "PlotCategory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_PostToTag" ADD CONSTRAINT "_PostToTag_A_fkey" FOREIGN KEY ("A") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;

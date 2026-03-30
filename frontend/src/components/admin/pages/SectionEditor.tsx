@@ -168,7 +168,7 @@ export default function SectionEditor({ schema, sections, onChange }: SectionEdi
                                         updateField(sectionId, field.key, next);
                                     }}
                                     className={`${inputClass} w-32`} />
-                                <input type="text" value={stat.label ?? ''} placeholder="Label (e.g. Plots Sold)"
+                                <input type="text" value={stat.label ?? ''} placeholder="Label (e.g. Projects Done)"
                                     onChange={e => {
                                         const next = [...stats]; next[i] = { ...stat, label: e.target.value };
                                         updateField(sectionId, field.key, next);

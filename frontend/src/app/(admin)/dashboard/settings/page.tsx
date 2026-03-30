@@ -661,7 +661,7 @@ export default function SettingsPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-xl font-bold text-slate-900">Listing Display Mode</h3>
-                                        <p className="text-sm text-slate-400">Controls how plots and blog posts are paginated on public listing pages.</p>
+                                        <p className="text-sm text-slate-400">Controls how content is paginated on public listing pages.</p>
                                     </div>
                                 </div>
                                 {!isSectionEditing('listing', ['listing_mode']) && (
@@ -682,7 +682,7 @@ export default function SettingsPage() {
                                     <option value="pagination">Pagination — Classic numbered page links</option>
                                     <option value="infinite">Infinite Scroll — Auto-load as the user scrolls down</option>
                                 </select>
-                                <p className="text-[10px] text-slate-400 ml-2">Applies to both the Plots and Blog listing pages.</p>
+                                <p className="text-[10px] text-slate-400 ml-2">Applies to all content listing pages (blog, etc.).</p>
                             </div>
                             {isSectionEditing('listing', ['listing_mode']) && (
                                 <div className="flex flex-wrap gap-3 pt-4">

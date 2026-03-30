@@ -15,17 +15,32 @@ export class AuditLogController {
     async getLogs(@Request() req, @Query('limit') limit: string) {
         const user = req.user;
         const limitNum = limit ? parseInt(limit) : 50;
+        const isAdmin = user.role === 'Admin' || user.role === 'SuperAdmin';
+        return this.auditLogService.findAll(isAdmin ? undefined : user.sub, limitNum);
+    }
 
-        // Check if user is SuperAdmin or Admin
-        // Using loose check or strictly checking role name
+    @Get('paginated')
+    @RequirePermissions(Permission.AUDIT_VIEW)
+    async getPaginated(
+        @Request() req,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+        @Query('action') action?: string,
+        @Query('status') status?: string,
+        @Query('from') from?: string,
+        @Query('to') to?: string,
+    ) {
+        const user = req.user;
         const isAdmin = user.role === 'Admin' || user.role === 'SuperAdmin';
 
-        if (isAdmin) {
-            // Admins see everything
-            return this.auditLogService.findAll(undefined, limitNum);
-        } else {
-            // Users see only their own
-            return this.auditLogService.findAll(user.sub, limitNum);
-        }
+        return this.auditLogService.findPaginated({
+            userId: isAdmin ? undefined : user.sub,
+            action,
+            status,
+            from,
+            to,
+            page: page ? parseInt(page) : 1,
+            limit: limit ? parseInt(limit) : 50,
+        });
     }
 }
