@@ -5,6 +5,7 @@ import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { SecurityService } from './security.service';
 import { UsersService } from '../users/users.service';
+import { LicenseService } from './license.service';
 
 @Controller('auth')
 export class AuthController {
@@ -12,6 +13,7 @@ export class AuthController {
         private authService: AuthService,
         private securityService: SecurityService,
         private usersService: UsersService,
+        private licenseService: LicenseService,
     ) { }
 
     @Throttle({ default: { ttl: 60000, limit: 10 } })
@@ -118,7 +120,16 @@ export class AuthController {
     @Get('profile')
     async getProfile(@Request() req) {
         const user = await this.usersService.findOne(req.user.email);
-        return user;
+        const licenseStatus = this.licenseService.getLicenseStatus();
+        const TIER_NAMES: Record<number, string> = { 1: 'Basic', 2: 'Premium', 3: 'Enterprise', 4: 'Custom' };
+        return {
+            ...user,
+            license: {
+                ...licenseStatus,
+                isValid: licenseStatus.valid,
+                tierName: TIER_NAMES[licenseStatus.tier] || 'Basic',
+            },
+        };
     }
 
     @UseGuards(JwtAuthGuard)

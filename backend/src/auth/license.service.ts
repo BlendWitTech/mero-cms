@@ -69,6 +69,15 @@ export class LicenseService {
         this.cached = null;
     }
 
+    /** Verify an arbitrary license key string (used during setup wizard). */
+    verifyKey(licenseKey: string): LicenseStatus {
+        const prev = process.env.LICENSE_KEY;
+        process.env.LICENSE_KEY = licenseKey;
+        const result = this.verify();
+        process.env.LICENSE_KEY = prev;
+        return result;
+    }
+
     private verify(): LicenseStatus {
         const key = process.env.LICENSE_KEY;
 

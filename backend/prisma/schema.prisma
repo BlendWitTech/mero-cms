@@ -19,10 +19,8 @@ model User {
   ipWhitelist         String[]      @default([])
   twoFactorEnabled    Boolean       @default(false)
   twoFactorSecret     String?
-  failedLoginAttempts  Int           @default(0)
-  lockoutUntil         DateTime?
-  passwordResetToken   String?
-  passwordResetExpiry  DateTime?
+  failedLoginAttempts Int           @default(0)
+  lockoutUntil        DateTime?
   preferences         Json?
   avatar              String?
   bio                 String?
@@ -146,17 +144,6 @@ model FormSubmission {
   userAgent String?
   createdAt DateTime @default(now())
   form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
-}
-
-model Webhook {
-  id        String   @id @default(uuid())
-  name      String
-  url       String
-  events    String[] // e.g. ["post.published", "page.updated"]
-  secret    String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model AnalyticsConfig {

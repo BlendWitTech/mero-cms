@@ -13,7 +13,8 @@ import {
     Cog8ToothIcon,
     ArrowRightOnRectangleIcon,
     ShieldCheckIcon,
-    Bars3Icon
+    Bars3Icon,
+    ArrowTopRightOnSquareIcon
 } from '@heroicons/react/24/outline';
 import { useSettings } from '@/context/SettingsContext';
 
@@ -131,7 +132,7 @@ export default function Header({ isCollapsed, onMobileMenuToggle }: HeaderProps)
                 <nav className="hidden md:flex items-center space-x-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 font-display">
                     <Link href="/dashboard" className="hover:text-blue-600 transition-colors flex items-center gap-1.5 shrink-0">
                         <HomeIcon className="h-3 w-3" strokeWidth={2.5} />
-                        {settings['site_title'] || 'CMS'}
+                        {settings['site_title'] || 'MERO CMS'}
                     </Link>
                     {segments.filter(s => s !== 'dashboard').map((segment, index, filteredSegments) => {
                         const href = `/dashboard/${filteredSegments.slice(0, index + 1).join('/')}`;

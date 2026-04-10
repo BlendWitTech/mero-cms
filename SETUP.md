@@ -6,13 +6,15 @@ This guide walks through every step to get Mero CMS running locally, on Railway 
 
 ## Branch Strategy
 
-| Branch | Environment | Backend | Frontend |
+| Branch | Environment | Status | Target |
 |---|---|---|---|
-| local | Development | localhost:3001 | localhost:3000 |
-| `develop` | Staging | Railway staging service | Vercel preview URL |
-| `main` | Production | Railway production service | Vercel production domain |
+| `develop` | Local/Dev | Drafting | Active development |
+| `testing` | Staging | Preview | Staging/QA branch |
+| `main` | Trunk | Trunk | Feature integration |
+| `production` | Production | Stable | Live client deployments |
+| `marketing` | Demo | Marketing | [demo.merocms.com](https://demo.merocms.com) |
 
-All work happens on `develop`. When staging is stable, open a PR from `develop` → `main` to deploy to production.
+Standard promotion path: `develop` → `testing` → `main` → `production`.
 
 ---
 
@@ -27,9 +29,9 @@ All work happens on `develop`. When staging is stable, open a PR from `develop` 
 ### Step 1 — Clone the repository
 
 ```bash
-git clone https://github.com/BlendWitTech/blendwit-cms.git
-cd blendwit-cms
-git checkout main
+git clone https://github.com/BlendWitTech/mero-cms.git
+cd mero-cms
+git checkout develop
 ```
 
 ### Step 2 — Backend setup
@@ -279,9 +281,10 @@ After this, every push to `main` will pause and send you an email. You click **R
 ## Part 6 — Day-to-Day Development Workflow
 
 ```
-main         ← production (merge from develop only)
-  └── develop  ← staging (integration branch)
-        └── feature/my-feature  ← your day-to-day work
+production   ← live (merge from main)
+  └── main   ← clean trunk (merge from testing)
+        └── testing ← staging (merge from develop)
+              └── develop ← active work
 ```
 
 ```bash
@@ -290,17 +293,11 @@ git checkout develop
 git pull origin develop
 git checkout -b feature/my-feature
 
-# Work, commit
-git add <files>
-git commit -m "feat: my feature description"
+# Work, commit, push
 git push origin feature/my-feature
 
-# Open PR: feature/my-feature → develop on GitHub
-# CI validates the build automatically
-# You approve and merge → Railway + Vercel auto-deploy to staging
-
-# When staging looks good, open PR: develop → main on GitHub
-# CI validates, you merge → production deploys
+# Open PR: feature/my-feature → develop
+# CI validates → merge to develop → testing → main → production
 ```
 
 ---

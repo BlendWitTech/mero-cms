@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query, NotFoundException } from '@nestjs/common';
 import { BlogsService } from './blogs.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -96,6 +96,7 @@ export class BlogsController {
     @RequirePermissions(Permission.CONTENT_CREATE)
     async duplicate(@Request() req, @Param('id') id: string) {
         const user = await this.usersService.findOne(req.user.email);
+        if (!user) throw new NotFoundException('User not found');
         const post = await this.blogsService.duplicate(id, user.id);
         await this.auditLog.log(user.id, 'BLOG_DUPLICATE', { originalId: id, newId: post.id });
         return post;

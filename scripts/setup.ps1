@@ -46,10 +46,41 @@ if (-not (Test-Path "frontend/.env.local")) {
     }
 }
 
+# Ensure root .env has JWT_SECRET for docker-compose variable interpolation
+if (Test-Path ".env") {
+    $rootEnv = Get-Content ".env" -Raw
+    if ($rootEnv -notmatch "^JWT_SECRET=.+") {
+        $backendJwt = if (Test-Path "backend/.env") {
+            (Get-Content "backend/.env" | Where-Object { $_ -match "^JWT_SECRET=" } | Select-Object -First 1) -replace "^JWT_SECRET=", ""
+        } else { "dev-jwt-secret-change-in-production-min-32-chars" }
+        Add-Content ".env" "`nJWT_SECRET=$backendJwt"
+        Write-Host "Synced JWT_SECRET to root .env for docker-compose." -ForegroundColor Green
+    }
+}
+
 # 3. Database Infrastructure
 if ($choice -eq "2") {
     Write-Host "[3/5] Starting Docker containers..." -ForegroundColor Gray
-    docker-compose up -d db pgadmin
+    docker-compose up -d db
+
+    # Ensure backend/.env points to the Docker database, not a local one
+    $dbUser = if ($env:DB_USER) { $env:DB_USER } else { "admin" }
+    $dbPass = if ($env:DB_PASSWORD) { $env:DB_PASSWORD } else { "password123" }
+    $dbName = if ($env:DB_NAME) { $env:DB_NAME } else { "mero_cms" }
+    $dockerDbUrl = "postgresql://${dbUser}:${dbPass}@localhost:5432/${dbName}"
+    (Get-Content "backend/.env") -replace "^DATABASE_URL=.*", "DATABASE_URL=$dockerDbUrl" | Set-Content "backend/.env"
+    Write-Host "Set DATABASE_URL → $dockerDbUrl" -ForegroundColor Green
+
+    # Copy LICENSE_KEY from root .env into backend/.env if present
+    $rootLicense = (Get-Content ".env" | Where-Object { $_ -match "^LICENSE_KEY=.+" } | Select-Object -First 1) -replace "^LICENSE_KEY=", ""
+    if ($rootLicense) {
+        $beContent = Get-Content "backend/.env" -Raw
+        if ($beContent -match "^LICENSE_KEY=\s*$" -or $beContent -notmatch "^LICENSE_KEY=") {
+            (Get-Content "backend/.env") -replace "^LICENSE_KEY=.*", "LICENSE_KEY=$rootLicense" | Set-Content "backend/.env"
+            Write-Host "Synced LICENSE_KEY to backend/.env." -ForegroundColor Green
+        }
+    }
+
     Write-Host "Waiting for database to be ready..." -ForegroundColor Gray
     
     $max_retries = 30
@@ -102,9 +133,8 @@ Write-Host "[5/5] Finalizing setup..." -ForegroundColor Gray
 npm run build
 
 Write-Host "`nSetup Complete! Run 'npm run dev' to start the application." -ForegroundColor Green
-Write-Host "`nAccess the dashboard at http://localhost:3000/login" -ForegroundColor Green
-Write-Host "--- CMS LOGIN CREDENTIALS ---" -ForegroundColor Cyan
-Write-Host "Email: superadmin@blendwit.com" -ForegroundColor Cyan
-Write-Host "Password: admin123" -ForegroundColor Cyan
-Write-Host "-----------------------------" -ForegroundColor Cyan
-Write-Host "(Note: The 'admin' database user is for internal system use only.)" -ForegroundColor Gray
+Write-Host "`n--- NEXT STEPS ---" -ForegroundColor Cyan
+Write-Host "1. Run:  npm run dev" -ForegroundColor White
+Write-Host "2. Open: http://localhost:3000/setup" -ForegroundColor White
+Write-Host "3. Complete the setup wizard to create your superadmin account and choose enabled modules." -ForegroundColor White
+Write-Host "------------------" -ForegroundColor Cyan

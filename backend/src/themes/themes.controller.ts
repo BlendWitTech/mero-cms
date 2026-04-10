@@ -78,6 +78,11 @@ export class ThemesController {
         return this.themesService.getPageSchema();
     }
 
+    @Get('active/section-palette')
+    async getSectionPalette() {
+        return this.themesService.getSectionPalette();
+    }
+
     @Post('reset')
     @RequirePermissions(Permission.THEMES_MANAGE)
     async resetToBase() {

@@ -48,10 +48,13 @@ export default function WebhooksPage() {
     async function fetchWebhooks() {
         setIsLoading(true);
         try {
-            const data = await apiRequest('/webhooks');
+            const data = await apiRequest('/webhooks', { skipNotification: true });
             setWebhooks(Array.isArray(data) ? data : []);
-        } catch {
-            showToast('Failed to load webhooks', 'error');
+        } catch (err: any) {
+            // Module disabled or forbidden — don't show an error toast
+            if (!err?.message?.includes('not enabled') && !err?.message?.includes('403')) {
+                showToast('Failed to load webhooks', 'error');
+            }
         } finally {
             setIsLoading(false);
         }

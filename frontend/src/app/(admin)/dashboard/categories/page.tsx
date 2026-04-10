@@ -288,7 +288,7 @@ export default function CategoriesPage() {
                         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                         <input
                             type="text"
-                            placeholder={`Search ${activeTab} categories...`}
+                            placeholder="Search categories..."
                             className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all"
                         />
                     </div>

@@ -98,7 +98,7 @@ export default function FormsPage() {
             slug: f.slug,
             description: f.description || '',
             fields: f.fields?.length ? f.fields : [emptyField()],
-            settings: f.settings || emptyForm.settings,
+            settings: (f.settings as typeof emptyForm.settings) || emptyForm.settings,
         });
         setModalOpen(true);
     }

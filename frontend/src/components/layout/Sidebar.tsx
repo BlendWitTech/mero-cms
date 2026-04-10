@@ -22,6 +22,8 @@ import {
     NewspaperIcon,
     ChatBubbleLeftRightIcon,
     PencilSquareIcon,
+    InformationCircleIcon,
+    ArrowTopRightOnSquareIcon
 } from '@heroicons/react/24/outline';
 import { apiRequest } from '@/lib/api';
 import { useSettings } from '@/context/SettingsContext';
@@ -255,7 +257,7 @@ interface SidebarProps {
 export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
-    const { permissions, isLoading: permissionsLoading } = usePermissions();
+    const { permissions, license, isLoading: permissionsLoading } = usePermissions();
     const { enabledModules, isLoading: modulesLoading } = useModules();
     const [navItems, setNavItems] = useState(initialNavigation);
     const [moduleAliases, setModuleAliases] = useState<Record<string, string>>({});
@@ -428,7 +430,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     {!isCollapsed ? (
                         <div className="flex flex-col">
                             <span className="text-lg font-black tracking-tight text-slate-900 animate-in fade-in zoom-in duration-500 font-display leading-none">
-                                {settings['site_title']?.toUpperCase() || 'BLENDWIT'}
+                                {settings['site_title']?.toUpperCase() || 'MERO CMS'}
                                 <span className="text-blue-600 ml-0.5 font-bold">CMS</span>
                             </span>
                         </div>
@@ -478,6 +480,97 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     </ul>
                 </nav>
             </div>
+
+            {/* License Tier Badge */}
+            {!isCollapsed && license && (
+                <div className="px-4 pb-6 pt-4 mt-auto border-t border-slate-100/60 bg-white/50 backdrop-blur-sm relative isolate group">
+                    <div className="absolute inset-0 bg-blue-50/10 pointer-events-none" />
+                    <div className="relative">
+                        <div className="flex items-center gap-3 mb-2 px-1">
+                            <div className={classNames(
+                                "h-2 w-2 rounded-full",
+                                license.tier >= 3 ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]" :
+                                license.tier >= 2 ? "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" :
+                                "bg-slate-400"
+                            )} />
+                            <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">System Status</span>
+                        </div>
+                        <div className={classNames(
+                            "flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-500 group-hover:scale-[1.02] active:scale-[0.98]",
+                            license.tier >= 3 ? "bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 shadow-xl shadow-slate-900/20" :
+                            license.tier >= 2 ? "bg-gradient-to-br from-blue-600 to-blue-700 border-blue-500 shadow-lg shadow-blue-600/20" :
+                            "bg-white border-slate-200 shadow-sm"
+                        )}>
+                            <div className="space-y-0.5">
+                                <p className={classNames(
+                                    "text-[9px] font-black tracking-widest uppercase leading-none opacity-60",
+                                    license.tier >= 2 ? "text-blue-100" : "text-slate-400"
+                                )}>
+                                    Edition
+                                </p>
+                                <p className={classNames(
+                                    "text-xs font-black tracking-tight",
+                                    license.tier >= 2 ? "text-white" : "text-slate-900"
+                                )}>
+                                    MERO {license.tierName?.toUpperCase() || 'BASIC'}
+                                </p>
+                            </div>
+                            <BoltIcon className={classNames(
+                                "h-4 w-4",
+                                license.tier >= 3 ? "text-amber-400" :
+                                license.tier >= 2 ? "text-blue-200" :
+                                "text-blue-600"
+                            )} />
+                        </div>
+                        {license.isDemo && (
+                            <p className="mt-2 text-[9px] font-bold text-center text-amber-600 animate-pulse uppercase tracking-wider">Demo Environment</p>
+                        )}
+                    </div>
+                </div>
+            )}
+            
+            {/* Collapsed Minimalist Badge */}
+            {isCollapsed && license && (
+                <div className="px-2 pb-6 mt-auto flex flex-col items-center gap-4">
+                    <div className={classNames(
+                        "h-8 w-8 rounded-xl flex items-center justify-center border shadow-sm transition-all duration-500 hover:scale-110",
+                        license.tier >= 3 ? "bg-slate-900 border-slate-700 text-amber-400" :
+                        license.tier >= 2 ? "bg-blue-600 border-blue-500 text-white" :
+                        "bg-white border-slate-200 text-blue-600"
+                    )} title={`Mero ${license.tierName || 'Basic'}`}>
+                        <BoltIcon className="h-4 w-4" />
+                    </div>
+                </div>
+            )}
+            
+            {/* Footer / Branding */}
+            {!isCollapsed && (
+                <div className="mt-auto px-6 py-8 border-t border-slate-100 space-y-4">
+                    <div className="space-y-1">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Developed by</p>
+                        <a 
+                            href="https://www.blendwit.com" 
+                            target="_blank" 
+                            className="group flex items-center gap-1.5"
+                        >
+                            <span className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">Blendwit Tech</span>
+                            <ArrowTopRightOnSquareIcon className="h-2.5 w-2.5 text-slate-300 group-hover:text-blue-400 transition-colors" />
+                        </a>
+                    </div>
+                    
+                    <div className="space-y-1">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Ecosystem</p>
+                        <a 
+                            href="https://www.merojukx.com" 
+                            target="_blank" 
+                            className="group flex items-center gap-1.5"
+                        >
+                            <span className="text-xs font-bold text-slate-500 group-hover:text-violet-600 transition-colors">Merojukx Platform</span>
+                            <ArrowTopRightOnSquareIcon className="h-2.5 w-2.5 text-slate-300 group-hover:text-violet-400 transition-colors" />
+                        </a>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

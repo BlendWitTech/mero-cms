@@ -207,9 +207,8 @@ export default function AuditLogPage() {
                         </thead>
                         <tbody>
                             {filteredLogs.map(log => (
-                                <>
+                                <React.Fragment key={log.id}>
                                     <tr
-                                        key={log.id}
                                         onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}
                                         className="border-b border-slate-100 hover:bg-slate-50/50 cursor-pointer transition-colors"
                                     >
@@ -245,7 +244,7 @@ export default function AuditLogPage() {
                                             </td>
                                         </tr>
                                     )}
-                                </>
+                                </React.Fragment>
                             ))}
                         </tbody>
                     </table>

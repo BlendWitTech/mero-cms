@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
 import { SetupService } from '../setup/setup.service';
 import { ThemesService } from '../themes/themes.service';
+import { PACKAGES, WebsiteType } from '../config/packages';
 
 @Controller('public')
 export class PublicController {
@@ -348,5 +349,13 @@ export class PublicController {
             console.error('Form submission error:', error);
             return { success: false, message: 'Submission failed. Please try again.' };
         }
+    }
+
+    @Get('packages')
+    getPackages(@Query('type') type?: WebsiteType) {
+        if (type) {
+            return PACKAGES.filter(p => p.websiteType === type);
+        }
+        return PACKAGES;
     }
 }

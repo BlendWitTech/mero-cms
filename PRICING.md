@@ -4,39 +4,29 @@ Mero CMS is available under two options. Both are one-time payments — no month
 
 ---
 
-## Option 1 — CMS Backend License
+## Licensing Tiers
 
-**Who it's for:** Developers or teams who want to self-host the CMS and build their own theme, or bring an existing theme.
+Mero CMS is available in three tiers to suit different project needs. All are one-time payments — no monthly subscriptions.
 
-**What you get:**
-- Full Mero CMS source code (NestJS backend + Next.js admin dashboard)
-- All content modules: blogs, pages, menus, services, team, testimonials, leads, media, SEO, analytics, themes
-- Theme upload system — upload any ZIP-packaged Next.js theme
-- Role-based access control with custom roles and permissions
-- Setup wizard — database, admin account, and demo content in minutes
-- 1 year of source code updates
-- Deployment guide for Railway (backend) + Vercel (frontend)
-- Email support
+### 1. Basic Tier — Personal & Starter
+**Who it's for:** Individual developers and personal bloggers.
+- **Included Modules:** blogs, pages, menus, media, forms.
+- **License:** Single domain, non-commercial use.
+- **Support:** Community / Docs.
+
+### 2. Premium Tier — Professional & Small Business
+**Who it's for:** Agencies and small to medium businesses.
+- **Included Modules:** Everything in Basic + team, services, testimonials, leads, seo, redirects, analytics, sitemap, robots, webhooks.
+- **License:** Single domain, commercial use.
+- **Support:** Priority email support (1 year).
+
+### 3. Enterprise Tier — Scale & Advanced
+**Who it's for:** Large organizations and white-label SaaS providers.
+- **Included Modules:** Everything in Premium + **collections** (custom schema builder) and **comments**.
+- **License:** Multi-domain or unrestricted (based on contract), white-label mode enabled.
+- **Support:** Dedicated Slack channel + 24/7 priority support.
 
 **Price:** [blendwit.com/mero-cms/pricing](https://blendwit.com/mero-cms/pricing)
-
----
-
-## Option 2 — CMS + Custom Theme Development
-
-**Who it's for:** Businesses that want a complete, ready-to-launch website — we handle the CMS setup and build a custom theme for your brand.
-
-**What you get (everything in Option 1, plus):**
-- Custom Next.js theme designed for your brand and content
-- Built with Tailwind CSS, mobile-responsive, production-ready
-- Seeded with your real content (menus, posts, services, team, testimonials)
-- Deployed to Railway (backend) + Vercel (frontend)
-- Theme packaged as a ZIP for re-upload, backups, or reuse
-- Up to 2 revision rounds included
-- Priority email support for 90 days post-launch
-- 30-minute onboarding call
-
-**Price:** [blendwit.com/mero-cms/pricing](https://blendwit.com/mero-cms/pricing) or email [hello@blendwit.com](mailto:hello@blendwit.com)
 
 ---
 

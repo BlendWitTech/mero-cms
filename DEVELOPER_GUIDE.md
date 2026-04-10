@@ -575,13 +575,17 @@ See `backend/.env.development.example` for a complete local config template.
 
 ### Branch Model
 
+The repository uses a strictly gated promotion flow across these primary branches:
+
 ```
-main          ← production (protected — PR required, manual deploy approval)
-  └── develop ← staging (protected — PR required, auto-deploys to Railway/Vercel)
-        └── feature/your-feature  ← day-to-day work
-        └── fix/bug-description
-        └── chore/task-name
+production    ← Stable release (protected — tagged v1.x.x)
+  └── main    ← Clean trunk (protected — features ready for release)
+        └── testing  ← Staging/QA (protected — feature verification)
+              └── develop ← Active development (merge here first)
 ```
+
+- `marketing`: Custom branch for [demo.merocms.com](https://demo.merocms.com).
+- `dependabot/*`: Automatic dependency updates, targeting the active default branch.
 
 ### Day-to-Day Flow
 
@@ -601,10 +605,10 @@ git push origin feature/add-projects-module
 ```
 
 **Rules:**
-- Never push directly to `develop` or `main`
-- Every PR must pass CI (backend build + frontend build) before merging
-- PRs to `develop` require at least one approval
-- PRs to `main` require owner approval — merging triggers the production approval gate
+- Never push directly to `production`, `main`, or `testing`.
+- Every PR must pass CI (backend build + frontend build) before merging.
+- PRs to `develop` require peer review.
+- Merging to `main` and `production` requires documentation check and owner approval.
 
 ---
 
@@ -641,8 +645,8 @@ docs(readme): update quick start instructions
 | Workflow                          | Trigger             | Steps                                          |
 |-----------------------------------|---------------------|------------------------------------------------|
 | `ci.yml`                          | All pushes + PRs    | Backend build → verify dist/main.js → Frontend build |
-| `deploy-staging.yml`              | Push to `develop`   | Same as CI → notify; Railway+Vercel auto-deploy|
-| `deploy-production.yml`           | Push to `main`      | CI → await manual approval → notify deploy     |
+| `deploy-testing.yml`              | Push to `testing`   | Same as CI → notify; Staging auto-deploy       |
+| `deploy-production.yml`           | Push to `production` | CI → await manual approval → notify deploy     |
 
 Railway and Vercel deploy automatically via their GitHub integrations once the connected branch is updated. The GitHub Actions workflows serve as the build validation gate.
 

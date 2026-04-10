@@ -4,7 +4,8 @@
   "private": true,
   "workspaces": [
     "backend",
-    "frontend"
+    "frontend",
+    "themes/marketing-theme"
   ],
   "scripts": {
     "dev:backend": "npm run start:dev -w backend",
@@ -12,7 +13,7 @@
     "dev:theme": "node scripts/dev-theme.js",
     "dev:db": "docker compose up db -d",
     "dev": "concurrently --restart-tries 5 --restart-after 1500 \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:theme\"",
-    "dev:all": "concurrently --restart-tries 5 --restart-after 1500 \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:theme\"",
+    "dev:all": "docker compose up db -d && concurrently --restart-tries 5 --restart-after 1500 \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:theme\"",
     "build": "npm run build -w backend && npm run build -w frontend",
     "install:all": "npm install",
     "setup": "powershell -ExecutionPolicy Bypass -File ./scripts/setup.ps1",

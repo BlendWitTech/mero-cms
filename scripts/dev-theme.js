@@ -58,9 +58,34 @@ function themeExists(name) {
     return name && fs.existsSync(path.join(THEMES_DIR, name));
 }
 
+/**
+ * Given an active theme value (directory name or theme.json slug), return the actual directory name.
+ * Searches all theme directories' theme.json for a matching slug if direct name not found.
+ */
+function resolveThemeDirName(name) {
+    if (!name) return null;
+    if (fs.existsSync(path.join(THEMES_DIR, name))) return name;
+    // Search by slug in theme.json files
+    if (fs.existsSync(THEMES_DIR)) {
+        const dirs = fs.readdirSync(THEMES_DIR, { withFileTypes: true })
+            .filter(d => d.isDirectory() && !d.name.startsWith('.') && !d.name.startsWith('_'));
+        for (const dir of dirs) {
+            const configPath = path.join(THEMES_DIR, dir.name, 'theme.json');
+            if (fs.existsSync(configPath)) {
+                try {
+                    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+                    if (config.slug === name) return dir.name;
+                } catch { }
+            }
+        }
+    }
+    return name; // fallback
+}
+
 /** Returns the theme to start: the active theme if it exists, otherwise the placeholder. */
 function resolveTheme(activeTheme) {
-    if (themeExists(activeTheme)) return activeTheme;
+    const dirName = resolveThemeDirName(activeTheme);
+    if (themeExists(dirName)) return dirName;
     if (fs.existsSync(path.join(THEMES_DIR, PLACEHOLDER_THEME))) return PLACEHOLDER_THEME;
     // Last resort: any available theme
     const dirs = fs.readdirSync(THEMES_DIR, { withFileTypes: true })
@@ -71,7 +96,11 @@ function resolveTheme(activeTheme) {
 
 function prepareTheme(themeName) {
     const themePath = path.join(THEMES_DIR, themeName);
-    if (!fs.existsSync(path.join(themePath, 'node_modules'))) {
+    const themeNodeModules = path.join(themePath, 'node_modules');
+    // Skip local install if the root node_modules already has Next.js (workspace-managed theme)
+    const rootNext = path.join(__dirname, '..', 'node_modules', 'next');
+    const needsInstall = !fs.existsSync(themeNodeModules) && !fs.existsSync(rootNext);
+    if (needsInstall) {
         console.log(`\n   Installing dependencies for "${themeName}"...`);
         execSync('npm install', { cwd: themePath, stdio: 'inherit' });
     }

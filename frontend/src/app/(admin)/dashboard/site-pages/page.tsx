@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import {
     DocumentTextIcon,
     ChevronRightIcon,
+    ChevronUpIcon,
+    ChevronDownIcon,
     EyeIcon,
     EyeSlashIcon,
     PencilSquareIcon,
@@ -20,6 +22,9 @@ import { useNotification } from '@/context/NotificationContext';
 import MediaPickerModal from '@/components/ui/MediaPickerModal';
 import EmojiPicker from 'emoji-picker-react';
 import { SERVICE_ICONS } from '@/lib/service-icons';
+
+import { usePermissions } from '@/context/PermissionsContext';
+import SectionPaletteModal from '@/components/dashboard/SectionPaletteModal';
 
 const PostEditor = dynamic(() => import('@/components/blog/PostEditor'), { ssr: false });
 
@@ -356,12 +361,16 @@ function FieldEditor({ field, value, onChange, disabled }: {
 
 // ─── Section card ─────────────────────────────────────────────────────────────
 
-function SectionCard({ sectionDef, sectionData, onToggle, onDataChange, saving }: {
+function SectionCard({ sectionDef, sectionData, onToggle, onDataChange, onRemove, onMoveUp, onMoveDown, saving, isEnterprise }: {
     sectionDef: SectionDef;
     sectionData: SectionData;
     onToggle: () => void;
     onDataChange: (key: string, value: any) => void;
+    onRemove: () => void;
+    onMoveUp?: () => void;
+    onMoveDown?: () => void;
     saving: boolean;
+    isEnterprise: boolean;
 }) {
     const [expanded, setExpanded] = useState(false);
     const enabled = sectionData.enabled;
@@ -370,12 +379,18 @@ function SectionCard({ sectionDef, sectionData, onToggle, onDataChange, saving }
     return (
         <div className={`border rounded-2xl transition-all ${enabled ? 'border-slate-200' : 'border-slate-100 opacity-60'}`}>
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 bg-white rounded-t-2xl">
+            <div className={`flex items-center justify-between px-5 py-4 bg-white rounded-t-2xl ${expanded ? 'border-b border-slate-50' : ''}`}>
                 <div className="flex items-center gap-3">
+                    {isEnterprise && (
+                        <div className="flex flex-col gap-1 mr-1">
+                            <button onClick={onMoveUp} disabled={saving} className="p-0.5 text-slate-300 hover:text-red-500 disabled:opacity-0"><ChevronUpIcon className="w-4 h-4" /></button>
+                            <button onClick={onMoveDown} disabled={saving} className="p-0.5 text-slate-300 hover:text-red-500 disabled:opacity-0"><ChevronDownIcon className="w-4 h-4" /></button>
+                        </div>
+                    )}
                     <div className={`w-2.5 h-2.5 rounded-full ${enabled ? 'bg-green-500' : 'bg-slate-300'}`} />
                     <div>
                         <h4 className="font-bold text-slate-800 text-sm">{sectionDef.label}</h4>
-                        {sectionDef.description && <p className="text-xs text-slate-400 mt-0.5">{sectionDef.description}</p>}
+                        <p className="text-[10px] text-slate-400 font-mono mt-0.5 uppercase tracking-wider">{sectionDef.id}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -396,7 +411,16 @@ function SectionCard({ sectionDef, sectionData, onToggle, onDataChange, saving }
                         >
                             <PencilSquareIcon className="w-3.5 h-3.5" />
                             {expanded ? 'Close' : 'Edit Content'}
-                            <ChevronRightIcon className={`w-3 h-3 transition-transform ${expanded ? 'rotate-90' : ''}`} />
+                        </button>
+                    )}
+                    {isEnterprise && (
+                        <button
+                            onClick={onRemove}
+                            disabled={saving}
+                            className="p-1.5 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            title="Remove section from page"
+                        >
+                            <TrashIcon className="w-4 h-4" />
                         </button>
                     )}
                 </div>
@@ -440,11 +464,17 @@ function SectionCard({ sectionDef, sectionData, onToggle, onDataChange, saving }
 
 export default function SitePagesPage() {
     const { showToast } = useNotification();
+    const { license } = usePermissions();
+    const isEnterprise = license?.tierName === 'Enterprise' || license?.tier >= 3;
+
     const [pageSchema, setPageSchema] = useState<PageDef[]>([]);
     const [activePage, setActivePage] = useState<string>('');
     const [pagesData, setPagesData] = useState<Record<string, PageSections>>({});
+    const [pageLayouts, setPageLayouts] = useState<Record<string, string[]>>({}); // order of section IDs
+
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isPaletteOpen, setIsPaletteOpen] = useState(false);
 
     // Load schema + current saved data
     const load = useCallback(async () => {
@@ -464,37 +494,43 @@ export default function SitePagesPage() {
             if (schema.length > 0 && !activePage) setActivePage(schema[0].slug);
 
             // Build initial sections state from saved Page records
-            const saved: Record<string, PageSections> = {};
+            const savedData: Record<string, PageSections> = {};
+            const savedLayouts: Record<string, string[]> = {};
+
             for (const pageDef of schema) {
                 const pageRecord = Array.isArray(pagesRes) ? pagesRes.find((p: any) => p.slug === pageDef.slug) : null;
                 const rawSections: any[] = pageRecord?.data?.sections || [];
                 const sections: PageSections = {};
-                for (const sec of pageDef.sections) {
-                    const saved_sec = rawSections.find((s: any) => s.id === sec.id);
-                    // Priority: saved page data > settings value > theme defaultValue
-                    const data: Record<string, any> = { ...(saved_sec?.data || {}) };
-                    for (const field of sec.fields) {
-                        const isEmpty = data[field.key] === undefined || data[field.key] === null || data[field.key] === '' || (Array.isArray(data[field.key]) && data[field.key].length === 0);
-                        if (isEmpty) {
-                            // Try settings first
-                            if (field.settingsKey) {
-                                const sv = settingsMap[field.settingsKey];
-                                if (sv) { data[field.key] = sv; continue; }
-                            }
-                            // Fall back to theme defaultValue
-                            if (field.defaultValue !== undefined) {
-                                data[field.key] = field.defaultValue;
+                
+                // Track layout order
+                const layout: string[] = [];
+
+                if (rawSections.length > 0) {
+                    // Use saved order
+                    for (const s of rawSections) {
+                        layout.push(s.id);
+                        sections[s.id] = { enabled: s.enabled !== false, data: s.data || {} };
+                    }
+                } else {
+                    // Use schema order
+                    for (const sec of pageDef.sections) {
+                        layout.push(sec.id);
+                        const fieldsData: Record<string, any> = {};
+                        for (const field of sec.fields) {
+                            if (field.settingsKey && settingsMap[field.settingsKey]) {
+                                fieldsData[field.key] = settingsMap[field.settingsKey];
+                            } else if (field.defaultValue !== undefined) {
+                                fieldsData[field.key] = field.defaultValue;
                             }
                         }
+                        sections[sec.id] = { enabled: true, data: fieldsData };
                     }
-                    sections[sec.id] = {
-                        enabled: saved_sec ? saved_sec.enabled !== false : true,
-                        data,
-                    };
                 }
-                saved[pageDef.slug] = sections;
+                savedData[pageDef.slug] = sections;
+                savedLayouts[pageDef.slug] = layout;
             }
-            setPagesData(saved);
+            setPagesData(savedData);
+            setPageLayouts(savedLayouts);
         } catch (e: any) {
             showToast(e.message || 'Failed to load page schema', 'error');
         } finally {
@@ -533,25 +569,49 @@ export default function SitePagesPage() {
         }));
     };
 
+    const moveSection = (index: number, direction: 'up' | 'down') => {
+        const layout = [...(pageLayouts[activePage] || [])];
+        const newIndex = direction === 'up' ? index - 1 : index + 1;
+        if (newIndex < 0 || newIndex >= layout.length) return;
+        [layout[index], layout[newIndex]] = [layout[newIndex], layout[index]];
+        setPageLayouts(prev => ({ ...prev, [activePage]: layout }));
+    };
+
+    const removeSection = (sectionId: string) => {
+        setPageLayouts(prev => ({ ...prev, [activePage]: (prev[activePage] || []).filter(id => id !== sectionId) }));
+    };
+
+    const addSectionFromPalette = (secDef: any) => {
+        const newId = `${secDef.type}_${Date.now()}`;
+        const defaultData: Record<string, any> = {};
+        secDef.fields.forEach((f: any) => { if (f.defaultValue !== undefined) defaultData[f.key] = f.defaultValue; });
+
+        setPagesData(prev => ({
+            ...prev,
+            [activePage]: { ...prev[activePage], [newId]: { enabled: true, data: defaultData } }
+        }));
+        setPageLayouts(prev => ({ ...prev, [activePage]: [...(prev[activePage] || []), newId] }));
+        
+        setIsPaletteOpen(false);
+        showToast(`${secDef.label} section added.`, 'success');
+    };
+
     const save = async () => {
         if (!currentPageDef) return;
         setIsSaving(true);
         try {
-            // Build sections array in order
-            const sections = currentPageDef.sections.map((sec) => ({
-                id: sec.id,
-                enabled: currentSections[sec.id]?.enabled ?? true,
-                data: currentSections[sec.id]?.data || {},
-            }));
-            await apiRequest(`/pages/by-slug/${activePage}`, {
-                method: 'PUT',
-                body: {
-                    title: currentPageDef.label,
-                    status: 'PUBLISHED',
-                    data: { sections },
-                },
+            const layoutIds = pageLayouts[activePage] || [];
+            const sections = layoutIds.map(id => {
+                const secState = pagesData[activePage]?.[id];
+                return { id, enabled: secState?.enabled ?? true, data: secState?.data || {} };
             });
-            showToast(`${currentPageDef.label} sections saved.`, 'success');
+
+            await apiRequest(`/pages/by-slug/${activePage}`, 'PUT', {
+                title: currentPageDef.label,
+                status: 'PUBLISHED',
+                data: { sections },
+            });
+            showToast('Page layout and content saved successfully.', 'success');
         } catch (e: any) {
             showToast(e.message || 'Save failed', 'error');
         } finally {
@@ -647,30 +707,65 @@ export default function SitePagesPage() {
                             <div className="flex items-center justify-between mb-4">
                                 <div>
                                     <h2 className="font-bold text-slate-800 text-lg">{currentPageDef.label}</h2>
-                                    <p className="text-xs text-slate-400">Toggle sections on/off and edit their content. Save when done.</p>
+                                    <p className="text-xs text-slate-400">Manage your page layout and section content.</p>
                                 </div>
-                                <div className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                                    <DocumentTextIcon className="w-4 h-4" />
-                                    /{activePage}
+                                <div className="flex items-center gap-2">
+                                    {isEnterprise && (
+                                        <button
+                                            onClick={() => setIsPaletteOpen(true)}
+                                            className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
+                                        >
+                                            <PlusIcon className="w-4 h-4" /> Add Section
+                                        </button>
+                                    )}
+                                    <div className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                                        <DocumentTextIcon className="w-4 h-4" />
+                                        /{activePage}
+                                    </div>
                                 </div>
                             </div>
 
-                            {currentPageDef.sections.map((sec) => (
-                                <SectionCard
-                                    key={sec.id}
-                                    sectionDef={sec}
-                                    sectionData={currentSections[sec.id] || { enabled: true, data: {} }}
-                                    onToggle={() => toggleSection(sec.id)}
-                                    onDataChange={(key, value) => updateSectionData(sec.id, key, value)}
-                                    saving={isSaving}
-                                />
-                            ))}
+                            {(pageLayouts[activePage] || []).map((id, i) => {
+                                // Find definition from schema by section type prefix if exact ID not found
+                                let secDef = currentPageDef.sections.find(s => s.id === id);
+                                if (!secDef) {
+                                    const type = id.split('_')[0];
+                                    // Try to find a section with this type in ANY page schema (or use a global map)
+                                    // For now, scan all pages in schema
+                                    for (const p of pageSchema) {
+                                        const found = p.sections.find(s => (s as any).type === type || s.id === type);
+                                        if (found) { secDef = found; break; }
+                                    }
+                                }
+                                if (!secDef) return null;
+
+                                return (
+                                    <SectionCard
+                                        key={id}
+                                        isEnterprise={isEnterprise}
+                                        sectionDef={secDef}
+                                        sectionData={currentSections[id] || { enabled: true, data: {} }}
+                                        onToggle={() => toggleSection(id)}
+                                        onDataChange={(key, value) => updateSectionData(id, key, value)}
+                                        onRemove={() => removeSection(id)}
+                                        onMoveUp={() => moveSection(i, 'up')}
+                                        onMoveDown={() => moveSection(i, 'down')}
+                                        saving={isSaving}
+                                    />
+                                );
+                            })}
                         </>
                     ) : (
                         <div className="text-center py-20 text-slate-400">Select a page to edit its sections.</div>
                     )}
                 </div>
             </div>
+
+            <SectionPaletteModal 
+                isOpen={isPaletteOpen} 
+                onClose={() => setIsPaletteOpen(false)} 
+                onSelect={addSectionFromPalette} 
+            />
 
             {/* Module Aliases info box */}
             <div className="mt-10 bg-amber-50 border border-amber-200 rounded-2xl p-6">

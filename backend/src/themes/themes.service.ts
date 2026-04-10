@@ -48,14 +48,68 @@ export class ThemesService {
 
     /**
      * Find a theme directory: checks built-in themes first, then uploaded themes.
+     * Accepts either the directory name or the slug from theme.json.
      * Returns null if not found in either location.
      */
     private findThemePath(name: string): string | null {
+        // 1. Exact directory name match
         const builtIn = path.join(this.builtInThemesPath, name);
         if (fs.existsSync(builtIn)) return builtIn;
         const uploaded = path.join(this.uploadPath, name);
         if (fs.existsSync(uploaded)) return uploaded;
+
+        // 2. Search by theme.json slug (built-in)
+        if (fs.existsSync(this.builtInThemesPath)) {
+            for (const dir of fs.readdirSync(this.builtInThemesPath, { withFileTypes: true })) {
+                if (!dir.isDirectory() || dir.name.startsWith('.')) continue;
+                const configPath = path.join(this.builtInThemesPath, dir.name, 'theme.json');
+                if (fs.existsSync(configPath)) {
+                    try {
+                        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+                        if (config.slug === name) return path.join(this.builtInThemesPath, dir.name);
+                    } catch { }
+                }
+            }
+        }
+
+        // 3. Search by theme.json slug (uploaded)
+        if (fs.existsSync(this.uploadPath)) {
+            for (const dir of fs.readdirSync(this.uploadPath, { withFileTypes: true })) {
+                if (!dir.isDirectory() || dir.name.startsWith('.')) continue;
+                const configPath = path.join(this.uploadPath, dir.name, 'theme.json');
+                if (fs.existsSync(configPath)) {
+                    try {
+                        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+                        if (config.slug === name) return path.join(this.uploadPath, dir.name);
+                    } catch { }
+                }
+            }
+        }
+
         return null;
+    }
+
+    /** Resolve the directory name for a theme (given slug or dir name). */
+    private resolveThemeDirName(name: string): string {
+        // If the directory itself exists, name is already the dir name
+        if (fs.existsSync(path.join(this.builtInThemesPath, name))) return name;
+        if (fs.existsSync(path.join(this.uploadPath, name))) return name;
+
+        // Otherwise find by slug and return the actual directory name
+        for (const baseDir of [this.builtInThemesPath, this.uploadPath]) {
+            if (!fs.existsSync(baseDir)) continue;
+            for (const dir of fs.readdirSync(baseDir, { withFileTypes: true })) {
+                if (!dir.isDirectory() || dir.name.startsWith('.')) continue;
+                const configPath = path.join(baseDir, dir.name, 'theme.json');
+                if (fs.existsSync(configPath)) {
+                    try {
+                        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+                        if (config.slug === name) return dir.name;
+                    } catch { }
+                }
+            }
+        }
+        return name; // fallback to original
     }
 
     async processThemeUpload(file: Express.Multer.File) {
@@ -134,6 +188,7 @@ export class ThemesService {
     async setupTheme(themeName: string, clearPrevious: boolean = false) {
         const themePath = this.findThemePath(themeName);
         if (!themePath) throw new BadRequestException(`Theme "${themeName}" not found`);
+        themeName = this.resolveThemeDirName(themeName);
 
         try {
             if (clearPrevious) {
@@ -432,6 +487,10 @@ export class ThemesService {
         const themePath = this.findThemePath(themeName);
         if (!themePath) throw new BadRequestException(`Theme "${themeName}" not found`);
 
+        // Always store the directory name so dev-theme.js can locate the folder
+        const dirName = this.resolveThemeDirName(themeName);
+        themeName = dirName;
+
         const results: Record<string, number> = {};
 
         // Set active_theme FIRST so all seed helpers pick up the correct theme
@@ -642,7 +701,44 @@ export class ThemesService {
     /** Return the active theme's page schema (for the section editor). */
     async getPageSchema(): Promise<any[]> {
         const config = await this.getActiveThemeConfig();
-        return config?.pageSchema || [];
+        const pages: any[] = config?.pageSchema || [];
+        // Normalize: theme.json may use `name` instead of `label`, and `type` instead of `id` on sections
+        return pages.map((page: any) => ({
+            ...page,
+            label: page.label || page.name || page.slug,
+            sections: (page.sections || []).map((sec: any) => ({
+                ...sec,
+                id: sec.id || sec.type,
+                type: sec.type || sec.id,
+            })),
+        }));
+    }
+
+    /** 
+     * Return a unique list of all section types defined in the theme's page schema.
+     * This acts as a "Section Palette" for the advanced page builder.
+     */
+    async getSectionPalette(): Promise<any[]> {
+        const config = await this.getActiveThemeConfig();
+        const pages: any[] = config?.pageSchema || [];
+        const palette = new Map<string, any>();
+
+        for (const page of pages) {
+            for (const sec of (page.sections || [])) {
+                const type = sec.type || sec.id;
+                if (!type) continue;
+                if (!palette.has(type)) {
+                    palette.set(type, {
+                        ...sec,
+                        id: type,
+                        type: type,
+                        label: sec.label || (type.charAt(0).toUpperCase() + type.slice(1)),
+                    });
+                }
+            }
+        }
+
+        return Array.from(palette.values());
     }
 
     /** Return module aliases (e.g. { team: 'Our Team' }). */

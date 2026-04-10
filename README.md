@@ -1,4 +1,9 @@
-# Mero CMS
+> **Version:** `v1.2.0` — Production release with modular CMS engine.
+> **Branches:** `main`, `production`, `develop`, `testing`, `marketing`.
+
+---
+
+# Mero CMS — Demo
 
 **Mero CMS** is a modular, self-hosted CMS built by [Blendwit Tech](https://blendwit.com).
 See [`docs/onboarding.md`](docs/onboarding.md) for the full deployment guide.
@@ -12,14 +17,17 @@ See [`docs/onboarding.md`](docs/onboarding.md) for the full deployment guide.
 
 ## Branch Strategy
 
-| Branch | Purpose | Tag format |
-|--------|---------|-----------|
-| `main` | Clean production code — no demo, no dev notes | `v1.2.0` |
-| `marketing` | `main` + demo overlay for `demo.merocms.com` | `v1.2.0-marketing` |
-| `stable` | Frozen snapshot used by live clients | `v1.1.0-stable` |
-| `develop` | Active development — merge here first | `v1.2.0-dev` |
+The repository follows a strictly gated promotion flow.
 
-**Never point a live client deployment at `develop` or `main` directly. Always use a pinned tag.**
+| Branch | Purpose | Status |
+|--------|---------|-----------|
+| `production` | Stable production-ready code used for client deployments. | Primary |
+| `main` | Clean trunk for features integrated from the development flow. | Trunk |
+| `testing` | Staging/QA branch for verifying features before production. | Preview |
+| `develop` | Active development branch — code changes merge here first. | Drafting |
+| `marketing` | Product marketing site and demo environment ([demo.merocms.com](https://demo.merocms.com)). | Demo |
+
+**All other branches except `dependabot/*` are temporary and should be deleted after merging.**
 
 ---
 
@@ -165,23 +173,27 @@ All modules except core are opt-in via `ENABLED_MODULES`:
 
 ---
 
+## Roadmap
+
+See [`task.md`](task.md) for the detailed progress of each stage.
+
+- **v1.3.0 Stability**: API rate limiting, Swagger coverage, automated testing baseline. (Target: May 2026)
+- **v1.4.0 Editor**: TipTap Rich Text Editor, Sharp Image pipeline, Content Scheduling. (Target: June 2026)
+- **v1.5.0 i18n**: Multi-language content support, locale-aware Public API. (Target: July 2026)
+- **v2.0.0 Platform**: Theme marketplace, CLI tool, white-label mode, e-commerce module. (Target: Q4 2026)
+
+---
+
 ## Releasing
 
-Tag `develop` as `v{major}.{minor}.{patch}-dev`, merge to `main`, tag as `v{major}.{minor}.{patch}`:
+Standard promotion path: `develop` → `testing` → `main` → `production`.
 
 ```bash
-git tag v1.3.0-dev
-git checkout main && git merge develop --no-ff
+git checkout testing && git merge develop --no-ff
+git checkout main && git merge testing --no-ff
+git checkout production && git merge main --no-ff
 git tag v1.3.0
-git push origin main develop --tags
-```
-
-For the marketing/demo branch:
-```bash
-git checkout marketing && git merge main --no-ff
-# restore/update backend/src/demo/ files as needed
-git tag v1.3.0-marketing
-git push origin marketing --tags
+git push origin production --tags
 ```
 
 GitHub Actions will automatically build and push Docker images to GHCR on tag push.

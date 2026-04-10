@@ -55,14 +55,31 @@ async function getAnalyticsConfig() {
   }
 }
 
+async function getSettings() {
+  try {
+    const res = await fetch(`${API_URL}/public/site-data`, {
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.settings || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata(): Promise<Metadata> {
-  const seo = await getGlobalSeo();
+  const [seo, settings] = await Promise.all([
+    getGlobalSeo(),
+    getSettings(),
+  ]);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
   return {
     title: {
-      default: seo?.title || "Blendwit CMS | Premium Content Management System",
-      template: "%s | Blendwit CMS",
+      default: seo?.title || (settings?.siteTitle ? `${settings.siteTitle} | CMS` : "Mero CMS | Premium Content Management"),
+      template: `%s | ${settings?.siteTitle || "Mero CMS"}`,
     },
     description: seo?.description || "Advanced Content Management System with powerful features for modern web applications",
     keywords: ["CMS", "Content Management", "Blendwit", "Web Development", "Blog Platform"],
