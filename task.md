@@ -1,6 +1,8 @@
-# Mero CMS — Project Roadmap
 
-This document tracks the high-level roadmap and feature priorities for Mero CMS, based on the v1.2.0 product analysis.
+## Milestone 0 — Repository Governance
+- [x] **Branch Alignment**: Synchronised `main`, `develop`, `marketing`, and `production` to a common stable baseline.
+- [x] **Dependabot Optimisation**: Reduced branch noise by implementing monthly grouped updates.
+- [x] **Strategy Definition**: Formally established roles for each primary branch.
 
 ## v1.3.0 — Stability & Performance
 - [ ] API Rate Limiting (nestjs-throttler)

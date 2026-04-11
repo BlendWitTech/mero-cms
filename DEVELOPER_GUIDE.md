@@ -578,10 +578,11 @@ See `backend/.env.development.example` for a complete local config template.
 The repository uses a strictly gated promotion flow across these primary branches:
 
 ```
-production    ← Stable release (protected — tagged v1.x.x)
-  └── main    ← Clean trunk (protected — features ready for release)
-        └── testing  ← Staging/QA (protected — feature verification)
-              └── develop ← Active development (merge here first)
+production    ← Stable release (sellable product, version controlled releases)
+main          ← Backup stable version (includes demo, safety fallback)
+testing       ← Staging/QA (pre-production verification, supports demo)
+develop       ← Active development hub (new features stem from here)
+marketing     ← Live environment for Mero CMS itself (supports demo)
 ```
 
 - `marketing`: Custom branch for [demo.merocms.com](https://demo.merocms.com).
