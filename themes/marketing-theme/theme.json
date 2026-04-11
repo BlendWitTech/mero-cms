@@ -226,6 +226,62 @@
           ]
         }
       ]
+    },
+    {
+      "slug": "pricing",
+      "name": "Pricing Page",
+      "sections": [
+        {
+          "type": "pricing-header",
+          "label": "Pricing Header",
+          "fields": [
+            { "key": "title", "label": "Title", "type": "text" },
+            { "key": "subtitle", "label": "Subtitle", "type": "textarea" }
+          ]
+        },
+        {
+          "type": "pricing-plans",
+          "label": "Pricing Plans Loader",
+          "fields": [
+            { "key": "display_type", "label": "Display Type", "type": "select", "options": ["grid", "tabs"], "defaultValue": "tabs" }
+          ]
+        },
+        {
+          "type": "faq",
+          "label": "FAQ Section",
+          "fields": [
+            { "key": "title", "label": "Title", "type": "text" }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "demo",
+      "name": "Demo Page",
+      "sections": [
+        {
+          "type": "demo-hero",
+          "label": "Demo Hero",
+          "fields": [
+            { "key": "title", "label": "Title", "type": "text" },
+            { "key": "description", "label": "Description", "type": "textarea" }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "contact",
+      "name": "Contact Page",
+      "sections": [
+        {
+          "type": "contact-grid",
+          "label": "Contact Info & Form",
+          "fields": [
+            { "key": "title", "label": "Title", "type": "text" },
+            { "key": "email", "label": "Contact Email", "type": "text" }
+          ]
+        }
+      ]
     }
   ],
   "seedData": {

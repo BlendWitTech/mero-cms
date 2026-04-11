@@ -5,63 +5,61 @@ updates:
   - package-ecosystem: npm
     directory: /backend
     schedule:
-      interval: weekly
+      interval: monthly
       day: monday
       time: "09:00"
       timezone: "Asia/Kathmandu"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 1 # Only 1 branch/PR at a time for backend
     labels:
       - dependencies
       - backend
     groups:
-      nestjs:
+      backend-dependencies:
         patterns:
-          - "@nestjs/*"
-      prisma:
-        patterns:
-          - "prisma"
-          - "@prisma/*"
+          - "*" # Groups ALL backend updates into a single PR
 
   # ── Frontend (Next.js / React) ───────────────────────────────────────────────
   - package-ecosystem: npm
     directory: /frontend
     schedule:
-      interval: weekly
+      interval: monthly
       day: monday
       time: "09:00"
       timezone: "Asia/Kathmandu"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 1 # Only 1 branch/PR at a time for frontend
     labels:
       - dependencies
       - frontend
     groups:
-      nextjs:
+      frontend-dependencies:
         patterns:
-          - "next"
-          - "react"
-          - "react-dom"
-      tailwind:
-        patterns:
-          - "tailwindcss"
-          - "@tailwindcss/*"
+          - "*" # Groups ALL frontend updates into a single PR
 
   # ── Root workspace ───────────────────────────────────────────────────────────
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
       day: monday
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 1
     labels:
       - dependencies
+    groups:
+      root-dependencies:
+        patterns:
+          - "*"
 
   # ── GitHub Actions ───────────────────────────────────────────────────────────
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
       day: monday
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 1
     labels:
       - dependencies
       - ci
+    groups:
+      actions-updates:
+        patterns:
+          - "*"

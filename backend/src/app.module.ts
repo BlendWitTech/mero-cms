@@ -32,6 +32,7 @@ import { ThemesModule } from './themes/themes.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { TasksModule } from './tasks/tasks.module';
 import { SetupModule } from './setup/setup.module';
+import { DemoModule } from './demo/demo.module';
 import { PublicModule } from './public/public.module';
 import { CollectionsModule } from './collections/collections.module';
 import { FormsModule } from './forms/forms.module';
@@ -85,6 +86,7 @@ function when(...keys: string[]) {
     NotificationsModule,
     TasksModule,
     SetupModule,
+    DemoModule,
     PublicModule,
     // Theme system and navigation are fundamental CMS infrastructure
     ThemesModule,

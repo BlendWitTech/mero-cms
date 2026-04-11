@@ -36,6 +36,21 @@ export const MODULE_LABELS: Record<string, { label: string; description: string;
     robots: { label: 'Robots.txt', description: 'Manage search engine crawl rules', group: 'SEO & Analytics' },
 };
 
+export const MODULE_TIERS: Record<string, number> = {
+    team: 2,
+    services: 2,
+    testimonials: 2,
+    leads: 2,
+    seo: 2,
+    redirects: 2,
+    analytics: 2,
+    sitemap: 2,
+    robots: 2,
+    webhooks: 2,
+    collections: 3,
+    comments: 3,
+};
+
 @Injectable()
 export class SetupService {
     constructor(

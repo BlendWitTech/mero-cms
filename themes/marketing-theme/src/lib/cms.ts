@@ -78,10 +78,19 @@ export interface Post {
 }
 
 export interface Page {
-  id?: string;
+  id: string;
   title: string;
   slug: string;
+  description?: string;
   content?: string;
+  data: {
+    sections?: Array<{
+      id: string;
+      type?: string;
+      enabled: boolean;
+      data: Record<string, any>;
+    }>;
+  };
   status?: string;
   metaTitle?: string;
   metaDescription?: string;
@@ -124,6 +133,7 @@ export interface SiteData {
   services: Service[];
   testimonials: Testimonial[];
   team: TeamMember[];
+  pages: Page[];
 }
 
 export interface PostsResponse {
@@ -166,6 +176,7 @@ export async function getSiteData(revalidate = 60): Promise<SiteData> {
     services: [],
     testimonials: [],
     team: [],
+    pages: [],
   };
 
   try {
@@ -180,6 +191,7 @@ export async function getSiteData(revalidate = 60): Promise<SiteData> {
       services: Array.isArray(json.services) ? json.services : [],
       testimonials: Array.isArray(json.testimonials) ? json.testimonials : [],
       team: Array.isArray(json.team) ? json.team : [],
+      pages: Array.isArray(json.pages) ? json.pages : [],
     };
   } catch {
     return fallback;

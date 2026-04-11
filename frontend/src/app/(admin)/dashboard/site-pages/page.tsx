@@ -501,18 +501,33 @@ export default function SitePagesPage() {
                 const pageRecord = Array.isArray(pagesRes) ? pagesRes.find((p: any) => p.slug === pageDef.slug) : null;
                 const rawSections: any[] = pageRecord?.data?.sections || [];
                 const sections: PageSections = {};
-                
-                // Track layout order
                 const layout: string[] = [];
 
                 if (rawSections.length > 0) {
-                    // Use saved order
+                    // Use saved order but merge with schema for field defaults
                     for (const s of rawSections) {
                         layout.push(s.id);
-                        sections[s.id] = { enabled: s.enabled !== false, data: s.data || {} };
+                        
+                        // Find section definition for defaults
+                        const secDef = pageDef.sections.find(sd => sd.id === s.id);
+                        const fieldsData: Record<string, any> = { ...(s.data || {}) };
+                        
+                        if (secDef) {
+                            for (const field of secDef.fields) {
+                                if (fieldsData[field.key] === undefined) {
+                                    if (field.settingsKey && settingsMap[field.settingsKey]) {
+                                        fieldsData[field.key] = settingsMap[field.settingsKey];
+                                    } else if (field.defaultValue !== undefined) {
+                                        fieldsData[field.key] = field.defaultValue;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        sections[s.id] = { enabled: s.enabled !== false, data: fieldsData };
                     }
                 } else {
-                    // Use schema order
+                    // Fresh page — use schema order
                     for (const sec of pageDef.sections) {
                         layout.push(sec.id);
                         const fieldsData: Record<string, any> = {};
