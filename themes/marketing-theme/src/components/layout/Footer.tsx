@@ -68,12 +68,12 @@ export default function Footer({ siteData }: { siteData: SiteData }) {
           <div>
             <h4 className="text-sm font-black uppercase tracking-widest text-slate-900 mb-6 sm:mb-8 transition-all hover:text-primary-600 cursor-default">HQ</h4>
             <ul className="space-y-4">
-              <li className="text-sm font-bold text-slate-500">{settings.contact_email || 'hello@mero-cms.com'}</li>
+              <li className="text-sm font-bold text-slate-500">{settings.contact_email || process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'hello@mero-cms.com'}</li>
               <li className="text-sm font-medium text-slate-400">
-                Developed by <a href="https://www.blendwit.com" target="_blank" className="font-black text-slate-900 hover:text-primary-600 transition-colors">Blendwit Tech</a>
+                Developed by <a href={process.env.NEXT_PUBLIC_DEVELOPER_URL || "https://www.blendwit.com"} target="_blank" className="font-black text-slate-900 hover:text-primary-600 transition-colors">Blendwit Tech</a>
               </li>
               <li className="text-sm font-medium text-slate-400">
-                Ecosystem: <a href="https://www.merojukx.com" target="_blank" className="font-bold text-slate-500 hover:text-violet-600 transition-colors">Merojukx Platform</a>
+                Ecosystem: <a href={process.env.NEXT_PUBLIC_ECOSYSTEM_URL || "https://www.merojukx.com"} target="_blank" className="font-bold text-slate-500 hover:text-violet-600 transition-colors">Merojukx Platform</a>
               </li>
             </ul>
           </div>

@@ -80,7 +80,7 @@ export default function Header({ siteData }: { siteData: SiteData }) {
             </button>
             <div className="hidden sm:block h-6 w-px bg-slate-200 mx-1"></div>
             <Button 
-                href="https://demo.mero-cms.com" 
+                href="/demo" 
                 variant="primary" 
                 size="md"
                 className={isScrolled ? 'py-2 px-5' : ''}

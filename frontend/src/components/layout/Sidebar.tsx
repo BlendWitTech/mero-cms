@@ -549,7 +549,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     <div className="space-y-1">
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Developed by</p>
                         <a 
-                            href="https://www.blendwit.com" 
+                            href={process.env.NEXT_PUBLIC_DEVELOPER_URL || "https://www.blendwit.com"} 
                             target="_blank" 
                             className="group flex items-center gap-1.5"
                         >
@@ -561,7 +561,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     <div className="space-y-1">
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Ecosystem</p>
                         <a 
-                            href="https://www.merojukx.com" 
+                            href={process.env.NEXT_PUBLIC_ECOSYSTEM_URL || "https://www.merojukx.com"} 
                             target="_blank" 
                             className="group flex items-center gap-1.5"
                         >
