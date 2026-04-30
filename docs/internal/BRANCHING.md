@@ -4,6 +4,11 @@ This is the source of truth for how code flows from a developer's
 laptop to a paying customer's site. Read this before pushing,
 merging, tagging, or deploying.
 
+> Pair this doc with [`VERSIONING.md`](./VERSIONING.md) — that one
+> covers how versions are tagged independently per branch, when to
+> skip versions, and the difference between "skipping the version
+> label" and "skipping the code."
+
 ---
 
 ## The model — develop → main → tag
