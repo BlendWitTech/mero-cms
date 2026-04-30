@@ -4,29 +4,36 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useDropzone } from 'react-dropzone';
 import {
-    XMarkIcon,
-    CloudArrowUpIcon,
-    PhotoIcon,
-    TrashIcon,
-    CheckCircleIcon,
-    DocumentIcon,
-    ArrowDownTrayIcon,
-    ClipboardDocumentIcon,
-    FolderIcon,
-    FolderOpenIcon,
-    FolderPlusIcon,
-    MagnifyingGlassIcon,
-    VideoCameraIcon,
-    CheckIcon,
-    PencilIcon,
-} from '@heroicons/react/24/outline';
+    X,
+    UploadCloud,
+    Image as ImageIcon,
+    Trash2,
+    CheckCircle,
+    FileText,
+    Download,
+    Clipboard,
+    Folder,
+    FolderOpen,
+    FolderPlus,
+    Search,
+    Video,
+    Check,
+    Pencil,
+    Eye,
+    ChevronRight,
+    ArrowUpRight,
+    Layers,
+    Sparkles
+} from 'lucide-react';
 import { apiRequest } from '@/lib/api';
 import AlertDialog from '@/components/ui/AlertDialog';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
 import { useNotification } from '@/context/NotificationContext';
 import PermissionGuard from '@/components/auth/PermissionGuard';
+
+import { getApiBaseUrl } from '@/lib/api';
+
+const API_BASE = getApiBaseUrl();
 
 interface MediaItem {
     id: string;
@@ -301,6 +308,28 @@ export default function MediaLibrary({
         }
     };
 
+    const generateAltText = async () => {
+        if (!selectedId) return;
+        const item = media.find(m => m.id === selectedId);
+        if (!item) return;
+
+        try {
+            const res: any = await apiRequest('/ai/generate', {
+                method: 'POST',
+                body: { 
+                    prompt: 'Generate a short, descriptive alt text for this image based on its filename.', 
+                    context: `Filename: ${item.filename}` 
+                }
+            });
+            const text = res.text || '';
+            const newAlt = text.replace(/^Alt Text:|^SUMMARY:|^AI Suggestion:/i, '').trim();
+            setEditAlt(newAlt);
+            showToast('Alt text generated!', 'success');
+        } catch (error) {
+            showToast('AI generation failed', 'error');
+        }
+    };
+
     const beautifyFilename = (filename: string) => {
         return filename
             .split('.')
@@ -507,101 +536,101 @@ export default function MediaLibrary({
     const selectedMedia = media.find(m => m.id === selectedId);
 
     const content = (
-        <div className={isStandalone ? "w-full h-full flex flex-col" : "w-full h-full flex flex-col"}>
-            {/* Header Section */}
-            <div className="flex-shrink-0 px-8 pb-6 pt-8">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-display">
-                            Media <span className="text-blue-600 font-bold">Library</span>
-                        </h1>
-                        <p className="mt-1 text-xs text-slate-500 font-semibold tracking-tight">Manage your digital assets and files.</p>
-                    </div>
-                    {!isStandalone && (
-                        <button onClick={handleCloseWrapper} className="p-2.5 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-900 transition-colors">
-                            <XMarkIcon className="h-6 w-6" />
+        <div className={isStandalone ? "w-full flex flex-col gap-6" : "w-full h-full flex flex-col"}>
+            {/* Header Section - Only show if NOT standalone (e.g. in a modal) */}
+            {!isStandalone && (
+                <div className="flex-shrink-0 px-10 pb-8 pt-10">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white font-display">
+                                Digital <span className="text-blue-600">Assets</span>
+                            </h1>
+                            <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest opacity-80">Cloud Infrastructure / Storage</p>
+                        </div>
+                        <button onClick={handleCloseWrapper} className="btn-ghost h-12 w-12 flex items-center justify-center p-0">
+                            <X className="h-6 w-6" />
                         </button>
-                    )}
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {/* Toolbar Row */}
-            <div className="flex-shrink-0 px-8 py-4 grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-slate-200 bg-white/50 backdrop-blur-sm z-10 sticky top-0">
+            {/* Toolbar Row (FilterBar Style) */}
+            <div className={`flex-shrink-0 ${isStandalone ? '' : 'px-10 py-6 border-b border-slate-100 dark:border-white/5 bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl z-10 sticky top-0'} grid grid-cols-1 md:grid-cols-2 gap-6`}>
                 <div className="relative group w-full">
-                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                     <input
                         type="text"
-                        placeholder="Search assets..."
+                        placeholder="Search assets by name..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all shadow-sm"
+                        className="w-full pl-11 pr-6 py-3.5 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-[1.25rem] text-[11px] font-black text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all shadow-sm"
                     />
                 </div>
 
-                <div className="flex items-center gap-1 p-1 bg-slate-100/50 rounded-[2rem] border border-slate-200 backdrop-blur-sm">
+                <div className="flex items-center gap-1 p-1 bg-slate-100/50 dark:bg-white/[0.02] rounded-[1.5rem] border border-slate-200 dark:border-white/10 backdrop-blur-sm">
                     {[
-                        { id: 'all', label: 'All', icon: FolderIcon },
-                        { id: 'images', label: 'Images', icon: PhotoIcon },
-                        { id: 'videos', label: 'Videos', icon: VideoCameraIcon },
-                        { id: 'docs', label: 'Docs', icon: DocumentIcon },
+                        { id: 'all', label: 'All', icon: Folder },
+                        { id: 'images', label: 'Images', icon: ImageIcon },
+                        { id: 'videos', label: 'Videos', icon: Video },
+                        { id: 'docs', label: 'Docs', icon: FileText },
                     ].map((tab: any) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex-1 flex items-center justify-center gap-2 px-2 py-3 rounded-[1.75rem] text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === tab.id
-                                ? 'bg-white text-blue-600 shadow-xl shadow-slate-200 ring-1 ring-slate-200/50'
-                                : 'text-slate-500 hover:text-slate-900'
+                            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id
+                                ? 'bg-white dark:bg-white/10 text-blue-600 dark:text-blue-400 shadow-md ring-1 ring-slate-200/50 dark:ring-white/5'
+                                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                                 }`}
                         >
-                            <tab.icon className="h-4 w-4" />
+                            <tab.icon className="h-3.5 w-3.5" />
                             <span className="hidden lg:inline">{tab.label}</span>
                         </button>
                     ))}
                 </div>
             </div>
 
-            <div className="flex-1 flex overflow-hidden">
+            <div className={`flex-1 flex overflow-hidden min-h-[600px] ${isStandalone ? 'bg-white/50 dark:bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-900/5 border border-slate-100 dark:border-white/[0.06]' : ''}`}>
                 {/* Folder Sidebar */}
-                <div className="w-48 flex-shrink-0 border-r border-slate-200 bg-white flex flex-col overflow-y-auto">
-                    <div className="p-3 flex items-center justify-between border-b border-slate-100">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Folders</span>
+                <div className={`w-64 flex-shrink-0 border-r border-slate-100 dark:border-white/5 bg-white/20 dark:bg-slate-950/20 flex flex-col overflow-y-auto custom-scrollbar`}>
+                    <div className="p-6 flex items-center justify-between border-b border-slate-50 dark:border-white/[0.02]">
+                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Directories</span>
                         <button
                             onClick={() => setShowNewFolderInput(true)}
-                            className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-all"
                             title="New folder"
                         >
-                            <FolderPlusIcon className="h-4 w-4" />
+                            <FolderPlus className="h-4 w-4" />
                         </button>
                     </div>
 
                     {showNewFolderInput && (
-                        <div className="p-2 border-b border-slate-100">
+                        <div className="p-4 border-b border-slate-50 dark:border-white/[0.02] space-y-3">
                             <input
                                 autoFocus
                                 value={newFolderName}
                                 onChange={e => setNewFolderName(e.target.value)}
                                 onKeyDown={e => { if (e.key === 'Enter') handleCreateFolder(); if (e.key === 'Escape') { setShowNewFolderInput(false); setNewFolderName(''); } }}
                                 placeholder="Folder name"
-                                className="w-full px-2 py-1.5 text-xs border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                                className="w-full px-3 py-2 text-[11px] font-black bg-slate-50 dark:bg-white/[0.02] border border-blue-100 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600/20"
                             />
-                            <div className="flex gap-1 mt-1">
-                                <button onClick={handleCreateFolder} className="flex-1 text-[10px] font-bold py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Create</button>
-                                <button onClick={() => { setShowNewFolderInput(false); setNewFolderName(''); }} className="flex-1 text-[10px] font-bold py-1 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200">Cancel</button>
+                            <div className="flex gap-2">
+                                <button onClick={handleCreateFolder} className="btn-primary flex-1 py-2 text-[10px]">Create</button>
+                                <button onClick={() => { setShowNewFolderInput(false); setNewFolderName(''); }} className="btn-outline flex-1 py-2 text-[10px]">Exit</button>
                             </div>
                         </div>
                     )}
 
                     <button
                         onClick={() => setActiveFolder(null)}
-                        className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold transition-colors ${!activeFolder ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                        className={`w-full flex items-center gap-3 px-5 py-4 text-[11px] font-black uppercase tracking-widest transition-all ${!activeFolder ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-r-2 border-blue-600' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.02]'}`}
                     >
-                        <FolderOpenIcon className="h-4 w-4 flex-shrink-0" />
-                        <span className="truncate">All Files</span>
-                        <span className="ml-auto text-[10px] text-slate-400">{media.length}</span>
+                        <FolderOpen className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">Root</span>
+                        <span className={`ml-auto px-1.5 py-0.5 rounded-md text-[9px] ${!activeFolder ? 'bg-blue-200/50 dark:bg-blue-500/20' : 'bg-slate-100 dark:bg-white/5'}`}>{media.length}</span>
                     </button>
 
                     {folders.filter(f => f !== 'root').map(folder => (
-                        <div key={folder} className={`group flex items-center gap-1 px-2 py-2 transition-colors ${activeFolder === folder ? 'bg-blue-50' : 'hover:bg-slate-50'}`}>
+                        <div key={folder} className={`group flex items-center gap-1 px-3 py-1 transition-colors ${activeFolder === folder ? 'bg-blue-50 dark:bg-blue-500/10 border-r-2 border-blue-600' : 'hover:bg-slate-50 dark:hover:bg-white/[0.02]'}`}>
                             {renamingFolder === folder ? (
                                 <input
                                     autoFocus
@@ -609,25 +638,25 @@ export default function MediaLibrary({
                                     onChange={e => setRenameFolderValue(e.target.value)}
                                     onKeyDown={e => { if (e.key === 'Enter') handleRenameFolder(folder); if (e.key === 'Escape') setRenamingFolder(null); }}
                                     onBlur={() => handleRenameFolder(folder)}
-                                    className="flex-1 min-w-0 px-1.5 py-0.5 text-xs border border-blue-300 rounded focus:outline-none"
+                                    className="flex-1 min-w-0 px-2 py-2 text-[11px] font-black bg-white dark:bg-slate-950 border border-blue-300 rounded-lg focus:outline-none"
                                 />
                             ) : (
                                 <button
                                     onClick={() => setActiveFolder(folder)}
-                                    className={`flex-1 flex items-center gap-2 min-w-0 text-xs font-semibold text-left ${activeFolder === folder ? 'text-blue-700' : 'text-slate-600'}`}
+                                    className={`flex-1 flex items-center gap-3 min-w-0 px-2 py-3 text-[11px] font-black uppercase tracking-widest text-left ${activeFolder === folder ? 'text-blue-700 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`}
                                 >
-                                    <FolderIcon className="h-4 w-4 flex-shrink-0" />
+                                    <Folder className="h-4 w-4 flex-shrink-0" />
                                     <span className="truncate">{folder}</span>
-                                    <span className="ml-auto text-[10px] text-slate-400">{media.filter(m => m.folder === folder).length}</span>
+                                    <span className="ml-auto text-[9px] opacity-40">{media.filter(m => m.folder === folder).length}</span>
                                 </button>
                             )}
                             {renamingFolder !== folder && (
-                                <div className="hidden group-hover:flex items-center gap-0.5 flex-shrink-0">
-                                    <button onClick={() => { setRenamingFolder(folder); setRenameFolderValue(folder); }} className="p-0.5 text-slate-400 hover:text-blue-600 rounded">
-                                        <PencilIcon className="h-3 w-3" />
+                                <div className="hidden group-hover:flex items-center gap-1 flex-shrink-0 pr-1">
+                                    <button onClick={() => { setRenamingFolder(folder); setRenameFolderValue(folder); }} className="p-1 text-slate-400 hover:text-blue-600 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-sm">
+                                        <Pencil className="h-3 w-3" />
                                     </button>
-                                    <button onClick={() => handleDeleteFolder(folder)} className="p-0.5 text-slate-400 hover:text-red-600 rounded">
-                                        <TrashIcon className="h-3 w-3" />
+                                    <button onClick={() => handleDeleteFolder(folder)} className="p-1 text-slate-400 hover:text-red-600 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-sm">
+                                        <Trash2 className="h-3 w-3" />
                                     </button>
                                 </div>
                             )}
@@ -636,34 +665,34 @@ export default function MediaLibrary({
                 </div>
 
                 {/* Main Content Area - Grid */}
-                <div className="flex-1 flex flex-col bg-slate-50/50 overflow-hidden relative min-w-0" {...getRootProps()}>
+                <div className="flex-1 flex flex-col bg-slate-50/50 dark:bg-slate-950/50 backdrop-blur-3xl overflow-hidden relative min-w-0" {...getRootProps()}>
                     <input {...getInputProps()} />
 
                     {isDragActive && (
-                        <div className="absolute inset-0 z-50 bg-blue-600/95 backdrop-blur-md flex flex-col items-center justify-center text-white">
-                            <CloudArrowUpIcon className="h-24 w-24 mb-6 animate-bounce" />
-                            <h3 className="text-3xl font-black font-display tracking-tight">Drop files here</h3>
-                            <p className="mt-2 text-blue-200 font-medium">to upload instantly</p>
+                        <div className="absolute inset-0 z-50 bg-blue-600/95 dark:bg-blue-500/90 backdrop-blur-2xl flex flex-col items-center justify-center text-white">
+                            <UploadCloud className="h-24 w-24 mb-6 animate-bounce" />
+                            <h3 className="text-4xl font-black font-display tracking-tight uppercase">Release to Upload</h3>
+                            <p className="mt-2 text-blue-100 font-black uppercase tracking-widest text-[10px]">Instant Content Synchronization</p>
                         </div>
                     )}
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar pt-6 px-8">
-                        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-4">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar pt-8 px-10 pb-10">
+                        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-6">
                             {/* Upload Card */}
                             <PermissionGuard permission="media_upload">
-                                <label className="aspect-square bg-white rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-blue-50 hover:border-blue-500 hover:text-blue-600 transition-all cursor-pointer group relative overflow-hidden shadow-sm hover:shadow-md">
+                                <label className="aspect-square bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-white/5 flex flex-col items-center justify-center text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer group relative overflow-hidden shadow-sm hover:shadow-2xl">
                                     <input type="file" className="hidden" multiple onChange={(e) => onDrop(Array.from(e.target.files || []))} disabled={isUploading} accept={acceptString} />
                                     {isUploading ? (
-                                        <div className="flex flex-col items-center gap-3">
-                                            <div className="animate-spin rounded-full h-8 w-8 border-3 border-blue-600 border-t-transparent"></div>
-                                            <span className="text-[10px] font-black uppercase tracking-widest animate-pulse">Uploading...</span>
+                                        <div className="flex flex-col items-center gap-4">
+                                            <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent shadow-lg shadow-blue-500/20"></div>
+                                            <span className="text-[9px] font-black uppercase tracking-widest animate-pulse">Syncing...</span>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center gap-2 group-hover:scale-110 transition-transform">
-                                            <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                                <CloudArrowUpIcon className="h-6 w-6" />
+                                        <div className="flex flex-col items-center gap-3 group-hover:scale-105 transition-transform">
+                                            <div className="p-4 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl group-hover:bg-blue-600 dark:group-hover:bg-blue-500 group-hover:text-white transition-all shadow-md">
+                                                <UploadCloud className="h-7 w-7" />
                                             </div>
-                                            <span className="text-[10px] font-black uppercase tracking-widest">Add New</span>
+                                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100">Direct Upload</span>
                                         </div>
                                     )}
                                 </label>
@@ -675,9 +704,9 @@ export default function MediaLibrary({
                                     onClick={() => handleSelectionChange(item.id)}
                                     className="group relative cursor-pointer"
                                 >
-                                    <div className={`aspect-square rounded-2xl overflow-hidden bg-white relative transition-all duration-300 shadow-sm ${selectedId === item.id
-                                        ? 'ring-4 ring-blue-500/30 border-blue-500 scale-[1.02] shadow-xl z-10'
-                                        : 'hover:scale-[1.02] hover:shadow-lg border border-slate-200'
+                                    <div className={`aspect-square rounded-3xl overflow-hidden bg-white dark:bg-slate-900 relative transition-all duration-500 shadow-sm ${selectedId === item.id
+                                        ? 'ring-4 ring-blue-500 dark:ring-blue-400/50 border-blue-500 scale-[1.05] shadow-2xl z-10'
+                                        : 'hover:scale-[1.02] hover:shadow-2xl border border-slate-100 dark:border-white/5'
                                         }`}>
 
                                         {item.mimetype.startsWith('image/') || (item.mimetype.startsWith('video/') && item.metadata?.poster) ? (
@@ -685,33 +714,35 @@ export default function MediaLibrary({
                                                 <img
                                                     src={`${API_BASE}${item.mimetype.startsWith('video/') ? item.metadata.poster : ((item.metadata?.versions?.small) || item.url)}`}
                                                     alt={item.altText || item.filename}
-                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                                                 />
                                                 {item.mimetype.startsWith('video/') && (
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors">
-                                                        <div className="h-10 w-10 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white shadow-lg ring-1 ring-white/50">
-                                                            <VideoCameraIcon className="h-5 w-5 ml-0.5" />
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40 group-hover:bg-slate-900/20 transition-colors">
+                                                        <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center text-white shadow-2xl ring-1 ring-white/50">
+                                                            <Video className="h-6 w-6 ml-0.5" />
                                                         </div>
                                                     </div>
                                                 )}
                                             </div>
                                         ) : (
-                                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50">
-                                                <DocumentIcon className="h-12 w-12 mb-3 opacity-50" />
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{item.mimetype.split('/')[1]}</span>
+                                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-white/[0.02]">
+                                                <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl shadow-sm mb-3">
+                                                    <FileText className="h-8 w-8 opacity-40 group-hover:scale-110 transition-transform" />
+                                                </div>
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{item.mimetype.split('/')[1]}</span>
                                             </div>
                                         )}
 
                                         {selectedId === item.id && (
-                                            <div className="absolute inset-0 bg-blue-900/10 flex items-center justify-center backdrop-blur-[1px]">
-                                                <div className="bg-blue-600 text-white rounded-full p-2 shadow-lg scale-in-center animate-in fade-in zoom-in duration-200">
-                                                    <CheckCircleIcon className="h-6 w-6" />
+                                            <div className="absolute inset-0 bg-blue-600/50 flex items-center justify-center backdrop-blur-[2px]">
+                                                <div className="bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 rounded-full p-2.5 shadow-2xl scale-in-center animate-in fade-in zoom-in duration-300">
+                                                    <CheckCircle className="h-7 w-7" />
                                                 </div>
                                             </div>
                                         )}
                                     </div>
 
-                                    <p className={`mt-2.5 text-xs font-bold truncate px-1 transition-colors text-center ${selectedId === item.id ? 'text-blue-600' : 'text-slate-600 group-hover:text-slate-900'
+                                    <p className={`mt-3.5 text-[10px] font-black truncate px-2 transition-colors text-center uppercase tracking-widest ${selectedId === item.id ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'
                                         }`}>
                                         {item.filename}
                                     </p>
@@ -720,12 +751,12 @@ export default function MediaLibrary({
                         </div>
 
                         {filteredMedia.length === 0 && !isLoading && (
-                            <div className="h-[50vh] flex flex-col items-center justify-center text-slate-400">
-                                <div className="p-6 bg-white rounded-full shadow-sm mb-4">
-                                    <PhotoIcon className="h-12 w-12 opacity-30" />
+                            <div className="h-[60vh] flex flex-col items-center justify-center text-slate-400">
+                                <div className="p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-xl mb-6 ring-1 ring-black/5 dark:ring-white/5 border border-slate-100 dark:border-white/5 group-hover:scale-110 transition-transform">
+                                    <ImageIcon className="h-14 w-14 opacity-20" />
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-900">No assets found</h3>
-                                <p className="text-sm font-medium mt-1">Try adjusting your search or upload new files.</p>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Vault Empty</h3>
+                                <p className="text-[10px] font-bold uppercase tracking-widest mt-2 opacity-50">Storage contains no matching records.</p>
                             </div>
                         )}
                     </div>
@@ -733,30 +764,30 @@ export default function MediaLibrary({
 
                 {/* Details Sidebar */}
                 {selectedMedia && (
-                    <div className="w-96 bg-white border-l border-slate-200 flex flex-col shadow-2xl relative z-20 flex-shrink-0 h-full overflow-hidden">
+                    <div className="w-[26rem] bg-white dark:bg-slate-950 border-l border-slate-100 dark:border-white/5 flex flex-col shadow-3xl relative z-20 flex-shrink-0 h-full overflow-hidden transition-all animate-in slide-in-from-right duration-500">
                         {/* Header Fixed */}
-                        <div className="p-4 flex items-center justify-between border-b border-slate-100 bg-white z-10">
-                            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Asset Details</h3>
-                            <div className="flex items-center gap-1">
+                        <div className="p-8 flex items-center justify-between border-b border-slate-50 dark:border-white/[0.02] bg-white dark:bg-slate-950 z-10">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Node Configuration</h3>
+                            <div className="flex items-center gap-2">
                                 <button
                                     onClick={handleUpdateAlt}
                                     disabled={!isDirty() || isSavingAlt}
-                                    className="p-1.5 text-blue-600 rounded-lg hover:bg-blue-50 hover:text-blue-700 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-                                    title="Save Changes"
+                                    className="btn-primary h-10 w-10 flex items-center justify-center p-0 disabled:opacity-20"
+                                    title="Synchronize Changes"
                                 >
-                                    {isSavingAlt ? <div className="w-4 h-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" /> : <CheckIcon className="h-5 w-5" />}
+                                    {isSavingAlt ? <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" /> : <Check className="h-5 w-5" />}
                                 </button>
-                                <button onClick={() => handleSelectionChange(null)} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
-                                    <XMarkIcon className="h-5 w-5" />
+                                <button onClick={() => handleSelectionChange(null)} className="btn-ghost h-10 w-10 flex items-center justify-center p-0">
+                                    <X className="h-5 w-5" />
                                 </button>
                             </div>
                         </div>
 
                         {/* Scrollable Content Container (Flexible) */}
-                        <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar p-4 gap-4">
+                        <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar p-8 gap-8">
 
                             {/* Preview (Flexible Height with Min Height) */}
-                            <div className="flex-shrink-0 min-h-[200px] w-full bg-slate-100 rounded-2xl overflow-hidden relative group shadow-inner ring-1 ring-black/5 aspect-video">
+                            <div className="flex-shrink-0 min-h-[220px] w-full bg-slate-50 dark:bg-white/[0.02] rounded-[2.5rem] overflow-hidden relative shadow-inner ring-1 ring-black/5 dark:ring-white/5 aspect-video border border-slate-100 dark:border-white/5">
                                 {selectedMedia.mimetype.startsWith('video/') ? (
                                     <video
                                         src={`${API_BASE}${selectedMedia.url}`}
@@ -785,69 +816,64 @@ export default function MediaLibrary({
                                         </pre>
                                     </div>
                                 ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400">
-                                        <div className="p-6 bg-white rounded-3xl shadow-sm mb-4">
-                                            {selectedMedia.mimetype.includes('pdf') ? <DocumentIcon className="h-10 w-10 text-red-100 text-red-500" /> :
-                                                selectedMedia.mimetype.includes('word') || selectedMedia.mimetype.includes('doc') ? <DocumentIcon className="h-10 w-10 text-blue-100 text-blue-500" /> :
-                                                    selectedMedia.mimetype.includes('excel') || selectedMedia.mimetype.includes('sheet') ? <DocumentIcon className="h-10 w-10 text-green-100 text-green-500" /> :
-                                                        <DocumentIcon className="h-10 w-10 text-slate-100" />}
+                                    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500">
+                                        <div className="p-8 bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-xl mb-5 ring-1 ring-black/5 dark:ring-white/5 border border-slate-100 dark:border-white/5">
+                                            {selectedMedia.mimetype.includes('pdf') ? <FileText className="h-12 w-12 text-red-500" /> :
+                                                selectedMedia.mimetype.includes('word') || selectedMedia.mimetype.includes('doc') ? <FileText className="h-12 w-12 text-blue-500" /> :
+                                                    selectedMedia.mimetype.includes('excel') || selectedMedia.mimetype.includes('sheet') ? <FileText className="h-12 w-12 text-emerald-500" /> :
+                                                        <FileText className="h-12 w-12 text-slate-300 dark:text-slate-600" />}
                                         </div>
-                                        <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Preview Not Available</p>
-                                        <p className="text-[10px] font-medium text-slate-300 mt-1 uppercase tracking-widest">
-                                            {selectedMedia.mimetype.includes('word') || selectedMedia.mimetype.includes('doc') ? 'WORD DOCUMENT' :
-                                                selectedMedia.mimetype.includes('excel') || selectedMedia.mimetype.includes('sheet') ? 'EXCEL SPREADSHEET' :
-                                                    selectedMedia.mimetype.split('/')[1].toUpperCase()}
-                                        </p>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Preview Interface Disabled</p>
                                     </div>
                                 )}
                             </div>
 
                             {/* Info */}
-                            <div className="flex-shrink-0">
-                                <h2 className="text-xl font-black text-slate-900 break-words leading-tight font-display">{selectedMedia.filename}</h2>
-                                <div className="flex flex-wrap items-center gap-3 mt-4">
-                                    <span className="px-2.5 py-1 rounded-md bg-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wide border border-slate-200">
+                            <div className="flex-shrink-0 space-y-4">
+                                <h2 className="text-2xl font-black text-slate-900 dark:text-white break-words leading-tight font-display tracking-tight">{selectedMedia.filename}</h2>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <span className="px-3.5 py-1.5 rounded-xl bg-slate-50 dark:bg-white/[0.02] text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-100 dark:border-white/5 shadow-sm">
                                         {(selectedMedia.size / 1024 / 1024).toFixed(2)} MB
                                     </span>
-                                    <span className="px-2.5 py-1 rounded-md bg-blue-50 text-[10px] font-bold text-blue-600 uppercase tracking-wide border border-blue-100">
+                                    <span className="px-3.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest border border-blue-100/50 dark:border-blue-500/20 shadow-sm">
                                         {selectedMedia.mimetype.split('/')[1].toUpperCase()}
                                     </span>
                                 </div>
                             </div>
 
                             {/* Actions */}
-                            <div className="flex-shrink-0 grid grid-cols-2 gap-3">
+                            <div className="flex-shrink-0 grid grid-cols-2 gap-4">
                                 <a
                                     href={`${API_BASE}${selectedMedia.url}`}
                                     target="_blank"
-                                    className="flex items-center justify-center gap-2 py-3 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200 transition-all hover:-translate-y-0.5"
+                                    className="btn-outline h-14 flex items-center justify-center gap-3"
                                 >
-                                    <ArrowDownTrayIcon className="h-4 w-4" />
-                                    Download
+                                    <Download className="h-4 w-4" />
+                                    Export
                                 </a>
                                 <PermissionGuard permission="media_delete" behavior="hide">
                                     <button
                                         onClick={(e) => handleDeleteClick(selectedMedia.id, e)}
-                                        className="flex items-center justify-center gap-2 py-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold hover:bg-red-100 transition-all hover:-translate-y-0.5"
+                                        className="btn-destructive h-14 flex items-center justify-center gap-3"
                                     >
-                                        <TrashIcon className="h-4 w-4" />
-                                        Delete
+                                        <Trash2 className="h-4 w-4" />
+                                        Purge
                                     </button>
                                 </PermissionGuard>
                             </div>
 
-                            <hr className="border-slate-100 my-2" />
+                            <div className="h-px w-full bg-slate-50 dark:bg-white/[0.02] my-2" />
 
                             {/* Version Selection */}
                             {!isStandalone && (
                                 <div className="flex-shrink-0 space-y-4">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                        <FolderIcon className="h-3 w-3" />
-                                        Select Version
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-3 ml-1">
+                                        <Layers className="h-3.5 w-3.5" />
+                                        Object Versions
                                     </label>
                                     <div className="space-y-2">
                                         <VersionRow
-                                            label="Original"
+                                            label="Raw Source"
                                             size="FULL"
                                             isSelected={selectedVersion.size === 'Original'}
                                             onClick={() => handleVersionSelect(`${API_BASE}${selectedMedia.url}`, 'Original')}
@@ -855,7 +881,7 @@ export default function MediaLibrary({
                                         {selectedMedia.metadata?.versions && Object.entries(selectedMedia.metadata.versions).map(([size, url]) => (
                                             <VersionRow
                                                 key={size}
-                                                label={`WebP ${size}`}
+                                                label={`Optimized ${size.toUpperCase()}`}
                                                 size="OPT"
                                                 isSelected={selectedVersion.url === `${API_BASE}${url}`}
                                                 onClick={() => handleVersionSelect(`${API_BASE}${url}`, size)}
@@ -868,28 +894,35 @@ export default function MediaLibrary({
                             {/* Alt Text */}
                             <div className="flex-shrink-0 space-y-4 mb-4">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                        <ClipboardDocumentIcon className="h-3 w-3" />
-                                        Alt Text
+                                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-3 ml-1">
+                                        <Clipboard className="h-3.5 w-3.5" />
+                                        Alternative Descriptor
                                     </label>
+                                    <button 
+                                        onClick={generateAltText}
+                                        className="btn-outline flex items-center gap-1 px-3 py-1 text-[9px]"
+                                    >
+                                        <Sparkles className="h-3 w-3" />
+                                        AI
+                                    </button>
                                 </div>
                                 <textarea
                                     value={editAlt}
                                     onChange={(e) => setEditAlt(e.target.value)}
-                                    className="w-full bg-slate-50 border-slate-200 rounded-xl p-4 text-xs font-medium min-h-[100px] resize-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
-                                    placeholder="Describe this asset for SEO..."
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-[2rem] p-6 text-[11px] font-black text-slate-900 dark:text-white min-h-[140px] resize-none focus:outline-none focus:ring-4 focus:ring-blue-600/5 transition-all shadow-inner"
+                                    placeholder="Describe this object for neural indexing..."
                                 />
                             </div>
                         </div>
 
                         {/* Insert Button (Fixed Bottom) */}
                         {!isStandalone && (
-                            <div className="p-4 border-t border-slate-100 bg-white z-10">
+                            <div className="p-10 border-t border-slate-50 dark:border-white/[0.02] bg-white dark:bg-slate-950/80 backdrop-blur-md z-10">
                                 <button
                                     onClick={handleInsertClick}
-                                    className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-xl shadow-blue-600/30 hover:bg-blue-700 hover:-translate-y-1 transition-all active:scale-95 active:translate-y-0"
+                                    className="btn-primary w-full py-6 text-[10px]"
                                 >
-                                    Insert Selected Asset
+                                    Finalize Selection
                                 </button>
                             </div>
                         )}
@@ -912,7 +945,7 @@ export default function MediaLibrary({
     return (
         <>
             {createPortal(
-                <div className="fixed inset-0 z-[9999] bg-white animate-in slide-in-from-bottom-5 duration-300 flex flex-col">
+                <div className="fixed inset-0 z-[9999] bg-white dark:bg-slate-950 animate-in slide-in-from-bottom-5 duration-500 flex flex-col custom-scrollbar">
                     {content}
                 </div>,
                 document.body
@@ -927,13 +960,19 @@ function VersionRow({ label, size, isSelected, onClick }: any) {
     return (
         <button
             onClick={onClick}
-            className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${isSelected
-                ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm'
-                : 'bg-white border-slate-100 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+            className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all duration-300 ${isSelected
+                ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-400 shadow-lg shadow-blue-500/5'
+                : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:border-slate-200 dark:hover:border-white/10 hover:bg-slate-50 dark:hover:bg-white/[0.01]'
                 }`}
         >
-            <span className="text-xs font-bold">{label}</span>
-            {isSelected && <CheckCircleIcon className="h-5 w-5" />}
+            <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
+            {isSelected ? (
+                <div className="bg-blue-600 dark:bg-blue-400 text-white dark:text-slate-900 rounded-full h-5 w-5 flex items-center justify-center p-0.5">
+                    <Check className="h-3 w-3 stroke-[4]" />
+                </div>
+            ) : (
+                <div className="h-5 w-5 rounded-full border border-slate-200 dark:border-white/10" />
+            )}
         </button>
     );
 }

@@ -58,38 +58,38 @@ const AuditDetailModal = ({ isOpen, onClose, log }: { isOpen: boolean, onClose: 
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
             <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] bg-white shadow-2xl ring-1 ring-slate-900/5 transition-all">
+            <div className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] bg-white dark:bg-slate-900 shadow-2xl ring-1 ring-slate-900/5 dark:ring-white/10 transition-all">
                 <div className="p-8">
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <div className="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                                 <InformationCircleIcon className="h-6 w-6" />
                             </div>
                             <div>
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Security Event</p>
-                                <h3 className="text-xl font-bold text-slate-900">{log.action.replace(/_/g, ' ')}</h3>
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white">{log.action.replace(/_/g, ' ')}</h3>
                             </div>
                         </div>
-                        <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-600 rounded-xl transition-all">
+                        <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-600 dark:hover:text-white rounded-xl transition-all">
                             <XMarkIcon className="h-5 w-5" />
                         </button>
                     </div>
 
                     <div className="space-y-6">
-                        <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                        <div className="bg-slate-50/50 dark:bg-white/5 p-4 rounded-2xl border border-slate-100 dark:border-white/10">
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Description</p>
-                            <p className="text-sm font-medium text-slate-700 leading-relaxed">
+                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
                                 You {humanizeAction(log.action, log.metadata)}.
                             </p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                            <div className="bg-slate-50/50 dark:bg-white/5 p-4 rounded-2xl border border-slate-100 dark:border-white/10">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Timestamp</p>
-                                <p className="text-sm font-bold text-slate-900">{new Date(log.createdAt).toLocaleDateString()}</p>
-                                <p className="text-[10px] font-medium text-slate-500">{new Date(log.createdAt).toLocaleTimeString()}</p>
+                                <p className="text-sm font-bold text-slate-900 dark:text-white">{new Date(log.createdAt).toLocaleDateString()}</p>
+                                <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{new Date(log.createdAt).toLocaleTimeString()}</p>
                             </div>
-                            <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                            <div className="bg-slate-50/50 dark:bg-white/5 p-4 rounded-2xl border border-slate-100 dark:border-white/10">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Status</p>
                                 <p className={`text-sm font-bold ${log.status === 'DANGER' ? 'text-red-600' :
                                     log.status === 'WARNING' ? 'text-amber-600' :
@@ -100,8 +100,8 @@ const AuditDetailModal = ({ isOpen, onClose, log }: { isOpen: boolean, onClose: 
 
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Event Metadata</p>
-                            <div className="bg-slate-900 rounded-3xl p-6 overflow-x-auto">
-                                <pre className="text-[11px] font-mono text-blue-400 leading-relaxed">
+                            <div className="bg-slate-50 dark:bg-black/40 rounded-3xl p-6 overflow-x-auto border border-slate-100 dark:border-white/[0.06]">
+                                <pre className="text-[11px] font-mono text-blue-600 dark:text-blue-400 leading-relaxed">
                                     {JSON.stringify(log.metadata, null, 4)}
                                 </pre>
                             </div>
@@ -111,7 +111,7 @@ const AuditDetailModal = ({ isOpen, onClose, log }: { isOpen: boolean, onClose: 
                     <div className="mt-8">
                         <button
                             onClick={onClose}
-                            className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95"
+                            className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-950 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 dark:hover:bg-slate-100 transition-all active:scale-95"
                         >
                             Close Details
                         </button>
@@ -219,25 +219,25 @@ export default function ProfilePage() {
 
     const getLogStyles = (status: string) => {
         switch (status) {
-            case 'DANGER': return 'bg-red-50 text-red-600 ring-red-100';
-            case 'WARNING': return 'bg-amber-50 text-amber-600 ring-amber-100';
-            default: return 'bg-slate-50 text-slate-600 ring-slate-100';
+            case 'DANGER': return 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 ring-red-100 dark:ring-red-500/20';
+            case 'WARNING': return 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-amber-100 dark:ring-amber-500/20';
+            default: return 'bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 ring-slate-100 dark:ring-white/10';
         }
     };
 
-    if (isLoading) return <div className="space-y-4 animate-pulse"><div className="h-64 bg-slate-100 rounded-[2rem]" /><div className="h-96 bg-slate-100 rounded-[2rem]" /></div>;
+    if (isLoading) return <div className="space-y-4"><div className="content-skeleton h-64 rounded-[2rem]" /><div className="content-skeleton h-96 rounded-[2rem]" /></div>;
 
     return (
         <div className="max-w-7xl mx-auto space-y-8 pb-20">
             {/* 2FA Modal */}
             {is2FAModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl space-y-6 scale-in-center">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full shadow-2xl space-y-6 scale-in-center border border-slate-200 dark:border-white/10">
                         <div className="text-center">
-                            <h3 className="text-xl font-bold text-slate-900">Scan QR Code</h3>
-                            <p className="text-sm text-slate-500 mt-2">Use Google Authenticator to scan this code.</p>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Scan QR Code</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Use Google Authenticator to scan this code.</p>
                         </div>
-                        <div className="flex justify-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="flex justify-center p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/10">
                             {qrCodeUrl && <img src={qrCodeUrl} alt="2FA" className="h-40 w-40 object-contain" />}
                         </div>
                         <input
@@ -245,18 +245,18 @@ export default function ProfilePage() {
                             placeholder="000 000"
                             value={twoFactorToken}
                             onChange={(e) => setTwoFactorToken(e.target.value)}
-                            className="w-full text-center text-xl font-mono py-3 border rounded-xl"
+                            className="w-full text-center text-xl font-mono py-3 border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600/10"
                         />
                         <div className="flex gap-3">
-                            <button onClick={() => setIs2FAModalOpen(false)} className="flex-1 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50 rounded-xl">Cancel</button>
-                            <button onClick={handleVerify2FA} className="flex-1 py-3 text-sm font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700">Verify</button>
+                            <button onClick={() => setIs2FAModalOpen(false)} className="flex-1 py-3 text-sm font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors">Cancel</button>
+                            <button onClick={handleVerify2FA} className="flex-1 py-3 text-sm font-semibold border border-blue-600/60 dark:border-blue-500/40 text-blue-600 dark:text-blue-400 bg-transparent rounded-xl hover:bg-blue-50 dark:hover:bg-blue-500/[0.08] transition-colors">Verify</button>
                         </div>
                     </div>
                 </div>
             )}
 
             {/* Profile Header Card */}
-            <div className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden relative">
+            <div className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] border border-slate-100 dark:border-white/[0.06] overflow-hidden relative shadow-sm dark:shadow-none">
                 {/* Cover Gradient */}
                 <div className="h-48 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 relative">
                     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
@@ -270,14 +270,14 @@ export default function ProfilePage() {
                                 {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" /> : formData.name.charAt(0)}
                             </div>
                         </div>
-                        <button className="absolute bottom-0 right-0 p-2.5 bg-slate-900 text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
+                        <button className="absolute bottom-0 right-0 p-2.5 border border-slate-300 dark:border-white/20 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl shadow-lg hover:scale-110 transition-transform">
                             <CameraIcon className="h-4 w-4" />
                         </button>
                     </div>
 
                     <div className="flex-1 mb-2">
                         <div className="flex items-center gap-3">
-                            <h1 className="text-3xl font-bold text-slate-900">{formData.name}</h1>
+                            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{formData.name}</h1>
                             {user?.twoFactorEnabled && <ShieldCheckIcon className="h-6 w-6 text-emerald-500" title="2FA Enabled" />}
                         </div>
                         <p className="text-slate-500 font-medium">{formData.email}</p>
@@ -314,10 +314,10 @@ export default function ProfilePage() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={classNames(
-                                "w-full flex items-center gap-3 p-4 rounded-2xl transition-all text-sm font-bold",
+                                "w-full flex items-center gap-3 p-4 rounded-2xl transition-all text-sm font-bold border",
                                 activeTab === tab.id
-                                    ? "bg-slate-900 text-white shadow-lg shadow-slate-900/10"
-                                    : "bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-50 border border-slate-200"
+                                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg shadow-slate-900/10 dark:shadow-none border-transparent"
+                                    : "bg-white dark:bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 border-slate-100 dark:border-white/[0.06]"
                             )}
                         >
                             <tab.icon className="h-5 w-5" />
@@ -329,7 +329,7 @@ export default function ProfilePage() {
                 {/* Main Content Area */}
                 <div className="lg:col-span-3">
                     {activeTab === 'general' && (
-                        <div className="bg-white rounded-[2.5rem] p-10 border border-slate-200 shadow-sm space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                        <div className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] p-10 border border-slate-100 dark:border-white/[0.06] shadow-sm dark:shadow-none space-y-8 animate-in slide-in-from-bottom-4 duration-500">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Full Name</label>
@@ -337,7 +337,7 @@ export default function ProfilePage() {
                                         type="text"
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all"
+                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-600/20 focus:border-transparent outline-none transition-all"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -346,7 +346,7 @@ export default function ProfilePage() {
                                         type="email"
                                         value={formData.email}
                                         disabled
-                                        className="w-full bg-slate-100 border border-slate-200 text-slate-500 rounded-2xl p-4 text-sm font-bold cursor-not-allowed"
+                                        className="w-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-500 rounded-2xl p-4 text-sm font-bold cursor-not-allowed"
                                     />
                                 </div>
                                 <div className="md:col-span-2 space-y-2">
@@ -355,13 +355,13 @@ export default function ProfilePage() {
                                         rows={4}
                                         value={formData.bio}
                                         onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all resize-none"
+                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-blue-600/20 focus:border-transparent outline-none transition-all resize-none"
                                         placeholder="Tell us about yourself..."
                                     />
                                 </div>
                             </div>
-                            <div className="flex justify-end pt-4 border-t border-slate-100">
-                                <button onClick={handleUpdate} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20 active:scale-95">
+                            <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-white/[0.06]">
+                                <button onClick={handleUpdate} className="border border-blue-600/60 dark:border-blue-500/40 text-blue-600 dark:text-blue-400 bg-transparent px-8 py-3 rounded-xl font-semibold text-sm hover:bg-blue-50 dark:hover:bg-blue-500/[0.08] transition-colors active:scale-95">
                                     Save Changes
                                 </button>
                             </div>
@@ -369,16 +369,16 @@ export default function ProfilePage() {
                     )}
 
                     {activeTab === 'preferences' && (
-                        <div className="bg-white rounded-[2.5rem] p-10 border border-slate-200 shadow-sm space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                        <div className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] p-10 border border-slate-100 dark:border-white/[0.06] shadow-sm dark:shadow-none space-y-8 animate-in slide-in-from-bottom-4 duration-500">
                             <div className="space-y-6">
-                                <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-4">Application Settings</h3>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-white/[0.06] pb-4">Application Settings</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Timezone</label>
                                         <select
                                             value={formData.preferences.timezone}
                                             onChange={(e) => setFormData({ ...formData, preferences: { ...formData.preferences, timezone: e.target.value } })}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-bold outline-none"
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-2xl p-4 text-sm font-bold outline-none"
                                         >
                                             <option>UTC+0 (London)</option>
                                             <option>UTC+5:30 (Mumbai)</option>
@@ -390,7 +390,7 @@ export default function ProfilePage() {
                                         <select
                                             value={formData.preferences.language}
                                             onChange={(e) => setFormData({ ...formData, preferences: { ...formData.preferences, language: e.target.value } })}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-bold outline-none"
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-2xl p-4 text-sm font-bold outline-none"
                                         >
                                             <option>English</option>
                                             <option>Spanish</option>
@@ -399,8 +399,8 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex justify-end pt-4 border-t border-slate-100">
-                                <button onClick={handleUpdate} className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors">
+                            <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-white/[0.06]">
+                                <button onClick={handleUpdate} className="border border-slate-600/40 dark:border-white/20 text-slate-700 dark:text-slate-200 bg-transparent px-8 py-3 rounded-xl font-semibold text-sm hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-colors">
                                     Update Preferences
                                 </button>
                             </div>
@@ -408,12 +408,12 @@ export default function ProfilePage() {
                     )}
 
                     {activeTab === 'activity' && (
-                        <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-200 shadow-sm animate-in slide-in-from-bottom-4 duration-500">
-                            <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                                <h3 className="text-lg font-bold text-slate-900">Security Audit Log</h3>
+                        <div className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-slate-100 dark:border-white/[0.06] shadow-sm dark:shadow-none animate-in slide-in-from-bottom-4 duration-500">
+                            <div className="p-8 border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-transparent flex justify-between items-center">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Security Audit Log</h3>
                                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{logs.length} Events</span>
                             </div>
-                            <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
+                            <div className="divide-y divide-slate-100 dark:divide-white/5 max-h-[600px] overflow-y-auto">
                                 {logs.length === 0 ? (
                                     <div className="p-20 text-center text-slate-400">
                                         <FingerPrintIcon className="h-12 w-12 mx-auto opacity-20 mb-4" />
@@ -425,18 +425,18 @@ export default function ProfilePage() {
                                         const style = getLogStyles(log.status);
 
                                         return (
-                                            <div key={log.id} className="p-6 flex items-center gap-4 hover:bg-slate-50 transition-colors group">
+                                            <div key={log.id} className="p-6 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors group">
                                                 <div className={`h-12 w-12 rounded-2xl flex items-center justify-center ring-1 ${style}`}>
                                                     <Icon className="h-6 w-6" />
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="flex items-center justify-between mb-2">
-                                                        <p className="text-sm font-bold text-slate-900">{log.action.replace(/_/g, ' ')}</p>
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-lg ring-1 ring-slate-100">
+                                                        <p className="text-sm font-bold text-slate-900 dark:text-white">{log.action.replace(/_/g, ' ')}</p>
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-white/5 px-2 py-1 rounded-lg ring-1 ring-slate-100 dark:ring-white/5">
                                                             {formatDistanceToNow(new Date(log.createdAt))} ago
                                                         </span>
                                                     </div>
-                                                    <p className="text-xs font-medium text-slate-600 leading-relaxed mb-2">
+                                                    <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed mb-2">
                                                         You {humanizeAction(log.action, log.metadata)}.
                                                     </p>
                                                     <div className="flex items-center justify-between">

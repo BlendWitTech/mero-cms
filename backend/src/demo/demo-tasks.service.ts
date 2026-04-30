@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { ThemesService } from '../themes/themes.service';
+import { DemoProvisioningService } from './demo-provisioning.service';
 
 @Injectable()
 export class DemoTasksService {
@@ -10,14 +11,70 @@ export class DemoTasksService {
     constructor(
         private prisma: PrismaService,
         private themesService: ThemesService,
+        private provisioning: DemoProvisioningService,
     ) {}
+
+    /**
+     * Drops isolated demo databases that have exceeded their 1-hour lifecycle.
+     *
+     * Defensively guarded — the `DemoSession` model only exists on
+     * Mero-Cloud installs that opted into the demo-instance feature.
+     * Regular self-hosted installs don't have the model in their
+     * Prisma schema, so `this.prisma.demoSession` is `undefined` and
+     * calling `.findMany` on it threw every hour. The guard makes the
+     * cron a no-op there instead of spamming the logs.
+     */
+    @Cron(CronExpression.EVERY_HOUR)
+    async cleanupExpiredDemos() {
+        const demoSession = (this.prisma as any).demoSession;
+        if (!demoSession || typeof demoSession.findMany !== 'function') {
+            // Model not in this install's schema — silently skip.
+            return;
+        }
+        this.logger.log('Cleaning up expired demo databases...');
+
+        const expired = await demoSession.findMany({
+            where: {
+                expiresAt: { lt: new Date() }
+            }
+        });
+
+        for (const session of expired) {
+            try {
+                this.logger.log(`Dropping expired database: ${session.databaseName}`);
+                await this.provisioning.dropDatabase(session.databaseName);
+                await demoSession.delete({ where: { id: session.id } });
+            } catch (error) {
+                this.logger.error(`Failed to drop database ${session.databaseName}: ${error.message}`);
+            }
+        }
+    }
 
     /**
      * Reset demo data every 2 hours.
      * Clears all content, re-seeds from theme seedData, reactivates demo users.
+     *
+     * GATED: this is destructive and only meant for hosted demo
+     * instances. Without the gate, regular self-hosted installs would
+     * see their content wiped every 2 hours. The cron only runs when
+     * the `is_demo_instance` setting is explicitly truthy OR the
+     * MERO_DEMO_MODE env var is set. Anything else short-circuits
+     * before touching content.
      */
     @Cron('0 */2 * * *')
     async resetDemoData() {
+        const demoFlag = await (this.prisma as any).setting.findUnique({
+            where: { key: 'is_demo_instance' },
+        }).catch(() => null);
+        const flagValue = (demoFlag?.value || '').toString().toLowerCase();
+        const isDemoInstance =
+            flagValue === 'true' || flagValue === '1' || flagValue === 'yes' ||
+            !!process.env.MERO_DEMO_MODE;
+        if (!isDemoInstance) {
+            // Production / dev install — leave the customer's data alone.
+            return;
+        }
+
         this.logger.log('Demo reset starting...');
         try {
             // 1. Clear all content tables and settings

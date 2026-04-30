@@ -144,6 +144,29 @@ export class PagesService {
     }
 
     /** Upsert a page by slug — used by the Site Pages section editor. */
+    /**
+     * Update an existing page identified by slug. Never creates — callers that
+     * need creation must use upsertBySlug (which is gated behind SITE_EDITOR).
+     * This method stays open to Basic-tier users so they can edit section
+     * content on seeded pages.
+     */
+    async updateBySlug(slug: string, dto: any) {
+        const existing = await (this.prisma as any).page.findFirst({ where: { slug } });
+        if (!existing) {
+            const { NotFoundException } = await import('@nestjs/common');
+            throw new NotFoundException(`Page '${slug}' not found. Page creation requires the Site Editor feature (Premium+).`);
+        }
+        return (this.prisma as any).page.update({
+            where: { id: existing.id },
+            data: {
+                ...(dto.title ? { title: dto.title } : {}),
+                ...(dto.data !== undefined ? { data: dto.data } : {}),
+                ...(dto.status ? { status: dto.status } : {}),
+            },
+        });
+    }
+
+    /** Upsert by slug — creates when missing. Gated behind SITE_EDITOR. */
     async upsertBySlug(slug, dto) {
         const existing = await (this.prisma as any).page.findFirst({ where: { slug } });
         if (existing) {

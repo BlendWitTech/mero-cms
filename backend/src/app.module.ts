@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -23,10 +24,6 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { SitemapModule } from './sitemap/sitemap.module';
 import { RobotsModule } from './robots/robots.module';
 import { MenusModule } from './menus/menus.module';
-import { TeamModule } from './team/team.module';
-import { ServicesModule } from './services/services.module';
-import { TestimonialsModule } from './testimonials/testimonials.module';
-import { LeadsModule } from './leads/leads.module';
 import { PagesModule } from './pages/pages.module';
 import { ThemesModule } from './themes/themes.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -40,6 +37,19 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { ModuleEnabledGuard } from './setup/module-enabled.guard';
 import { TierGuard } from './auth/tier.guard';
 import { LicenseService } from './auth/license.service';
+import { TeamModule } from './team/team.module';
+import { TestimonialsModule } from './testimonials/testimonials.module';
+import { ServicesModule } from './services/services.module';
+import { LeadsModule } from './leads/leads.module';
+import { PackagesModule } from './packages/packages.module';
+import { DemoContextMiddleware } from './demo/demo-context.middleware';
+import { AiModule } from './ai/ai.module';
+import { PaymentsModule } from './payments/payments.module';
+import { ThemeEditorModule } from './theme-editor/theme-editor.module';
+import { PluginsModule } from './plugins/plugins.module';
+import { DownloadsModule } from './downloads/downloads.module';
+import { ContentSchedulerModule } from './content-scheduler/content-scheduler.module';
+import { ApiKeysModule } from './api-keys/api-keys.module';
 
 
 /**
@@ -71,7 +81,14 @@ function when(...keys: string[]) {
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
+    ScheduleModule.forRoot(),
+    // Global rate limit — catches unauthenticated attackers. Authenticated
+    // read endpoints (/settings, /auth/profile, /public/site-data, etc.) are
+    // polled frequently by the admin middleware + SettingsContext + theme
+    // RSC, so the global cap has to leave room for legitimate usage. More
+    // aggressive per-endpoint limits live as @Throttle overrides on login,
+    // 2FA, register, forgot-password, reset-password, /ai/generate, etc.
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 300 }]),
     // ── Core modules — always loaded ──────────────────────────────────────────
     PrismaModule,
     UsersModule,
@@ -88,8 +105,16 @@ function when(...keys: string[]) {
     SetupModule,
     DemoModule,
     PublicModule,
+    PackagesModule,
+    AiModule,
+    PaymentsModule,
+    DownloadsModule,
     // Theme system and navigation are fundamental CMS infrastructure
     ThemesModule,
+    ThemeEditorModule,
+    PluginsModule,
+    ApiKeysModule,
+    ContentSchedulerModule,
     MenusModule,
     PagesModule,
     CollectionsModule,
@@ -105,16 +130,20 @@ function when(...keys: string[]) {
     ...when('blogs', 'tags')(TagsModule),
     ...when('blogs', 'comments')(CommentsModule),
 
-    ...when('team')(TeamModule),
-    ...when('services')(ServicesModule),
-    ...when('testimonials')(TestimonialsModule),
-    ...when('leads')(LeadsModule),
+    // Theme-specific and specialized content modules have been removed from the core
+    // to keep the base CMS lightweight and truly modular.
 
     ...when('seo')(SeoMetaModule),
     ...when('redirects')(RedirectsModule),
     ...when('analytics')(AnalyticsModule),
     ...when('sitemap')(SitemapModule),
     ...when('robots')(RobotsModule),
+
+    // Theme-related content modules
+    ...when('team')(TeamModule),
+    ...when('testimonials')(TestimonialsModule),
+    ...when('services')(ServicesModule),
+    ...when('leads')(LeadsModule),
   ],
   controllers: [AppController],
   providers: [
@@ -125,4 +154,10 @@ function when(...keys: string[]) {
     { provide: APP_GUARD, useClass: ModuleEnabledGuard },
   ],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+    configure(consumer: MiddlewareConsumer) {
+        consumer
+            .apply(DemoContextMiddleware)
+            .forRoutes('*');
+    }
+}

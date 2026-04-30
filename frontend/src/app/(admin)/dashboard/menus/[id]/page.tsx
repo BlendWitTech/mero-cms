@@ -171,14 +171,14 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
             )}
 
             {/* Header */}
-            <div className="flex items-center justify-between bg-white p-4 rounded-[2rem] border border-slate-200 shadow-sm sticky top-0 z-20 mx-2">
+            <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-[2rem] border border-slate-200 dark:border-white/10 shadow-sm sticky top-0 z-20 mx-2">
                 <div className="flex items-center gap-4">
-                    <button onClick={handleBack} className="p-3 hover:bg-slate-50 rounded-2xl text-slate-500 transition-all hover:scale-105 active:scale-95">
+                    <button onClick={handleBack} className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl text-slate-500 dark:text-slate-400 transition-all hover:scale-105 active:scale-95">
                         <ArrowLeftIcon className="h-5 w-5" strokeWidth={2.5} />
                     </button>
                     <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{isNew ? 'New Structure' : 'Edit Navigation'}</p>
-                        <h1 className="text-xl font-bold text-slate-900 tracking-tight">{isNew ? 'Create New Menu' : name}</h1>
+                        <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1">{isNew ? 'New Structure' : 'Edit Navigation'}</p>
+                        <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{isNew ? 'Create New Menu' : name}</h1>
                     </div>
                 </div>
                  <button
@@ -194,10 +194,10 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mx-2">
                 {/* Left: General Settings */}
                 <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm space-y-8">
+                    <div className="bg-white dark:bg-slate-900/60 rounded-[2.5rem] p-8 border border-slate-100 dark:border-white/[0.06] shadow-sm space-y-8">
                         <div className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Menu Name</label>
+                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Menu Name</label>
                                 <div className="relative group">
                                     <IdentificationIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                                      <input
@@ -208,14 +208,14 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
                                             setName(e.target.value);
                                             if (isNew) setSlug(e.target.value.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''));
                                         }}
-                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all disabled:opacity-50"
+                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-white/10 text-slate-900 dark:text-white rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all disabled:opacity-50"
                                         placeholder="e.g. Main Header Menu"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Menu API Slug</label>
+                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Menu API Slug</label>
                                 <div className="relative group">
                                     <PaperAirplaneIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                                      <input
@@ -223,11 +223,11 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
                                         value={slug}
                                         disabled={isReadOnly}
                                         onChange={(e) => setSlug(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold font-mono text-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all disabled:opacity-50"
+                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-white/10 rounded-2xl text-sm font-bold font-mono text-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all disabled:opacity-50"
                                         placeholder="main-menu"
                                     />
                                 </div>
-                                <p className="text-[10px] text-slate-400 font-medium ml-1">Unique identifier used to fetch this menu in your frontend components.</p>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium ml-1">Unique identifier used to fetch this menu in your frontend components.</p>
                             </div>
                         </div>
                     </div>
@@ -235,16 +235,16 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
 
                 {/* Right: Menu Items (Links) */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm">
+                    <div className="bg-white dark:bg-slate-900/60 rounded-[2.5rem] p-8 border border-slate-100 dark:border-white/[0.06] shadow-sm">
                         <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h3 className="text-lg font-black text-slate-900 tracking-tight">Menu Items</h3>
-                                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Manage links and hierarchy</p>
+                                <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Menu Items</h3>
+                                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-1">Manage links and hierarchy</p>
                             </div>
                              <button
                                 onClick={addMenuItem}
                                 disabled={isReadOnly}
-                                className="flex items-center gap-2 bg-slate-50 text-blue-600 hover:bg-blue-600 hover:text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <PlusIcon className="h-4 w-4" strokeWidth={3} />
                                 Add Link
@@ -253,49 +253,49 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
 
                         <div className="space-y-4">
                             {items.length === 0 ? (
-                                <div className="py-12 text-center bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100">
-                                    <LinkIcon className="h-10 w-10 text-slate-200 mx-auto mb-3" />
-                                    <p className="text-sm font-bold text-slate-400">No items added to this menu yet.</p>
+                                <div className="py-12 text-center bg-slate-50/50 dark:bg-slate-800/30 rounded-3xl border-2 border-dashed border-slate-100 dark:border-white/10">
+                                    <LinkIcon className="h-10 w-10 text-slate-200 dark:text-slate-700 mx-auto mb-3" />
+                                    <p className="text-sm font-bold text-slate-400 dark:text-slate-500">No items added to this menu yet.</p>
                                 </div>
                             ) : (
                                 items.map((item, index) => (
-                                    <div key={index} className="group bg-slate-50 rounded-3xl p-6 border border-slate-100 hover:border-blue-200 hover:bg-white transition-all">
+                                    <div key={index} className="group bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-6 border border-slate-100 dark:border-white/[0.06] hover:border-blue-200 dark:hover:border-blue-500/40 hover:bg-white dark:hover:bg-slate-800 transition-all">
                                         <div className="flex items-start gap-4">
-                                            <div className="mt-2 text-slate-300">
+                                            <div className="mt-2 text-slate-300 dark:text-slate-600">
                                                 <Bars2Icon className="h-5 w-5 cursor-move" />
                                             </div>
                                             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-1.5">
-                                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Label</label>
+                                                    <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Label</label>
                                                      <input
                                                         type="text"
                                                         value={item.label}
                                                         disabled={isReadOnly}
                                                         onChange={(e) => updateMenuItem(index, 'label', e.target.value)}
-                                                        className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 disabled:opacity-50"
+                                                        className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 disabled:opacity-50"
                                                         placeholder="e.g. Services"
                                                     />
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">URL / Path</label>
+                                                    <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">URL / Path</label>
                                                      <input
                                                         type="text"
                                                         value={item.url}
                                                         disabled={isReadOnly}
                                                         onChange={(e) => updateMenuItem(index, 'url', e.target.value)}
-                                                        className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 disabled:opacity-50"
+                                                        className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/5 disabled:opacity-50"
                                                         placeholder="/services"
                                                     />
                                                 </div>
                                                 <div className="md:col-span-2 flex items-center justify-between">
                                                     <div className="flex items-center gap-4">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Target:</span>
+                                                            <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">Target:</span>
                                                              <select
                                                                 value={item.target}
                                                                 disabled={isReadOnly}
                                                                 onChange={(e) => updateMenuItem(index, 'target', e.target.value)}
-                                                                className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold focus:outline-none disabled:opacity-50"
+                                                                className="px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold focus:outline-none disabled:opacity-50"
                                                             >
                                                                 <option value="_self">Same Window</option>
                                                                 <option value="_blank">New Tab</option>
@@ -305,7 +305,7 @@ export default function MenuEditor({ params }: { params: Promise<{ id: string }>
                                                      <button
                                                         onClick={() => removeMenuItem(index)}
                                                         disabled={isReadOnly}
-                                                        className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all disabled:opacity-0 disabled:cursor-not-allowed"
+                                                        className="p-2 text-slate-300 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-all disabled:opacity-0 disabled:cursor-not-allowed"
                                                     >
                                                         <TrashIcon className="h-4 w-4" />
                                                     </button>

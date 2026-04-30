@@ -41,7 +41,9 @@ export async function middleware(request: NextRequest) {
     }
 
     // Auth cookie set by setAuthToken() in @/lib/auth
-    const token = request.cookies.get('cms_token')?.value;
+    const isDemoRequest = request.nextUrl.searchParams.get('demo') === '1';
+    const cookieName = isDemoRequest ? 'cms_demo_token' : 'cms_token';
+    const token = request.cookies.get(cookieName)?.value;
 
     const isProtected = PROTECTED_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'));
 
@@ -51,15 +53,22 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/', request.url));
         }
 
-        // Validate token with the backend
-        let tokenValid = false;
+        // Validate token with the backend.
+        // Fail-open on 5xx, 429, or network errors — those are backend
+        // conditions, not auth problems, and clearing the user's session
+        // because the rate-limiter briefly fired would be hostile.
+        // Only 401/403 count as "this token is actually invalid".
+        let tokenValid = true;
         try {
             const authRes = await fetch(`${API_URL}/auth/profile`, {
                 headers: { Authorization: `Bearer ${token}` },
                 cache: 'no-store',
                 signal: AbortSignal.timeout(3000),
             });
-            tokenValid = authRes.ok;
+            if (authRes.status === 401 || authRes.status === 403) {
+                tokenValid = false;
+            }
+            // everything else (200, 429, 500, timeout) → keep session
         } catch {
             // Backend unreachable — fail-open so dashboard still loads when backend restarts
             tokenValid = true;
@@ -82,6 +91,15 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    // Run on all paths except Next.js internals, static files, and API routes
-    matcher: ['/((?!_next/static|_next/image|favicon.ico|assets|uploads|api/).*)'],
+    // Run on all paths except Next.js internals, API routes, and any
+    // static asset (paths ending in a known file extension). Without
+    // the extension exclusion, files in `public/` like /emblem.svg,
+    // /logo.svg, /robots.txt etc. get a 307 redirect to /login because
+    // unauthenticated users would be treated like they were trying to
+    // hit a protected page. The extension list covers SVG, raster
+    // images, web fonts, plain CSS/JS, and the small set of metadata
+    // files Next.js produces (sitemap, robots, manifest).
+    matcher: [
+        '/((?!_next/static|_next/image|favicon.ico|assets|uploads|api/|.+\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|otf|css|js|map|txt|xml|json|webmanifest)$).*)',
+    ],
 };

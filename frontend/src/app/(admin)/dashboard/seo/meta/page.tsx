@@ -265,9 +265,15 @@ export default function MetaManagement() {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {loading ? (
-                            <tr>
-                                <td colSpan={5} className="p-8 text-center text-slate-500">Loading...</td>
-                            </tr>
+                            [1, 2, 3, 4].map((index) => (
+                                <tr key={index} className="animate-pulse">
+                                    <td className="p-4"><div className="h-6 rounded-2xl bg-slate-100" /></td>
+                                    <td className="p-4"><div className="h-6 rounded-2xl bg-slate-100 w-24" /></td>
+                                    <td className="p-4"><div className="h-6 rounded-2xl bg-slate-100 w-32" /></td>
+                                    <td className="p-4"><div className="h-6 rounded-2xl bg-slate-100 w-20" /></td>
+                                    <td className="p-4"><div className="h-6 rounded-2xl bg-slate-100 w-40" /></td>
+                                </tr>
+                            ))
                         ) : filteredContent.length === 0 ? (
                             <tr>
                                 <td colSpan={5} className="p-8 text-center text-slate-500">No content found.</td>

@@ -1,9 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
 export class RobotsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        // SettingsService.getSiteUrl() — DB-first source of truth for
+        // the public site URL. Used to print absolute Sitemap: lines
+        // in the default robots.txt.
+        private settings: SettingsService,
+    ) { }
 
     async getRobotsTxt() {
         const robot = await this.prisma.robotsTxt.findFirst({
@@ -13,7 +20,7 @@ export class RobotsService {
 
         if (!robot) {
             // Return default robots.txt
-            return this.getDefaultRobotsTxt();
+            return await this.getDefaultRobotsTxt();
         }
 
         return robot.content;
@@ -41,10 +48,10 @@ export class RobotsService {
         });
     }
 
-    private getDefaultRobotsTxt(): string {
-        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    private async getDefaultRobotsTxt(): Promise<string> {
+        const baseUrl = await this.settings.getSiteUrl();
 
-        return `# Blendwit CMS - Robots.txt
+        return `# Mero CMS - Robots.txt
 User-agent: *
 Allow: /
 

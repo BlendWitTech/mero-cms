@@ -27,7 +27,9 @@ interface Props {
     current?: string;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { getApiBaseUrl } from '@/lib/api';
+
+const API_BASE = getApiBaseUrl();
 
 function absUrl(url: string) {
     if (!url) return '';

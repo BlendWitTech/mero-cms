@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { apiRequest } from '@/lib/api';
 import { useNotification } from '@/context/NotificationContext';
+import AlertDialog from '@/components/ui/AlertDialog';
 
 export default function RedirectsPage() {
     const [redirects, setRedirects] = useState<any[]>([]);
@@ -27,6 +28,7 @@ export default function RedirectsPage() {
         isActive: true
     });
     const [isSaving, setIsSaving] = useState(false);
+    const [deleteRedirect, setDeleteRedirect] = useState<{ id: string; fromPath: string } | null>(null);
     const { showToast } = useNotification();
 
     useEffect(() => {
@@ -87,11 +89,16 @@ export default function RedirectsPage() {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this redirect?')) return;
+    const handleDelete = (id: string, fromPath: string) => {
+        setDeleteRedirect({ id, fromPath });
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteRedirect) return;
         try {
-            await apiRequest(`/redirects/${id}`, { method: 'DELETE' });
+            await apiRequest(`/redirects/${deleteRedirect.id}`, { method: 'DELETE' });
             showToast('Redirect deleted successfully!', 'success');
+            setDeleteRedirect(null);
             fetchRedirects();
         } catch (error: any) {
             showToast(error.message || 'Failed to delete redirect.', 'error');
@@ -207,7 +214,7 @@ export default function RedirectsPage() {
                                                 <button onClick={() => handleOpenModal(redirect)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-blue-600 transition-all">
                                                     <PencilSquareIcon className="h-4 w-4" />
                                                 </button>
-                                                <button onClick={() => handleDelete(redirect.id)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-500 transition-all">
+                                                <button onClick={() => handleDelete(redirect.id, redirect.fromPath)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-500 transition-all">
                                                     <TrashIcon className="h-4 w-4" />
                                                 </button>
                                             </div>
@@ -307,6 +314,16 @@ export default function RedirectsPage() {
                     </div>
                 </div>
             )}
+            <AlertDialog
+                isOpen={Boolean(deleteRedirect)}
+                title="Delete Redirect"
+                description={`Delete the redirect from ${deleteRedirect?.fromPath}? This action cannot be undone.`}
+                confirmLabel="Delete"
+                variant="danger"
+                isLoading={false}
+                onConfirm={confirmDelete}
+                onCancel={() => setDeleteRedirect(null)}
+            />
         </div>
     );
 }

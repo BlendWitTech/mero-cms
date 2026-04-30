@@ -1,5 +1,5 @@
 /**
- * Blendwit CMS - Static Bridge v1.0
+ * Mero CMS - Static Bridge v1.0
  * Link your hand-coded designs to CMS content seamlessly.
  */
 

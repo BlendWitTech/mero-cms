@@ -15,9 +15,9 @@
  *   --media none      Skip media entirely
  *
  * Examples:
- *   node scripts/package-theme.js ktm-plots
- *   node scripts/package-theme.js ktm-plots --media all
- *   node scripts/package-theme.js ktm-plots --media none --output ./releases
+ *   node scripts/package-theme.js my-theme
+ *   node scripts/package-theme.js my-theme --media all
+ *   node scripts/package-theme.js my-theme --media none --output ./releases
  */
 
 const fs   = require('fs');

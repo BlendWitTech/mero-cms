@@ -1,13 +1,12 @@
 model TeamMember {
   id          String   @id @default(uuid())
   name        String
-  role        String
-  bio         String?  @db.Text
-  image       String?
+  role        String?
+  bio         String?
+  avatar      String?
   socialLinks Json?
   order       Int      @default(0)
-  theme       String?
-  attributes  Json?
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

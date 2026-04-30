@@ -18,7 +18,7 @@ export class BlogsService {
     async create(authorId: string, createPostDto: any) {
         const { categories, tags, seo, ...postData } = createPostDto;
 
-        const { title, slug, content, excerpt, coverImage, status, featured, publishedAt } = postData;
+        const { title, slug, content, excerpt, coverImage, status, featured, publishedAt, publishAt } = postData;
         const data: any = {
             title,
             slug,
@@ -28,7 +28,10 @@ export class BlogsService {
             status: status || 'DRAFT',
             featured: featured || false,
             authorId,
-            publishedAt: status === 'PUBLISHED' ? new Date() : (publishedAt || null)
+            // publishedAt = actual publish time. Set on PUBLISHED; clear otherwise.
+            publishedAt: status === 'PUBLISHED' ? (publishedAt ? new Date(publishedAt) : new Date()) : null,
+            // publishAt = scheduled future publish time. Set on SCHEDULED; clear otherwise.
+            publishAt: status === 'SCHEDULED' ? (publishAt ? new Date(publishAt) : null) : null,
         };
 
         if (categories && categories.length > 0) {
@@ -86,7 +89,6 @@ export class BlogsService {
                 author: { select: { name: true, email: true } },
                 categories: true,
                 tags: true,
-                _count: { select: { comments: true } }
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -136,7 +138,7 @@ export class BlogsService {
 
     async update(id: string, updatePostDto: any) {
         const { categories, tags, seo, ...postData } = updatePostDto;
-        const { title, slug, content, excerpt, coverImage, status, featured, publishedAt } = postData;
+        const { title, slug, content, excerpt, coverImage, status, featured, publishedAt, publishAt } = postData;
         const data: any = {
             title,
             slug,
@@ -145,7 +147,15 @@ export class BlogsService {
             coverImage,
             status,
             featured,
-            publishedAt
+            // Keep publishedAt/publishAt in sync with the new status. See create() for rules.
+            publishedAt:
+                status === 'PUBLISHED'
+                    ? (publishedAt ? new Date(publishedAt) : new Date())
+                    : (status === 'SCHEDULED' ? null : publishedAt ? new Date(publishedAt) : undefined),
+            publishAt:
+                status === 'SCHEDULED'
+                    ? (publishAt ? new Date(publishAt) : null)
+                    : null,
         };
 
         if (categories) {
@@ -277,7 +287,6 @@ export class BlogsService {
                     author: { select: { name: true, avatar: true } },
                     categories: true,
                     tags: true,
-                    _count: { select: { comments: true } }
                 },
                 orderBy: { publishedAt: 'desc' },
                 skip,
@@ -309,7 +318,6 @@ export class BlogsService {
                     include: { user: { select: { name: true, avatar: true } } },
                     orderBy: { createdAt: 'desc' }
                 },
-                _count: { select: { comments: true } }
             },
         });
 
@@ -331,7 +339,6 @@ export class BlogsService {
             include: {
                 author: { select: { name: true, avatar: true } },
                 categories: true,
-                _count: { select: { comments: true } }
             },
             take: 3,
             orderBy: { publishedAt: 'desc' },
@@ -343,5 +350,53 @@ export class BlogsService {
             seo: await this.seoMetaService.findByPage('post', post.id),
             relatedPosts,
         };
+    }
+
+    /**
+     * Posts published per week for the last `weeks` ISO weeks. Counts
+     * by `publishedAt` (falling back to `createdAt` if not set), so
+     * drafts don't pollute the velocity chart.
+     */
+    async countByWeek(weeks: number): Promise<Array<{ week: string; count: number }>> {
+        const since = new Date();
+        since.setHours(0, 0, 0, 0);
+        since.setDate(since.getDate() - weeks * 7);
+
+        const rows: Array<{ publishedAt: Date | null; createdAt: Date }> = await (this.prisma as any).post.findMany({
+            where: {
+                OR: [
+                    { publishedAt: { gte: since } },
+                    { AND: [{ publishedAt: null }, { createdAt: { gte: since } }] },
+                ],
+            },
+            select: { publishedAt: true, createdAt: true },
+        });
+
+        // Bucket by ISO week start (Monday).
+        const buckets = new Map<string, number>();
+        for (let i = weeks - 1; i >= 0; i--) {
+            const d = new Date();
+            d.setHours(0, 0, 0, 0);
+            d.setDate(d.getDate() - i * 7);
+            buckets.set(this.weekKey(d), 0);
+        }
+        for (const row of rows) {
+            const ts = row.publishedAt || row.createdAt;
+            const key = this.weekKey(ts);
+            if (buckets.has(key)) buckets.set(key, (buckets.get(key) || 0) + 1);
+        }
+        return Array.from(buckets.entries()).map(([week, count]) => ({ week, count }));
+    }
+
+    /** Format a date as 'W42' (ISO week number) for chart labels. */
+    private weekKey(d: Date): string {
+        const tmp = new Date(d);
+        tmp.setHours(0, 0, 0, 0);
+        // Set to nearest Thursday: current date + 4 - current day number
+        // (make Sunday's day number 7).
+        tmp.setDate(tmp.getDate() + 4 - (tmp.getDay() || 7));
+        const yearStart = new Date(tmp.getFullYear(), 0, 1);
+        const weekNo = Math.ceil(((+tmp - +yearStart) / 86400000 + 1) / 7);
+        return `W${String(weekNo).padStart(2, '0')}`;
     }
 }

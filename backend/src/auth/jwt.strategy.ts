@@ -10,16 +10,28 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         private usersService: UsersService,
         private prisma: PrismaService
     ) {
+        // main.ts / assertRequiredSecrets() guarantees JWT_SECRET is set
+        // before NestFactory constructs this strategy. Fail loudly if that
+        // invariant is ever broken (e.g. direct test-harness import).
+        if (!process.env.JWT_SECRET) {
+            throw new Error('JWT_SECRET is required — refusing to initialise JwtStrategy.');
+        }
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: process.env.JWT_SECRET || 'secretKey',
+            secretOrKey: process.env.JWT_SECRET,
         });
     }
 
     async validate(payload: any) {
         if (payload.scope === '2fa_pending') {
             throw new UnauthorizedException('Please complete 2FA verification');
+        }
+        // Privileged users who must enrol 2FA before accessing anything
+        // substantial. /auth/2fa/generate and /auth/2fa/enable accept this
+        // scope explicitly (see auth.controller); everything else rejects.
+        if (payload.scope === '2fa_setup_required') {
+            throw new UnauthorizedException('2FA enrolment required before continuing');
         }
 
         const user = await this.usersService.findOne(payload.email);

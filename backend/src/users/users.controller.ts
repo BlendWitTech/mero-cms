@@ -156,6 +156,19 @@ export class UsersController {
         return res;
     }
 
+    @Patch(':id/unlock')
+    @RequirePermissions(Permission.USERS_REACTIVATE)
+    async unlock(@Param('id') id: string, @Request() req) {
+        await this.accessControl.validateHierarchy(req.user.id, id);
+        const target = await this.usersService.findById(id);
+        const res = await this.usersService.unlockAccount(id);
+        await this.auditLog.log(req.user.id, 'USER_UNLOCK', {
+            targetUserId: id,
+            targetUserName: target?.name || 'Unknown User',
+        });
+        return res;
+    }
+
     @Post(':id/transfer')
     @Roles('Super Admin')
     async transfer(@Param('id') id: string, @Body() data: { targetUserId: string }, @Request() req) {

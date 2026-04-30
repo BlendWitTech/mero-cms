@@ -1,0 +1,3930 @@
+{
+  "name": "Mero Pro",
+  "slug": "mero-pro",
+  "version": "1.0.0",
+  "description": "The Mero Pro bundle — three premium designs (marketing classic, blendwit-tech Whitepace aesthetic, vivid Positivus aesthetic) shipped exclusively to Custom-tier customers.",
+  "author": "Blendwit",
+  "minPackageTier": 4,
+  "supportedPackages": [
+    "personal-custom",
+    "org-custom"
+  ],
+  "bundle": {
+    "activeDesign": "blendwit-tech",
+    "designs": [
+      {
+        "key": "marketing",
+        "name": "Mero Marketing (classic)",
+        "description": "Pastel-character-driven hero, dashboard mockup behind, motion-first copy. The original Mero look.",
+        "preview": "/designs/marketing/preview.png",
+        "bundleAccess": ["custom"],
+        "componentRoot": "src/designs/marketing/components",
+        "//pages": "Inherits the bundle-level pageSchema + seedData below until/unless overridden. Designs without their own `pages` array fall through to the flat fields, which lets us roll out per-design overrides incrementally."
+      },
+      {
+        "key": "blendwit-tech",
+        "name": "Blendwit Tech (Positivus aesthetic)",
+        "description": "White canvas, lime-green accents, hard-edged stamped cards, bold sans typography. The Positivus mould adapted as the Blendwit tech-company site — playful + bold + brand-coloured. Brand assets: Blendwit wordmark + circular mark.",
+        "preview": "/designs/blendwit-tech/preview.png",
+        "bundleAccess": ["custom"],
+        "componentRoot": "src/designs/blendwit-tech/components",
+        "logoWordmark": "/blendwit/wordmark.svg",
+        "logoMark": "/blendwit/mark.svg",
+        "pages": [
+          {
+            "slug": "home",
+            "label": "Home",
+            "sections": [
+              { "id": "hero", "type": "Hero", "label": "Hero" },
+              { "id": "features", "type": "FeatureBlocks", "label": "Feature blocks" },
+              { "id": "pricing", "type": "PricingTeaser", "label": "Pricing" },
+              { "id": "testimonials", "type": "Testimonials", "label": "Testimonials" },
+              { "id": "cta", "type": "FinalCTA", "label": "Final CTA" }
+            ]
+          }
+        ],
+        "seedData": {
+          "pages": [
+            {
+              "slug": "home",
+              "title": "Home",
+              "data": {
+                "sections": [
+                  {
+                    "id": "hero",
+                    "type": "Hero",
+                    "data": {
+                      "title": "Software people *actually* brag about",
+                      "subtitle": "Blendwit is the tech studio behind Mero CMS, opinionated developer tools, and the long tail of small product bets we ship for teams that pick their tools carefully.",
+                      "primaryCta": "Talk to us",
+                      "primaryHref": "/contact"
+                    }
+                  },
+                  {
+                    "id": "features",
+                    "type": "FeatureBlocks",
+                    "data": {
+                      "title": "What we build",
+                      "description": "Three product lines, one studio. We pick problems where opinionated software outperforms generic platforms — then ship something teams actually want to use.",
+                      "blocks": [
+                        {
+                          "title": "Mero CMS",
+                          "body": "A self-hosted CMS for SMBs in markets that are tired of monthly SaaS lock-in. One-time license, plugin marketplace, visual editor that doesn't suck.",
+                          "cta": "See Mero CMS",
+                          "href": "https://mero.cms",
+                          "tone": "lime"
+                        },
+                        {
+                          "title": "Developer tools",
+                          "body": "Small CLIs, plugins, and SDKs for the workflows we keep hitting at Blendwit and our clients. Free to use, open in spirit, occasionally paid for the deep ones.",
+                          "cta": "Browse tools",
+                          "href": "/tools",
+                          "tone": "grey"
+                        },
+                        {
+                          "title": "Product partnerships",
+                          "body": "We co-build software with founders. You bring the domain knowledge, we bring engineering velocity. 8-week MVPs, not 18-month consulting engagements.",
+                          "cta": "Start a project",
+                          "href": "/contact?intent=partnership",
+                          "tone": "dark"
+                        },
+                        {
+                          "title": "Mero Cloud",
+                          "body": "Managed hosting for Mero CMS customers who don't want to run their own infrastructure. Backups, SSL, uptime — we handle it.",
+                          "cta": "See Mero Cloud",
+                          "href": "https://mero.cms/cloud",
+                          "tone": "grey"
+                        },
+                        {
+                          "title": "Open source",
+                          "body": "Several of our internal tools are MIT-licensed on GitHub. We use the same components on client work — so what you fork is what we run in production.",
+                          "cta": "GitHub →",
+                          "href": "https://github.com/blendwit",
+                          "tone": "lime"
+                        },
+                        {
+                          "title": "Writing & research",
+                          "body": "Long-form essays on product engineering, the SMB software market, and what we're learning shipping Mero. New piece every month or so.",
+                          "cta": "Read the blog",
+                          "href": "/blog",
+                          "tone": "dark"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "pricing",
+                    "type": "PricingTeaser",
+                    "data": {
+                      "title": "How we engage",
+                      "subtitle": "Three ways to work with Blendwit. The right one depends on whether you need product, partnership, or just a tool.",
+                      "tiers": [
+                        {
+                          "name": "Open source",
+                          "price": "Free",
+                          "period": "",
+                          "description": "Use our public tools. We're around in GitHub Discussions if you get stuck.",
+                          "features": ["MIT licensed", "Public roadmap", "Community support", "No commercial restrictions"],
+                          "cta": "Browse repos",
+                          "href": "https://github.com/blendwit"
+                        },
+                        {
+                          "name": "Mero License",
+                          "price": "$799",
+                          "period": "one-time",
+                          "description": "Mero CMS Custom-tier license. Three designs, plugin marketplace, your own developers.",
+                          "features": ["Self-hosted forever", "All designs unlocked", "Pro widget pack", "Plugin marketplace access", "Priority support"],
+                          "cta": "Get Mero",
+                          "href": "https://mero.cms/pricing",
+                          "featured": true
+                        },
+                        {
+                          "name": "Partnership",
+                          "price": "From $15k",
+                          "period": "/ engagement",
+                          "description": "We co-build your product. 8-week sprints, fixed scope, real software at the end.",
+                          "features": ["Senior engineers only", "Direct Slack channel", "Source code yours", "Optional ongoing retainer"],
+                          "cta": "Talk to us",
+                          "href": "/contact?intent=partnership"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "testimonials",
+                    "type": "Testimonials",
+                    "data": {
+                      "title": "What our clients say",
+                      "description": "We don't take many projects. The ones we do, we ship.",
+                      "testimonials": [
+                        {
+                          "quote": "Blendwit shipped in eight weeks what our previous agency couldn't deliver in a year. Different planet.",
+                          "name": "Anjana Pradhan",
+                          "role": "Co-founder, Patan Tech"
+                        },
+                        {
+                          "quote": "They argued with us when we were wrong, agreed quickly when we were right, and built something we use every day.",
+                          "name": "Kiran Shrestha",
+                          "role": "Engineering Lead, Sequence"
+                        },
+                        {
+                          "quote": "We picked Mero because it didn't try to be everything. The team behind it is the same way — focused, opinionated, fast.",
+                          "name": "Mira Tamang",
+                          "role": "CTO, Northwind Logistics"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "cta",
+                    "type": "FinalCTA",
+                    "data": {
+                      "title": "Got a problem worth solving?",
+                      "subtitle": "Send us the messy version. We're good at the messy version.",
+                      "primaryCta": "Start a conversation",
+                      "primaryHref": "/contact"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "key": "vivid",
+        "name": "Vivid (Whitepace aesthetic)",
+        "description": "Deep-navy + yellow-accent SaaS layout in the Whitepace mould. The serious-B2B alternative — built for technology / product-marketing customers who want a calmer, corporate feel.",
+        "preview": "/designs/vivid/preview.png",
+        "bundleAccess": ["custom"],
+        "componentRoot": "src/designs/vivid/components",
+        "pages": [
+          {
+            "slug": "home",
+            "label": "Home",
+            "sections": [
+              { "id": "hero", "type": "Hero", "label": "Hero" },
+              { "id": "features", "type": "FeatureBlocks", "label": "Services grid" },
+              { "id": "pricing", "type": "PricingTeaser", "label": "Pricing" },
+              { "id": "testimonials", "type": "Testimonials", "label": "Testimonials" },
+              { "id": "cta", "type": "FinalCTA", "label": "Final CTA" }
+            ]
+          }
+        ],
+        "seedData": {
+          "pages": [
+            {
+              "slug": "home",
+              "title": "Home",
+              "data": {
+                "sections": [
+                  {
+                    "id": "hero",
+                    "type": "Hero",
+                    "data": {
+                      "title": "Navigating the *digital* landscape for success",
+                      "subtitle": "Our digital marketing agency helps businesses grow and succeed online through a range of services including SEO, PPC, social media marketing, and content creation.",
+                      "primaryCta": "Book a consultation",
+                      "primaryHref": "/contact"
+                    }
+                  },
+                  {
+                    "id": "features",
+                    "type": "FeatureBlocks",
+                    "data": {
+                      "title": "Services",
+                      "description": "At our digital marketing agency, we offer a range of services to help businesses grow and succeed online. These services include:",
+                      "blocks": [
+                        { "title": "Search engine optimization", "cta": "Learn more", "href": "/services/seo" },
+                        { "title": "Pay-per-click advertising", "cta": "Learn more", "href": "/services/ppc" },
+                        { "title": "Social Media Marketing",   "cta": "Learn more", "href": "/services/social" },
+                        { "title": "Email Marketing",            "cta": "Learn more", "href": "/services/email" },
+                        { "title": "Content Creation",           "cta": "Learn more", "href": "/services/content" },
+                        { "title": "Analytics and Tracking",     "cta": "Learn more", "href": "/services/analytics" }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "pricing",
+                    "type": "PricingTeaser",
+                    "data": {
+                      "title": "Pricing",
+                      "subtitle": "Pick the plan that matches the work. Switch any time — no contracts, no hidden fees."
+                    }
+                  },
+                  {
+                    "id": "testimonials",
+                    "type": "Testimonials",
+                    "data": {
+                      "title": "Testimonials",
+                      "description": "Hear from our happy clients about their experience working with us."
+                    }
+                  },
+                  {
+                    "id": "cta",
+                    "type": "FinalCTA",
+                    "data": {
+                      "title": "Let’s make things happen",
+                      "subtitle": "Contact us today to learn more about how our digital marketing services can help your business grow online.",
+                      "primaryCta": "Get your free proposal",
+                      "primaryHref": "/contact"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "modules": [
+    "pages",
+    "blogs",
+    "menus",
+    "testimonials",
+    "team",
+    "services",
+    "forms",
+    "leads",
+    "categories",
+    "tags",
+    "comments",
+    "seo-meta",
+    "redirects",
+    "collections"
+  ],
+  "moduleAliases": {
+    "team": "Our team",
+    "testimonials": "Customer voices",
+    "services": "Capabilities",
+    "blogs": "Blog",
+    "leads": "Lead inbox",
+    "forms": "Forms",
+    "collections": "Custom content"
+  },
+  "requiredCapabilities": [],
+  "optionalCapabilities": [
+    "seoFull",
+    "analytics",
+    "aiContent",
+    "webhooks",
+    "apiAccess"
+  ],
+  "brandingFields": [
+    {
+      "group": "Identity",
+      "fields": [
+        {
+          "key": "site_title",
+          "label": "Master Site Descriptor",
+          "type": "string",
+          "fallback": "Mero CMS"
+        },
+        {
+          "key": "site_tagline",
+          "label": "Brand Tagline",
+          "type": "string",
+          "fallback": "Where motion meets meaning"
+        },
+        {
+          "key": "copyright_text",
+          "label": "Copyright Disclaimer",
+          "type": "string",
+          "fallback": "© Mero CMS"
+        },
+        {
+          "key": "logo_url",
+          "label": "Brand Assets / Logo",
+          "type": "media",
+          "fallback": null
+        },
+        {
+          "key": "favicon_url",
+          "label": "Infrastructure / Favicon",
+          "type": "media",
+          "fallback": null
+        },
+        {
+          "key": "meta_description",
+          "label": "Meta description",
+          "type": "text",
+          "fallback": null
+        }
+      ]
+    },
+    {
+      "group": "Colors",
+      "fields": [
+        {
+          "key": "primary_color",
+          "label": "Brand Identity / Primary Accent",
+          "type": "color",
+          "fallback": "#cb172b",
+          "cssVar": "--brand"
+        },
+        {
+          "key": "secondary_color",
+          "label": "Secondary Color",
+          "type": "color",
+          "fallback": "#023d91",
+          "cssVar": "--navy"
+        },
+        {
+          "key": "accent_color",
+          "label": "Accent / Background Color",
+          "type": "color",
+          "fallback": "#fbfaf6",
+          "cssVar": "--paper"
+        },
+        {
+          "key": "text_color",
+          "label": "Body text color",
+          "type": "color",
+          "fallback": "#0d0e14",
+          "cssVar": "--ink"
+        },
+        {
+          "key": "heading_color",
+          "label": "Heading text color",
+          "type": "color",
+          "fallback": "#2a2c35",
+          "cssVar": "--ink-2"
+        },
+        {
+          "key": "link_color",
+          "label": "Link / Anchor color",
+          "type": "color",
+          "fallback": "#023d91",
+          "cssVar": "--link"
+        },
+        {
+          "key": "muted_text_color",
+          "label": "Muted / Caption color",
+          "type": "color",
+          "fallback": "#5b5e6b",
+          "cssVar": "--ink-3"
+        }
+      ]
+    },
+    {
+      "group": "Typography",
+      "fields": [
+        {
+          "key": "heading_font",
+          "label": "Heading Font",
+          "type": "font",
+          "fallback": "Bricolage Grotesque",
+          "cssVar": "--font-display",
+          "options": [
+            "Bricolage Grotesque",
+            "Inter",
+            "Instrument Serif",
+            "Manrope",
+            "Plus Jakarta Sans",
+            "Space Grotesk",
+            "DM Sans",
+            "Outfit"
+          ]
+        },
+        {
+          "key": "body_font",
+          "label": "Body Font",
+          "type": "font",
+          "fallback": "Inter",
+          "cssVar": "--font-body",
+          "options": [
+            "Inter",
+            "Manrope",
+            "Plus Jakarta Sans",
+            "DM Sans",
+            "Outfit",
+            "Geist",
+            "Space Grotesk",
+            "System UI"
+          ]
+        },
+        {
+          "key": "base_font_size",
+          "label": "Base Font Size",
+          "type": "size",
+          "fallback": "16px",
+          "cssVar": "--base-fs",
+          "options": [
+            "14px",
+            "15px",
+            "16px",
+            "17px",
+            "18px"
+          ]
+        },
+        {
+          "key": "heading_weight",
+          "label": "Heading Weight",
+          "type": "weight",
+          "fallback": "800",
+          "cssVar": "--hw",
+          "options": [
+            "500",
+            "600",
+            "700",
+            "800",
+            "900"
+          ]
+        },
+        {
+          "key": "body_weight",
+          "label": "Body Weight",
+          "type": "weight",
+          "fallback": "400",
+          "cssVar": "--bw",
+          "options": [
+            "300",
+            "400",
+            "500",
+            "600"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Layout",
+      "fields": [
+        {
+          "key": "border_radius",
+          "label": "Global Border Radius",
+          "type": "size",
+          "fallback": "20px",
+          "cssVar": "--r-md",
+          "options": [
+            "0px",
+            "8px",
+            "12px",
+            "16px",
+            "20px",
+            "28px"
+          ]
+        },
+        {
+          "key": "layout_density",
+          "label": "Layout Density",
+          "type": "select",
+          "fallback": "comfortable",
+          "cssVar": "--density",
+          "options": [
+            "compact",
+            "comfortable",
+            "spacious"
+          ]
+        }
+      ]
+    }
+  ],
+  "pageSchema": [
+    {
+      "slug": "home",
+      "name": "Home",
+      "label": "Home page",
+      "description": "Marketing landing page composed of nine sections.",
+      "sections": [
+        {
+          "id": "hero",
+          "type": "Hero",
+          "label": "Hero",
+          "variants": [
+            {
+              "key": "split",
+              "label": "Split",
+              "description": "Two-column layout with character illustration on the right and dashboard mockup behind."
+            },
+            {
+              "key": "centered",
+              "label": "Centered",
+              "description": "Single column, everything centered, illustration sits below the CTAs."
+            },
+            {
+              "key": "minimal",
+              "label": "Minimal",
+              "description": "Text-only with a subtle emblem watermark — the message is the design."
+            }
+          ]
+        },
+        {
+          "id": "logos",
+          "type": "LogoStrip",
+          "label": "Trust strip"
+        },
+        {
+          "id": "features",
+          "type": "FeatureBlocks",
+          "label": "Feature blocks"
+        },
+        {
+          "id": "use-cases",
+          "type": "UseCases",
+          "label": "Use cases"
+        },
+        {
+          "id": "stats",
+          "type": "Stats",
+          "label": "Stats band"
+        },
+        {
+          "id": "pricing",
+          "type": "PricingTeaser",
+          "label": "Pricing teaser"
+        },
+        {
+          "id": "testimonials",
+          "type": "Testimonials",
+          "label": "Testimonials carousel"
+        },
+        {
+          "id": "faq",
+          "type": "FAQ",
+          "label": "FAQ accordion"
+        },
+        {
+          "id": "cta",
+          "type": "FinalCTA",
+          "label": "Final CTA"
+        }
+      ]
+    },
+    {
+      "slug": "pricing",
+      "name": "Pricing",
+      "label": "Pricing page",
+      "sections": [
+        {
+          "id": "pricing",
+          "type": "PricingTeaser",
+          "label": "Pricing matrix"
+        },
+        {
+          "id": "faq",
+          "type": "FAQ",
+          "label": "Pricing FAQ"
+        },
+        {
+          "id": "cta",
+          "type": "FinalCTA",
+          "label": "Final CTA"
+        }
+      ]
+    },
+    {
+      "slug": "features",
+      "name": "Features",
+      "label": "Features page",
+      "sections": [
+        {
+          "id": "features",
+          "type": "FeatureBlocks",
+          "label": "Feature blocks"
+        },
+        {
+          "id": "use-cases",
+          "type": "UseCases",
+          "label": "Use cases"
+        },
+        {
+          "id": "stats",
+          "type": "Stats",
+          "label": "Stats band"
+        },
+        {
+          "id": "cta",
+          "type": "FinalCTA",
+          "label": "Final CTA"
+        }
+      ]
+    },
+    {
+      "slug": "about",
+      "name": "About",
+      "label": "About page",
+      "sections": [
+        {
+          "id": "stats",
+          "type": "Stats",
+          "label": "Stats band"
+        },
+        {
+          "id": "cta",
+          "type": "FinalCTA",
+          "label": "Final CTA"
+        }
+      ]
+    },
+    {
+      "slug": "contact",
+      "name": "Contact",
+      "label": "Contact page",
+      "description": "Hero + contact form + info list.",
+      "sections": [
+        {
+          "id": "hero",
+          "type": "PageHero",
+          "label": "Hero",
+          "variants": [
+            {
+              "key": "split",
+              "label": "Split",
+              "description": "Two-column layout with character illustration on the right and dashboard mockup behind."
+            },
+            {
+              "key": "centered",
+              "label": "Centered",
+              "description": "Single column, everything centered, illustration sits below the CTAs."
+            },
+            {
+              "key": "minimal",
+              "label": "Minimal",
+              "description": "Text-only with a subtle emblem watermark — the message is the design."
+            }
+          ]
+        },
+        {
+          "id": "form",
+          "type": "ContactForm",
+          "label": "Contact form"
+        },
+        {
+          "id": "options",
+          "type": "ListSection",
+          "label": "Other ways to reach us"
+        }
+      ]
+    },
+    {
+      "slug": "blog",
+      "name": "Blog index",
+      "label": "Blog landing page",
+      "description": "Header + featured stories. Posts list comes from the Blog module.",
+      "sections": [
+        {
+          "id": "hero",
+          "type": "PageHero",
+          "label": "Hero",
+          "variants": [
+            {
+              "key": "split",
+              "label": "Split",
+              "description": "Two-column layout with character illustration on the right and dashboard mockup behind."
+            },
+            {
+              "key": "centered",
+              "label": "Centered",
+              "description": "Single column, everything centered, illustration sits below the CTAs."
+            },
+            {
+              "key": "minimal",
+              "label": "Minimal",
+              "description": "Text-only with a subtle emblem watermark — the message is the design."
+            }
+          ]
+        },
+        {
+          "id": "featured",
+          "type": "ListSection",
+          "label": "Featured posts"
+        }
+      ]
+    },
+    {
+      "slug": "customers",
+      "name": "Customers",
+      "label": "Customers page",
+      "description": "Hero + logo strip + case-study grid + final CTA.",
+      "sections": [
+        {
+          "id": "hero",
+          "type": "PageHero",
+          "label": "Hero",
+          "variants": [
+            {
+              "key": "split",
+              "label": "Split",
+              "description": "Two-column layout with character illustration on the right and dashboard mockup behind."
+            },
+            {
+              "key": "centered",
+              "label": "Centered",
+              "description": "Single column, everything centered, illustration sits below the CTAs."
+            },
+            {
+              "key": "minimal",
+              "label": "Minimal",
+              "description": "Text-only with a subtle emblem watermark — the message is the design."
+            }
+          ]
+        },
+        {
+          "id": "logos",
+          "type": "LogoStrip",
+          "label": "Logo strip"
+        },
+        {
+          "id": "cases",
+          "type": "ListSection",
+          "label": "Case studies"
+        },
+        {
+          "id": "quotes",
+          "type": "Testimonials",
+          "label": "Customer quotes"
+        },
+        {
+          "id": "cta",
+          "type": "FinalCTA",
+          "label": "Final CTA"
+        }
+      ]
+    },
+    {
+      "slug": "careers",
+      "name": "Careers",
+      "label": "Careers page",
+      "description": "Hero + values + open roles.",
+      "sections": [
+        {
+          "id": "hero",
+          "type": "PageHero",
+          "label": "Hero",
+          "variants": [
+            {
+              "key": "split",
+              "label": "Split",
+              "description": "Two-column layout with character illustration on the right and dashboard mockup behind."
+            },
+            {
+              "key": "centered",
+              "label": "Centered",
+              "description": "Single column, everything centered, illustration sits below the CTAs."
+            },
+            {
+              "key": "minimal",
+              "label": "Minimal",
+              "description": "Text-only with a subtle emblem watermark — the message is the design."
+            }
+          ]
+        },
+        {
+          "id": "values",
+          "type": "ListSection",
+          "label": "How we work"
+        },
+        {
+          "id": "roles",
+          "type": "ListSection",
+          "label": "Open roles"
+        },
+        {
+          "id": "cta",
+          "type": "FinalCTA",
+          "label": "Final CTA"
+        }
+      ]
+    },
+    {
+      "slug": "docs",
+      "name": "Docs index",
+      "label": "Docs landing page",
+      "description": "Header + topic tiles linking into the docs tree.",
+      "sections": [
+        {
+          "id": "hero",
+          "type": "PageHero",
+          "label": "Hero",
+          "variants": [
+            {
+              "key": "split",
+              "label": "Split",
+              "description": "Two-column layout with character illustration on the right and dashboard mockup behind."
+            },
+            {
+              "key": "centered",
+              "label": "Centered",
+              "description": "Single column, everything centered, illustration sits below the CTAs."
+            },
+            {
+              "key": "minimal",
+              "label": "Minimal",
+              "description": "Text-only with a subtle emblem watermark — the message is the design."
+            }
+          ]
+        },
+        {
+          "id": "topics",
+          "type": "ListSection",
+          "label": "Topic tiles"
+        }
+      ]
+    },
+    {
+      "slug": "changelog",
+      "name": "Changelog",
+      "label": "Changelog page",
+      "description": "Hero + release-note list (rich text).",
+      "sections": [
+        {
+          "id": "hero",
+          "type": "PageHero",
+          "label": "Hero",
+          "variants": [
+            {
+              "key": "split",
+              "label": "Split",
+              "description": "Two-column layout with character illustration on the right and dashboard mockup behind."
+            },
+            {
+              "key": "centered",
+              "label": "Centered",
+              "description": "Single column, everything centered, illustration sits below the CTAs."
+            },
+            {
+              "key": "minimal",
+              "label": "Minimal",
+              "description": "Text-only with a subtle emblem watermark — the message is the design."
+            }
+          ]
+        },
+        {
+          "id": "releases",
+          "type": "ListSection",
+          "label": "Releases"
+        }
+      ]
+    },
+    {
+      "slug": "roadmap",
+      "name": "Roadmap",
+      "label": "Public roadmap",
+      "description": "Hero + Now / Next / Later columns.",
+      "sections": [
+        {
+          "id": "hero",
+          "type": "PageHero",
+          "label": "Hero",
+          "variants": [
+            {
+              "key": "split",
+              "label": "Split",
+              "description": "Two-column layout with character illustration on the right and dashboard mockup behind."
+            },
+            {
+              "key": "centered",
+              "label": "Centered",
+              "description": "Single column, everything centered, illustration sits below the CTAs."
+            },
+            {
+              "key": "minimal",
+              "label": "Minimal",
+              "description": "Text-only with a subtle emblem watermark — the message is the design."
+            }
+          ]
+        },
+        {
+          "id": "now",
+          "type": "ListSection",
+          "label": "Now"
+        },
+        {
+          "id": "next",
+          "type": "ListSection",
+          "label": "Next"
+        },
+        {
+          "id": "later",
+          "type": "ListSection",
+          "label": "Later"
+        }
+      ]
+    },
+    {
+      "slug": "themes",
+      "name": "Themes gallery",
+      "label": "Themes marketplace",
+      "description": "Hero + theme grid + final CTA.",
+      "sections": [
+        {
+          "id": "hero",
+          "type": "PageHero",
+          "label": "Hero",
+          "variants": [
+            {
+              "key": "split",
+              "label": "Split",
+              "description": "Two-column layout with character illustration on the right and dashboard mockup behind."
+            },
+            {
+              "key": "centered",
+              "label": "Centered",
+              "description": "Single column, everything centered, illustration sits below the CTAs."
+            },
+            {
+              "key": "minimal",
+              "label": "Minimal",
+              "description": "Text-only with a subtle emblem watermark — the message is the design."
+            }
+          ]
+        },
+        {
+          "id": "themes",
+          "type": "ListSection",
+          "label": "Themes"
+        },
+        {
+          "id": "cta",
+          "type": "FinalCTA",
+          "label": "Final CTA"
+        }
+      ]
+    },
+    {
+      "slug": "legal-terms",
+      "name": "Terms of service",
+      "label": "Legal — terms",
+      "description": "Standalone rich-text legal page.",
+      "sections": [
+        {
+          "id": "hero",
+          "type": "PageHero",
+          "label": "Hero",
+          "variants": [
+            {
+              "key": "split",
+              "label": "Split",
+              "description": "Two-column layout with character illustration on the right and dashboard mockup behind."
+            },
+            {
+              "key": "centered",
+              "label": "Centered",
+              "description": "Single column, everything centered, illustration sits below the CTAs."
+            },
+            {
+              "key": "minimal",
+              "label": "Minimal",
+              "description": "Text-only with a subtle emblem watermark — the message is the design."
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "type": "RichContent",
+          "label": "Document body"
+        }
+      ]
+    },
+    {
+      "slug": "legal-privacy",
+      "name": "Privacy policy",
+      "label": "Legal — privacy",
+      "description": "Standalone rich-text legal page.",
+      "sections": [
+        {
+          "id": "hero",
+          "type": "PageHero",
+          "label": "Hero",
+          "variants": [
+            {
+              "key": "split",
+              "label": "Split",
+              "description": "Two-column layout with character illustration on the right and dashboard mockup behind."
+            },
+            {
+              "key": "centered",
+              "label": "Centered",
+              "description": "Single column, everything centered, illustration sits below the CTAs."
+            },
+            {
+              "key": "minimal",
+              "label": "Minimal",
+              "description": "Text-only with a subtle emblem watermark — the message is the design."
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "type": "RichContent",
+          "label": "Document body"
+        }
+      ]
+    },
+    {
+      "slug": "legal-security",
+      "name": "Security",
+      "label": "Legal — security",
+      "description": "Security overview + practices list.",
+      "sections": [
+        {
+          "id": "hero",
+          "type": "PageHero",
+          "label": "Hero",
+          "variants": [
+            {
+              "key": "split",
+              "label": "Split",
+              "description": "Two-column layout with character illustration on the right and dashboard mockup behind."
+            },
+            {
+              "key": "centered",
+              "label": "Centered",
+              "description": "Single column, everything centered, illustration sits below the CTAs."
+            },
+            {
+              "key": "minimal",
+              "label": "Minimal",
+              "description": "Text-only with a subtle emblem watermark — the message is the design."
+            }
+          ]
+        },
+        {
+          "id": "practices",
+          "type": "ListSection",
+          "label": "Practices"
+        },
+        {
+          "id": "body",
+          "type": "RichContent",
+          "label": "Document body"
+        }
+      ]
+    },
+    {
+      "slug": "legal-dpa",
+      "name": "Data processing addendum",
+      "label": "Legal — DPA",
+      "description": "Standalone rich-text legal page.",
+      "sections": [
+        {
+          "id": "hero",
+          "type": "PageHero",
+          "label": "Hero",
+          "variants": [
+            {
+              "key": "split",
+              "label": "Split",
+              "description": "Two-column layout with character illustration on the right and dashboard mockup behind."
+            },
+            {
+              "key": "centered",
+              "label": "Centered",
+              "description": "Single column, everything centered, illustration sits below the CTAs."
+            },
+            {
+              "key": "minimal",
+              "label": "Minimal",
+              "description": "Text-only with a subtle emblem watermark — the message is the design."
+            }
+          ]
+        },
+        {
+          "id": "body",
+          "type": "RichContent",
+          "label": "Document body"
+        }
+      ]
+    }
+  ],
+  "moduleSchemas": {
+    "Hero": [
+      {
+        "key": "_variant",
+        "type": "select",
+        "label": "Design",
+        "description": "Pick a Hero layout. All variants share the same content fields — switching is non-destructive.",
+        "options": [
+          "split",
+          "centered",
+          "minimal"
+        ]
+      },
+      {
+        "key": "title",
+        "type": "string",
+        "label": "Headline",
+        "required": true
+      },
+      {
+        "key": "subtitle",
+        "type": "text",
+        "label": "Subhead"
+      },
+      {
+        "key": "primaryCta",
+        "type": "string",
+        "label": "Primary CTA label"
+      },
+      {
+        "key": "primaryHref",
+        "type": "string",
+        "label": "Primary CTA URL"
+      },
+      {
+        "key": "secondaryCta",
+        "type": "string",
+        "label": "Secondary CTA label"
+      },
+      {
+        "key": "secondaryHref",
+        "type": "string",
+        "label": "Secondary CTA URL"
+      },
+      {
+        "key": "trustText",
+        "type": "string",
+        "label": "Trust line"
+      },
+      {
+        "key": "heroImage",
+        "type": "image",
+        "label": "Hero illustration",
+        "description": "The character / illustration shown on the right of the hero. Pick from your media library or paste a URL. Leave empty to hide."
+      },
+      {
+        "key": "emblemImage",
+        "type": "image",
+        "label": "Emblem watermark",
+        "description": "Faint watermark behind the hero illustration. Set to 'none' to hide entirely."
+      },
+      {
+        "key": "dashboardVariant",
+        "type": "select",
+        "label": "Dashboard mockup",
+        "description": "The tilted admin UI shown behind the character illustration (split variant only). Pick a variant or hide entirely.",
+        "options": [
+          "overview",
+          "pages",
+          "analytics",
+          "none"
+        ]
+      },
+      {
+        "key": "dashboardImage",
+        "type": "image",
+        "label": "Custom dashboard image",
+        "description": "Replace the built-in mockup with your own screenshot. Useful when the customer's actual product is more compelling than a generic admin UI. Leave empty to use the built-in."
+      }
+    ],
+    "LogoStrip": [
+      {
+        "key": "eyebrow",
+        "type": "string",
+        "label": "Eyebrow"
+      },
+      {
+        "key": "logos",
+        "type": "text",
+        "label": "Logos (newline-separated)"
+      }
+    ],
+    "FeatureBlocks": [
+      {
+        "key": "_variant",
+        "type": "select",
+        "label": "Design",
+        "description": "Pick a feature-block layout. All variants share the same data.",
+        "options": [
+          "alternating",
+          "grid-3up",
+          "iconed-list"
+        ]
+      },
+      {
+        "key": "title",
+        "type": "string",
+        "label": "Section title"
+      },
+      {
+        "key": "subtitle",
+        "type": "text",
+        "label": "Section subtitle"
+      },
+      {
+        "key": "blocks",
+        "type": "json",
+        "label": "Feature blocks",
+        "itemShape": [
+          {
+            "key": "image",
+            "type": "image",
+            "label": "Block image",
+            "description": "Visual shown alongside this feature block."
+          },
+          {
+            "key": "imageAlt",
+            "type": "string",
+            "label": "Image alt text",
+            "description": "Accessibility — describe the image for screen readers."
+          }
+        ]
+      }
+    ],
+    "UseCases": [
+      {
+        "key": "eyebrow",
+        "type": "string",
+        "label": "Eyebrow"
+      },
+      {
+        "key": "title",
+        "type": "string",
+        "label": "Title"
+      },
+      {
+        "key": "subtitle",
+        "type": "text",
+        "label": "Subtitle"
+      },
+      {
+        "key": "cases",
+        "type": "json",
+        "label": "Cases",
+        "itemShape": [
+          {
+            "key": "character",
+            "type": "image",
+            "label": "Character image",
+            "description": "Optional illustration shown beside this use case."
+          }
+        ]
+      }
+    ],
+    "Stats": [
+      {
+        "key": "items",
+        "type": "json",
+        "label": "Stats"
+      }
+    ],
+    "PricingTeaser": [
+      {
+        "key": "eyebrow",
+        "type": "string",
+        "label": "Eyebrow"
+      },
+      {
+        "key": "title",
+        "type": "string",
+        "label": "Title"
+      },
+      {
+        "key": "subtitle",
+        "type": "text",
+        "label": "Subtitle"
+      },
+      {
+        "key": "personal",
+        "type": "json",
+        "label": "Personal tiers"
+      },
+      {
+        "key": "organizational",
+        "type": "json",
+        "label": "Organizational tiers"
+      }
+    ],
+    "Testimonials": [
+      {
+        "key": "_variant",
+        "type": "select",
+        "label": "Design",
+        "description": "Pick a testimonials layout: carousel (horizontal scroll), grid (3-up cards), or quote-tile (single big quote).",
+        "options": [
+          "carousel",
+          "grid",
+          "quote-tile"
+        ]
+      },
+      {
+        "key": "eyebrow",
+        "type": "string",
+        "label": "Eyebrow"
+      },
+      {
+        "key": "title",
+        "type": "string",
+        "label": "Title"
+      },
+      {
+        "key": "subtitle",
+        "type": "text",
+        "label": "Subtitle"
+      },
+      {
+        "key": "_managedNote",
+        "type": "managed",
+        "label": "Testimonials content",
+        "managedLabel": "Testimonials",
+        "managedHref": "/dashboard/testimonials",
+        "description": "Testimonials shown on this section come from your Testimonials collection. Add, edit, or reorder them there — the rendered section automatically reflects the latest list."
+      }
+    ],
+    "FAQ": [
+      {
+        "key": "_variant",
+        "type": "select",
+        "label": "Design",
+        "description": "Pick a FAQ layout: accordion (expandable), two-column (Q-on-left), or inline (flat list).",
+        "options": [
+          "accordion",
+          "two-column",
+          "inline"
+        ]
+      },
+      {
+        "key": "title",
+        "type": "string",
+        "label": "Title"
+      },
+      {
+        "key": "items",
+        "type": "json",
+        "label": "Q&A"
+      }
+    ],
+    "FinalCTA": [
+      {
+        "key": "title",
+        "type": "string",
+        "label": "Title"
+      },
+      {
+        "key": "subtitle",
+        "type": "text",
+        "label": "Subtitle"
+      },
+      {
+        "key": "primaryCta",
+        "type": "string",
+        "label": "Primary CTA label"
+      },
+      {
+        "key": "primaryHref",
+        "type": "string",
+        "label": "Primary CTA URL"
+      },
+      {
+        "key": "secondaryCta",
+        "type": "string",
+        "label": "Secondary CTA label"
+      },
+      {
+        "key": "secondaryHref",
+        "type": "string",
+        "label": "Secondary CTA URL"
+      },
+      {
+        "key": "trustText",
+        "type": "string",
+        "label": "Trust line"
+      },
+      {
+        "key": "emblemImage",
+        "type": "image",
+        "label": "Decorative emblem",
+        "description": "Small emblem shown beside the CTA copy. Leave empty for the default brand emblem."
+      }
+    ],
+    "PageHero": [
+      {
+        "key": "eyebrow",
+        "type": "string",
+        "label": "Eyebrow"
+      },
+      {
+        "key": "title",
+        "type": "string",
+        "label": "Headline",
+        "required": true
+      },
+      {
+        "key": "subtitle",
+        "type": "text",
+        "label": "Subhead"
+      },
+      {
+        "key": "primaryCta",
+        "type": "string",
+        "label": "Primary CTA label"
+      },
+      {
+        "key": "primaryHref",
+        "type": "string",
+        "label": "Primary CTA URL"
+      },
+      {
+        "key": "secondaryCta",
+        "type": "string",
+        "label": "Secondary CTA label"
+      },
+      {
+        "key": "secondaryHref",
+        "type": "string",
+        "label": "Secondary CTA URL"
+      }
+    ],
+    "RichContent": [
+      {
+        "key": "eyebrow",
+        "type": "string",
+        "label": "Eyebrow"
+      },
+      {
+        "key": "title",
+        "type": "string",
+        "label": "Section title"
+      },
+      {
+        "key": "body",
+        "type": "richtext",
+        "label": "Body (Markdown supported)"
+      }
+    ],
+    "ListSection": [
+      {
+        "key": "eyebrow",
+        "type": "string",
+        "label": "Eyebrow"
+      },
+      {
+        "key": "title",
+        "type": "string",
+        "label": "Section title"
+      },
+      {
+        "key": "subtitle",
+        "type": "text",
+        "label": "Subhead"
+      },
+      {
+        "key": "items",
+        "type": "json",
+        "label": "Items",
+        "itemShape": [
+          {
+            "key": "title",
+            "type": "string",
+            "label": "Title"
+          },
+          {
+            "key": "body",
+            "type": "text",
+            "label": "Body"
+          },
+          {
+            "key": "href",
+            "type": "string",
+            "label": "Link (optional)"
+          }
+        ]
+      }
+    ],
+    "ContactForm": [
+      {
+        "key": "eyebrow",
+        "type": "string",
+        "label": "Eyebrow"
+      },
+      {
+        "key": "title",
+        "type": "string",
+        "label": "Headline"
+      },
+      {
+        "key": "subtitle",
+        "type": "text",
+        "label": "Subhead"
+      },
+      {
+        "key": "submitLabel",
+        "type": "string",
+        "label": "Submit button label"
+      },
+      {
+        "key": "successText",
+        "type": "text",
+        "label": "Success message"
+      },
+      {
+        "key": "email",
+        "type": "string",
+        "label": "Reply-to email"
+      },
+      {
+        "key": "phone",
+        "type": "string",
+        "label": "Phone (optional)"
+      },
+      {
+        "key": "address",
+        "type": "text",
+        "label": "Address (optional)"
+      }
+    ]
+  },
+  "designs": [
+    {
+      "key": "default",
+      "label": "Default — Linktree-vibrant",
+      "description": "Pastel mesh-gradient hero, vibrant feature visuals, hand-tossed character illustrations.",
+      "sectionVariants": {}
+    }
+  ],
+  "defaultDesignKey": "default",
+  "defaultSettings": {
+    "site_title": "Mero CMS",
+    "site_tagline": "Where motion meets meaning",
+    "copyright_text": "© Mero CMS · Built by Blendwit",
+    "primary_color": "#cb172b",
+    "secondary_color": "#023d91",
+    "accent_color": "#fbfaf6",
+    "text_color": "#0d0e14",
+    "heading_color": "#2a2c35",
+    "link_color": "#023d91",
+    "muted_text_color": "#5b5e6b",
+    "heading_font": "Bricolage Grotesque",
+    "body_font": "Inter",
+    "base_font_size": "16px",
+    "heading_weight": "800",
+    "body_weight": "400",
+    "border_radius": "20px",
+    "layout_density": "comfortable",
+    "footer_text": "The motion-first CMS for teams that treat content as a product.",
+    "hero_title": "The CMS your team actually wants to use.",
+    "hero_subtitle": "Mero CMS is the motion-first content platform for teams that treat content as a product.",
+    "cta_text": "Start free →",
+    "cta_url": "/signup",
+    "meta_description": "Mero CMS — the motion-first headless-ish content platform."
+  },
+  "requiredCollections": [],
+  "seedData": {
+    "menus": [
+      {
+        "slug": "main-nav",
+        "name": "Main navigation",
+        "items": [
+          {
+            "label": "Product",
+            "url": "/#features",
+            "order": 1
+          },
+          {
+            "label": "Use cases",
+            "url": "/#use-cases",
+            "order": 2
+          },
+          {
+            "label": "Pricing",
+            "url": "/pricing",
+            "order": 3
+          },
+          {
+            "label": "Customers",
+            "url": "/customers",
+            "order": 4
+          },
+          {
+            "label": "FAQ",
+            "url": "/#faq",
+            "order": 5
+          }
+        ]
+      },
+      {
+        "slug": "footer-product",
+        "name": "Product",
+        "items": [
+          {
+            "label": "Features",
+            "url": "/features",
+            "order": 1
+          },
+          {
+            "label": "Pricing",
+            "url": "/pricing",
+            "order": 2
+          },
+          {
+            "label": "Changelog",
+            "url": "/changelog",
+            "order": 3
+          },
+          {
+            "label": "Roadmap",
+            "url": "/roadmap",
+            "order": 4
+          }
+        ]
+      },
+      {
+        "slug": "footer-resources",
+        "name": "Resources",
+        "items": [
+          {
+            "label": "Docs",
+            "url": "/docs",
+            "order": 1
+          },
+          {
+            "label": "API reference",
+            "url": "/docs/api",
+            "order": 2
+          },
+          {
+            "label": "Theme gallery",
+            "url": "/themes",
+            "order": 3
+          },
+          {
+            "label": "Blog",
+            "url": "/blog",
+            "order": 4
+          }
+        ]
+      },
+      {
+        "slug": "footer-company",
+        "name": "Company",
+        "items": [
+          {
+            "label": "About",
+            "url": "/about",
+            "order": 1
+          },
+          {
+            "label": "Customers",
+            "url": "/customers",
+            "order": 2
+          },
+          {
+            "label": "Careers",
+            "url": "/careers",
+            "order": 3
+          },
+          {
+            "label": "Contact",
+            "url": "/contact",
+            "order": 4
+          }
+        ]
+      },
+      {
+        "slug": "footer-legal",
+        "name": "Legal",
+        "items": [
+          {
+            "label": "Terms",
+            "url": "/legal/terms",
+            "order": 1
+          },
+          {
+            "label": "Privacy",
+            "url": "/legal/privacy",
+            "order": 2
+          },
+          {
+            "label": "Security",
+            "url": "/legal/security",
+            "order": 3
+          },
+          {
+            "label": "DPA",
+            "url": "/legal/dpa",
+            "order": 4
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "slug": "home",
+        "title": "Home",
+        "description": "Marketing landing page composed of nine sections.",
+        "data": {
+          "sections": [
+            {
+              "id": "hero",
+              "data": {
+                "eyebrow": "v1.5 just shipped — visual editor in beta",
+                "title": "The CMS your team actually wants to use.",
+                "subtitle": "Mero CMS is the motion-first content platform for teams that treat content as a product. Visual editor, AI Studio, eight-tier capability matrix — all from one admin you'd recommend to a friend.",
+                "primaryCta": "Start free →",
+                "primaryHref": "/signup",
+                "secondaryCta": "Book a demo",
+                "secondaryHref": "/contact",
+                "trustText": "4.9 / 5 · 600+ teams shipping with Mero CMS",
+                "heroImage": "/character-hero.svg",
+                "emblemImage": "/emblem.svg",
+                "_variant": "split",
+                "dashboardVariant": "overview",
+                "dashboardImage": ""
+              }
+            },
+            {
+              "id": "logos",
+              "data": {
+                "eyebrow": "Trusted by teams who pick their tools carefully",
+                "logos": "Blendwit\nNimble\nFleet\nAtlas\nPaperline\nUnion\nSequence\nKite"
+              }
+            },
+            {
+              "id": "features",
+              "data": {
+                "title": "Everything a content team needs. Nothing they don't.",
+                "subtitle": "Six core capabilities, each one designed to feel inevitable once you've used it.",
+                "blocks": [
+                  {
+                    "icon": "Layers",
+                    "title": "Visual page builder",
+                    "body": "Click any section to edit inline. Drag to reorder. Swap variants without breaking your design system."
+                  },
+                  {
+                    "icon": "Sparkles",
+                    "title": "AI Studio",
+                    "body": "Generate copy, alt text, and SEO meta with one keystroke. Your tone, your brand voice, your existing posts as the prompt."
+                  },
+                  {
+                    "icon": "Database",
+                    "title": "Custom collections",
+                    "body": "Define any content type with a JSON schema. Mero builds the editor and the public API automatically."
+                  },
+                  {
+                    "icon": "Workflow",
+                    "title": "Forms + leads",
+                    "body": "Drag-and-drop form builder. Submissions land in your lead inbox with email, source, and a one-click reply button."
+                  },
+                  {
+                    "icon": "Webhook",
+                    "title": "Webhooks",
+                    "body": "Slack ping on a new post. Zapier on every form submission. Custom events for your own integrations."
+                  },
+                  {
+                    "icon": "ShieldCheck",
+                    "title": "Security by default",
+                    "body": "JWT + refresh-token rotation. Audit log on every settings change. IP whitelisting per role. Two-factor everywhere."
+                  }
+                ]
+              }
+            },
+            {
+              "id": "use-cases",
+              "data": {
+                "eyebrow": "Built for the way you work",
+                "title": "Three teams. Three completely different sites. One CMS.",
+                "subtitle": "Mero adapts to the shape of your content — not the other way around.",
+                "cases": [
+                  {
+                    "icon": "Briefcase",
+                    "tag": "B2B Marketing",
+                    "title": "Lead-gen marketing site",
+                    "body": "Pricing pages, demo signups, gated whitepapers, customer stories, blog. Visual editor for the marketing lead, code editor for the dev."
+                  },
+                  {
+                    "icon": "Newspaper",
+                    "tag": "Content + Publishing",
+                    "title": "Editorial publication",
+                    "body": "Long-form posts, author bios, taxonomy, newsletters, member-gated archive. Scheduled publishing across timezones."
+                  },
+                  {
+                    "icon": "Building2",
+                    "tag": "Org / Brand",
+                    "title": "Multi-team brand site",
+                    "body": "About, careers, customers, docs, changelog. Granular roles so legal can edit policies without touching the homepage."
+                  }
+                ]
+              }
+            },
+            {
+              "id": "stats",
+              "data": {
+                "items": [
+                  {
+                    "value": "600+",
+                    "label": "Teams shipping"
+                  },
+                  {
+                    "value": "12,000",
+                    "label": "Sites in production"
+                  },
+                  {
+                    "value": "99.99%",
+                    "label": "Uptime, last 90 days"
+                  },
+                  {
+                    "value": "< 80ms",
+                    "label": "P95 page response"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "pricing",
+              "data": {
+                "eyebrow": "Pricing",
+                "title": "One-time licence. Eight tiers.",
+                "subtitle": "Pick the tier that matches your team. Lifetime use of the version you bought, optional annual maintenance for updates.",
+                "personal": [],
+                "organizational": []
+              }
+            },
+            {
+              "id": "testimonials",
+              "data": {
+                "eyebrow": "What customers say",
+                "title": "Teams who switched to Mero, in their own words.",
+                "subtitle": "Six representative quotes from the last 90 days.",
+                "testimonials": [
+                  {
+                    "name": "Anjali Shrestha",
+                    "role": "Editor-in-Chief",
+                    "company": "Paperline",
+                    "quote": "Our editorial team stopped pinging engineering for content changes. That alone paid for the licence in week one.",
+                    "rating": 5
+                  },
+                  {
+                    "name": "Rohan Kapoor",
+                    "role": "Founder",
+                    "company": "Sequence",
+                    "quote": "We migrated from WordPress in two days. The visual editor is genuinely better than what we replaced.",
+                    "rating": 5
+                  },
+                  {
+                    "name": "Maya Patel",
+                    "role": "Marketing Lead",
+                    "company": "Atlas",
+                    "quote": "AI Studio writes our blog drafts in our voice. I edit, I don't rewrite.",
+                    "rating": 5
+                  },
+                  {
+                    "name": "Daniel Cho",
+                    "role": "Tech Lead",
+                    "company": "Union",
+                    "quote": "The capability matrix is the cleanest tier-gating I've seen. We unlock things by paying, not by integrating.",
+                    "rating": 5
+                  },
+                  {
+                    "name": "Priya Joshi",
+                    "role": "Content Strategist",
+                    "company": "Kite",
+                    "quote": "Custom collections meant we shipped a portfolio CMS in an afternoon. The schema-to-editor mapping just works.",
+                    "rating": 5
+                  },
+                  {
+                    "name": "Saugat Pahari",
+                    "role": "Founder",
+                    "company": "Blendwit",
+                    "quote": "We dogfood Mero for our own marketing site. Every feature ships from the team that uses it daily.",
+                    "rating": 5
+                  }
+                ]
+              }
+            },
+            {
+              "id": "faq",
+              "data": {
+                "title": "Questions, answered.",
+                "items": [
+                  {
+                    "q": "Is Mero CMS truly self-hosted?",
+                    "a": "Yes. Buy the licence, deploy to your own infrastructure (or use Mero Cloud if you'd rather we handle hosting). No phone-home, no SaaS lock-in."
+                  },
+                  {
+                    "q": "How does the one-time licence work?",
+                    "a": "You pay once for the CMS. Your install runs forever on the version you bought. Optional annual maintenance keeps you on the latest version with security patches."
+                  },
+                  {
+                    "q": "Can we migrate from WordPress?",
+                    "a": "Yes. We have a one-time migration tool that pulls posts, pages, media, users, and tags. Most teams complete the move in under 4 hours."
+                  },
+                  {
+                    "q": "What's the difference between Personal and Organizational?",
+                    "a": "Personal tiers are sized for solo creators (1-5 seats, smaller storage). Organizational tiers add multi-user from day one, larger storage, and tier-3+ adds dashboard branding."
+                  },
+                  {
+                    "q": "Do you have a free tier?",
+                    "a": "We have a 14-day free trial on any tier. No card required. After the trial, pick a tier or your data is exported and the install retired."
+                  },
+                  {
+                    "q": "Can we build custom features on top?",
+                    "a": "Yes. Premium+ tiers include code-level theme editing and a plugin marketplace. Custom tier includes bespoke development scope."
+                  }
+                ]
+              }
+            },
+            {
+              "id": "cta",
+              "data": {
+                "title": "Stop wrestling with your CMS.",
+                "subtitle": "Spin up a free trial in 90 seconds. No card, no email wall, no sales call required.",
+                "primaryCta": "Start free →",
+                "primaryHref": "/signup",
+                "secondaryCta": "Talk to sales",
+                "secondaryHref": "/contact",
+                "trustText": "Trial includes every Pro-tier feature. Downgrade or commit at the end.",
+                "emblemImage": "/emblem.svg"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "pricing",
+        "title": "Pricing",
+        "description": "One-time licence with eight tiers across personal and organizational use.",
+        "data": {
+          "sections": [
+            {
+              "id": "pricing",
+              "data": {
+                "eyebrow": "Pricing",
+                "title": "One-time licence. Eight tiers.",
+                "subtitle": "Pick the tier that matches your team. Lifetime use of the version you bought, optional annual maintenance for updates.",
+                "personal": [],
+                "organizational": []
+              }
+            },
+            {
+              "id": "faq",
+              "data": {
+                "title": "Questions, answered.",
+                "items": [
+                  {
+                    "q": "Is Mero CMS truly self-hosted?",
+                    "a": "Yes. Buy the licence, deploy to your own infrastructure (or use Mero Cloud if you'd rather we handle hosting). No phone-home, no SaaS lock-in."
+                  },
+                  {
+                    "q": "How does the one-time licence work?",
+                    "a": "You pay once for the CMS. Your install runs forever on the version you bought. Optional annual maintenance keeps you on the latest version with security patches."
+                  },
+                  {
+                    "q": "Can we migrate from WordPress?",
+                    "a": "Yes. We have a one-time migration tool that pulls posts, pages, media, users, and tags. Most teams complete the move in under 4 hours."
+                  },
+                  {
+                    "q": "What's the difference between Personal and Organizational?",
+                    "a": "Personal tiers are sized for solo creators (1-5 seats, smaller storage). Organizational tiers add multi-user from day one, larger storage, and tier-3+ adds dashboard branding."
+                  },
+                  {
+                    "q": "Do you have a free tier?",
+                    "a": "We have a 14-day free trial on any tier. No card required. After the trial, pick a tier or your data is exported and the install retired."
+                  },
+                  {
+                    "q": "Can we build custom features on top?",
+                    "a": "Yes. Premium+ tiers include code-level theme editing and a plugin marketplace. Custom tier includes bespoke development scope."
+                  }
+                ]
+              }
+            },
+            {
+              "id": "cta",
+              "data": {
+                "title": "Stop wrestling with your CMS.",
+                "subtitle": "Spin up a free trial in 90 seconds. No card, no email wall, no sales call required.",
+                "primaryCta": "Start free →",
+                "primaryHref": "/signup",
+                "secondaryCta": "Talk to sales",
+                "secondaryHref": "/contact",
+                "trustText": "Trial includes every Pro-tier feature. Downgrade or commit at the end.",
+                "emblemImage": "/emblem.svg"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "features",
+        "title": "Features",
+        "description": "Full feature breakdown with use-cases, stats, and conversion CTA.",
+        "data": {
+          "sections": [
+            {
+              "id": "features",
+              "data": {
+                "title": "Everything a content team needs. Nothing they don't.",
+                "subtitle": "Six core capabilities, each one designed to feel inevitable once you've used it.",
+                "blocks": [
+                  {
+                    "icon": "Layers",
+                    "title": "Visual page builder",
+                    "body": "Click any section to edit inline. Drag to reorder. Swap variants without breaking your design system."
+                  },
+                  {
+                    "icon": "Sparkles",
+                    "title": "AI Studio",
+                    "body": "Generate copy, alt text, and SEO meta with one keystroke. Your tone, your brand voice, your existing posts as the prompt."
+                  },
+                  {
+                    "icon": "Database",
+                    "title": "Custom collections",
+                    "body": "Define any content type with a JSON schema. Mero builds the editor and the public API automatically."
+                  },
+                  {
+                    "icon": "Workflow",
+                    "title": "Forms + leads",
+                    "body": "Drag-and-drop form builder. Submissions land in your lead inbox with email, source, and a one-click reply button."
+                  },
+                  {
+                    "icon": "Webhook",
+                    "title": "Webhooks",
+                    "body": "Slack ping on a new post. Zapier on every form submission. Custom events for your own integrations."
+                  },
+                  {
+                    "icon": "ShieldCheck",
+                    "title": "Security by default",
+                    "body": "JWT + refresh-token rotation. Audit log on every settings change. IP whitelisting per role. Two-factor everywhere."
+                  }
+                ]
+              }
+            },
+            {
+              "id": "use-cases",
+              "data": {
+                "eyebrow": "Built for the way you work",
+                "title": "Three teams. Three completely different sites. One CMS.",
+                "subtitle": "Mero adapts to the shape of your content — not the other way around.",
+                "cases": [
+                  {
+                    "icon": "Briefcase",
+                    "tag": "B2B Marketing",
+                    "title": "Lead-gen marketing site",
+                    "body": "Pricing pages, demo signups, gated whitepapers, customer stories, blog. Visual editor for the marketing lead, code editor for the dev."
+                  },
+                  {
+                    "icon": "Newspaper",
+                    "tag": "Content + Publishing",
+                    "title": "Editorial publication",
+                    "body": "Long-form posts, author bios, taxonomy, newsletters, member-gated archive. Scheduled publishing across timezones."
+                  },
+                  {
+                    "icon": "Building2",
+                    "tag": "Org / Brand",
+                    "title": "Multi-team brand site",
+                    "body": "About, careers, customers, docs, changelog. Granular roles so legal can edit policies without touching the homepage."
+                  }
+                ]
+              }
+            },
+            {
+              "id": "stats",
+              "data": {
+                "items": [
+                  {
+                    "value": "600+",
+                    "label": "Teams shipping"
+                  },
+                  {
+                    "value": "12,000",
+                    "label": "Sites in production"
+                  },
+                  {
+                    "value": "99.99%",
+                    "label": "Uptime, last 90 days"
+                  },
+                  {
+                    "value": "< 80ms",
+                    "label": "P95 page response"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "cta",
+              "data": {
+                "title": "Stop wrestling with your CMS.",
+                "subtitle": "Spin up a free trial in 90 seconds. No card, no email wall, no sales call required.",
+                "primaryCta": "Start free →",
+                "primaryHref": "/signup",
+                "secondaryCta": "Talk to sales",
+                "secondaryHref": "/contact",
+                "trustText": "Trial includes every Pro-tier feature. Downgrade or commit at the end.",
+                "emblemImage": "/emblem.svg"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "about",
+        "title": "About",
+        "description": "Who Blendwit is and what we believe about content tools.",
+        "data": {
+          "sections": [
+            {
+              "id": "stats",
+              "data": {
+                "items": [
+                  {
+                    "value": "2024",
+                    "label": "Founded in Kathmandu"
+                  },
+                  {
+                    "value": "12",
+                    "label": "Engineers + designers"
+                  },
+                  {
+                    "value": "600+",
+                    "label": "Customers in 22 countries"
+                  },
+                  {
+                    "value": "$0",
+                    "label": "Spent on outbound sales"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "cta",
+              "data": {
+                "title": "Want to work with us?",
+                "subtitle": "We're hiring across engineering, design, and customer support. Remote-friendly within Asia-Pacific timezones.",
+                "primaryCta": "See open roles →",
+                "primaryHref": "/careers",
+                "secondaryCta": "Email the team",
+                "secondaryHref": "mailto:hello@mero.cms",
+                "emblemImage": "/emblem.svg"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "contact",
+        "title": "Contact us",
+        "description": "Get in touch with the Mero CMS team.",
+        "data": {
+          "sections": [
+            {
+              "id": "hero",
+              "data": {
+                "eyebrow": "Talk to a human",
+                "title": "We'd love to hear from you.",
+                "subtitle": "Sales, partnerships, support, or just hello — pick the channel that fits.",
+                "primaryCta": "Email us",
+                "primaryHref": "mailto:hello@mero.cms",
+                "secondaryCta": "Book a call",
+                "secondaryHref": "/contact#book"
+              }
+            },
+            {
+              "id": "form",
+              "data": {
+                "eyebrow": "Send a message",
+                "title": "Tell us a little about your project.",
+                "subtitle": "We typically reply within one business day.",
+                "submitLabel": "Send message",
+                "successText": "Thanks — we'll be in touch within one business day.",
+                "email": "hello@mero.cms",
+                "phone": "+977 1-555-0140",
+                "address": "Kathmandu, Nepal"
+              }
+            },
+            {
+              "id": "options",
+              "data": {
+                "eyebrow": "Other channels",
+                "title": "Pick what works for you.",
+                "items": [
+                  {
+                    "title": "Sales",
+                    "body": "Pricing, enterprise, agencies.",
+                    "href": "mailto:sales@mero.cms"
+                  },
+                  {
+                    "title": "Support",
+                    "body": "Existing customers, technical issues.",
+                    "href": "mailto:support@mero.cms"
+                  },
+                  {
+                    "title": "Press",
+                    "body": "Logos, quotes, story leads.",
+                    "href": "mailto:press@mero.cms"
+                  },
+                  {
+                    "title": "Security",
+                    "body": "Disclose a vulnerability.",
+                    "href": "mailto:security@mero.cms"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "blog",
+        "title": "Blog",
+        "description": "Stories, product updates, and field notes from the team.",
+        "data": {
+          "sections": [
+            {
+              "id": "hero",
+              "data": {
+                "eyebrow": "Field notes",
+                "title": "Stories from teams shipping with Mero.",
+                "subtitle": "Product deep-dives, engineering write-ups, and behind-the-scenes posts."
+              }
+            },
+            {
+              "id": "featured",
+              "data": {
+                "eyebrow": "Editor's picks",
+                "title": "Featured posts",
+                "items": [
+                  {
+                    "title": "Why we rebuilt our visual editor",
+                    "body": "Three rewrites and what we kept.",
+                    "href": "/blog/visual-editor-rewrite"
+                  },
+                  {
+                    "title": "Designing a permission matrix",
+                    "body": "How we settled on role × capability.",
+                    "href": "/blog/permission-matrix"
+                  },
+                  {
+                    "title": "AI Studio under the hood",
+                    "body": "Prompt routing, caching, and tone.",
+                    "href": "/blog/ai-studio-internals"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "customers",
+        "title": "Customers",
+        "description": "Teams shipping content with Mero CMS.",
+        "data": {
+          "sections": [
+            {
+              "id": "hero",
+              "data": {
+                "eyebrow": "Customers",
+                "title": "Built for teams that ship.",
+                "subtitle": "From two-person studios to 200-person product orgs — Mero scales with the work."
+              }
+            },
+            {
+              "id": "logos",
+              "data": {
+                "eyebrow": "Trusted by 600+ teams worldwide",
+                "logos": "Blendwit\nNimble\nFleet\nAtlas\nPaperline\nUnion\nSequence\nKite"
+              }
+            },
+            {
+              "id": "cases",
+              "data": {
+                "eyebrow": "Case studies",
+                "title": "How real teams use Mero.",
+                "items": [
+                  {
+                    "title": "Blendwit",
+                    "body": "Migrated 2k pages off WordPress in 11 days. Editors stayed productive throughout.",
+                    "href": "/customers/blendwit"
+                  },
+                  {
+                    "title": "Paperline",
+                    "body": "Replaced three separate tools with one CMS. Saved $14k/yr on tooling.",
+                    "href": "/customers/paperline"
+                  },
+                  {
+                    "title": "Sequence",
+                    "body": "Custom collections power a public knowledge base used by 80k visitors a month.",
+                    "href": "/customers/sequence"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "quotes",
+              "data": {
+                "eyebrow": "What customers say",
+                "title": "Voices from the field.",
+                "items": []
+              }
+            },
+            {
+              "id": "cta",
+              "data": {
+                "eyebrow": "Join them",
+                "title": "Start with Mero today.",
+                "primaryCta": "Start free",
+                "primaryHref": "/signup",
+                "secondaryCta": "Book a demo",
+                "secondaryHref": "/contact",
+                "emblemImage": "/emblem.svg"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "careers",
+        "title": "Careers",
+        "description": "Open roles at Mero and how we work.",
+        "data": {
+          "sections": [
+            {
+              "id": "hero",
+              "data": {
+                "eyebrow": "Careers",
+                "title": "Build the CMS you wish existed.",
+                "subtitle": "Small team, fully remote, async-first. We hire for taste, judgement, and a high bar for craft.",
+                "primaryCta": "See open roles",
+                "primaryHref": "#roles"
+              }
+            },
+            {
+              "id": "values",
+              "data": {
+                "eyebrow": "How we work",
+                "title": "What you can expect.",
+                "items": [
+                  {
+                    "title": "Async by default",
+                    "body": "Few meetings, lots of writing. Your calendar belongs to you."
+                  },
+                  {
+                    "title": "Ship something real",
+                    "body": "First-week PR is the norm. We don't believe in three-month onboarding."
+                  },
+                  {
+                    "title": "Generous tooling",
+                    "body": "Whatever you need to do your best work — laptops, software, conferences."
+                  },
+                  {
+                    "title": "Equity that matters",
+                    "body": "Real ownership, not lottery tickets. Liquid at every secondary."
+                  }
+                ]
+              }
+            },
+            {
+              "id": "roles",
+              "data": {
+                "eyebrow": "Open positions",
+                "title": "Join us.",
+                "items": [
+                  {
+                    "title": "Senior full-stack engineer",
+                    "body": "Remote · Full-time · NestJS + Next.js",
+                    "href": "/careers/senior-fullstack"
+                  },
+                  {
+                    "title": "Product designer",
+                    "body": "Remote · Full-time · Figma + design systems",
+                    "href": "/careers/product-designer"
+                  },
+                  {
+                    "title": "Developer relations",
+                    "body": "Remote · Full-time · Docs, demos, community",
+                    "href": "/careers/devrel"
+                  },
+                  {
+                    "title": "Customer success engineer",
+                    "body": "Remote · Full-time · Migrations + support",
+                    "href": "/careers/customer-success"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "cta",
+              "data": {
+                "title": "Don't see your role?",
+                "subtitle": "We're always happy to hear from sharp people. Send us a note.",
+                "primaryCta": "Email us",
+                "primaryHref": "mailto:work@mero.cms",
+                "emblemImage": "/emblem.svg"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "docs",
+        "title": "Documentation",
+        "description": "Guides, references, and tutorials for Mero CMS.",
+        "data": {
+          "sections": [
+            {
+              "id": "hero",
+              "data": {
+                "eyebrow": "Documentation",
+                "title": "Everything you need to ship with Mero.",
+                "subtitle": "Quickstarts, reference guides, and deep dives — written for the people who actually have to use it.",
+                "primaryCta": "Quickstart",
+                "primaryHref": "/docs/quickstart",
+                "secondaryCta": "API reference",
+                "secondaryHref": "/docs/api"
+              }
+            },
+            {
+              "id": "topics",
+              "data": {
+                "eyebrow": "Browse by topic",
+                "title": "Where do you want to start?",
+                "items": [
+                  {
+                    "title": "Quickstart",
+                    "body": "Five-minute setup from a fresh install.",
+                    "href": "/docs/quickstart"
+                  },
+                  {
+                    "title": "Themes",
+                    "body": "Build, package, and ship a theme.",
+                    "href": "/docs/themes"
+                  },
+                  {
+                    "title": "Plugins",
+                    "body": "Extend Mero with capabilities and tools.",
+                    "href": "/docs/plugins"
+                  },
+                  {
+                    "title": "Visual editor",
+                    "body": "Inline editing, drag-and-drop, schemas.",
+                    "href": "/docs/visual-editor"
+                  },
+                  {
+                    "title": "API",
+                    "body": "REST endpoints, auth, webhooks.",
+                    "href": "/docs/api"
+                  },
+                  {
+                    "title": "Self-hosting",
+                    "body": "Docker, Kubernetes, license setup.",
+                    "href": "/docs/self-hosting"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "changelog",
+        "title": "Changelog",
+        "description": "Every release, every fix, every quiet improvement.",
+        "data": {
+          "sections": [
+            {
+              "id": "hero",
+              "data": {
+                "eyebrow": "Changelog",
+                "title": "What's new in Mero CMS.",
+                "subtitle": "We ship every Tuesday. Here's the trail."
+              }
+            },
+            {
+              "id": "releases",
+              "data": {
+                "eyebrow": "Recent releases",
+                "title": "v1.5 → today",
+                "items": [
+                  {
+                    "title": "v1.5.0 — Visual editor (beta)",
+                    "body": "Inline editing on the public site. Section toolbar. Drag-to-reorder. Variant swaps. Public preview tokens."
+                  },
+                  {
+                    "title": "v1.4.0 — AI Studio",
+                    "body": "Per-tenant prompt routing. Brand-voice presets. SEO meta + alt-text generators."
+                  },
+                  {
+                    "title": "v1.3.0 — Multi-provider payments",
+                    "body": "Stripe, Khalti, eSewa. Idempotent webhooks. Order lifecycle hooks."
+                  },
+                  {
+                    "title": "v1.2.0 — Plugin gallery",
+                    "body": "Tier × theme compatibility matrix. One-click install. Auto-migration on enable."
+                  },
+                  {
+                    "title": "v1.1.0 — Custom collections",
+                    "body": "JSON-schema driven. Auto-generated admin UI. Public REST API per collection."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "roadmap",
+        "title": "Roadmap",
+        "description": "What we're building, in priority order.",
+        "data": {
+          "sections": [
+            {
+              "id": "hero",
+              "data": {
+                "eyebrow": "Roadmap",
+                "title": "Where Mero is going.",
+                "subtitle": "Public, opinionated, and updated weekly. Vote on what matters via your account.",
+                "primaryCta": "Suggest a feature",
+                "primaryHref": "mailto:feedback@mero.cms"
+              }
+            },
+            {
+              "id": "now",
+              "data": {
+                "eyebrow": "Shipping this quarter",
+                "title": "Now",
+                "items": [
+                  {
+                    "title": "Visual editor — GA",
+                    "body": "Section locking, undo/redo, multi-user cursors."
+                  },
+                  {
+                    "title": "Localization (i18n)",
+                    "body": "Per-locale content, fallbacks, RTL support."
+                  },
+                  {
+                    "title": "Audit log v2",
+                    "body": "Diff view on every settings change. Per-actor filters."
+                  }
+                ]
+              }
+            },
+            {
+              "id": "next",
+              "data": {
+                "eyebrow": "Next quarter",
+                "title": "Next",
+                "items": [
+                  {
+                    "title": "Workflow + approvals",
+                    "body": "Two-step publish, scheduled rollouts, role-based gates."
+                  },
+                  {
+                    "title": "Data export (GDPR)",
+                    "body": "Self-serve export of all tenant data in standard formats."
+                  },
+                  {
+                    "title": "Theme marketplace v2",
+                    "body": "Paid themes, royalties, automatic updates."
+                  }
+                ]
+              }
+            },
+            {
+              "id": "later",
+              "data": {
+                "eyebrow": "On the horizon",
+                "title": "Later",
+                "items": [
+                  {
+                    "title": "Edge image pipeline",
+                    "body": "On-the-fly resize, focal-point cropping, AVIF."
+                  },
+                  {
+                    "title": "A/B testing",
+                    "body": "Split traffic at the section level. Stats inline in the editor."
+                  },
+                  {
+                    "title": "Mobile app",
+                    "body": "iOS + Android for editors on the go."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "themes",
+        "title": "Themes",
+        "description": "Pre-built themes that drop into your Mero install.",
+        "data": {
+          "sections": [
+            {
+              "id": "hero",
+              "data": {
+                "eyebrow": "Themes",
+                "title": "Beautiful starts. No design debt.",
+                "subtitle": "Hand-built themes for marketing sites, blogs, docs, and storefronts. Install in one click."
+              }
+            },
+            {
+              "id": "themes",
+              "data": {
+                "eyebrow": "Browse the gallery",
+                "title": "Pick your starting point.",
+                "items": [
+                  {
+                    "title": "Mero Pro",
+                    "body": "The flagship marketing theme. Hero, features, pricing, blog.",
+                    "href": "/themes/mero-pro"
+                  },
+                  {
+                    "title": "Mero Docs",
+                    "body": "Documentation theme with side-nav, search, and code blocks.",
+                    "href": "/themes/mero-docs"
+                  },
+                  {
+                    "title": "Mero Storefront",
+                    "body": "Commerce-ready theme with product collections and checkout.",
+                    "href": "/themes/mero-storefront"
+                  },
+                  {
+                    "title": "Mero Journal",
+                    "body": "A minimal blog theme — typography first, chrome second.",
+                    "href": "/themes/mero-journal"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "cta",
+              "data": {
+                "title": "Need something custom?",
+                "subtitle": "Our partner agencies build bespoke themes for teams who need something specific.",
+                "primaryCta": "Find a partner",
+                "primaryHref": "/contact?topic=partners",
+                "emblemImage": "/emblem.svg"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "legal-terms",
+        "title": "Terms of service",
+        "description": "The terms governing your use of Mero CMS.",
+        "data": {
+          "sections": [
+            {
+              "id": "hero",
+              "data": {
+                "eyebrow": "Legal",
+                "title": "Terms of service",
+                "subtitle": "Last updated: April 2026."
+              }
+            },
+            {
+              "id": "body",
+              "data": {
+                "title": "Agreement",
+                "body": "## 1. Introduction\n\nThese Terms govern your use of Mero CMS. By using the service, you agree to be bound by these Terms.\n\n## 2. Accounts\n\nYou are responsible for keeping your account credentials secure. You must be at least 18 years old to create an account.\n\n## 3. Acceptable use\n\nYou may not use the service to host illegal content, send spam, or attempt to disrupt the service for other users.\n\n## 4. Payments\n\nLicenses are sold one-time. Refunds are available within 14 days of purchase, no questions asked.\n\n## 5. Liability\n\nThe service is provided as-is. We will not be liable for any indirect or consequential damages.\n\n## 6. Changes\n\nWe may update these Terms from time to time. We'll notify you of material changes by email."
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "legal-privacy",
+        "title": "Privacy policy",
+        "description": "How we collect, use, and protect your data.",
+        "data": {
+          "sections": [
+            {
+              "id": "hero",
+              "data": {
+                "eyebrow": "Legal",
+                "title": "Privacy policy",
+                "subtitle": "Last updated: April 2026."
+              }
+            },
+            {
+              "id": "body",
+              "data": {
+                "title": "Your privacy",
+                "body": "## What we collect\n\nAccount info (name, email), billing info (held by Stripe / Khalti / eSewa — never us), and product usage telemetry.\n\n## What we don't collect\n\nWe do not sell your data. We do not run third-party ad pixels. We do not read your content.\n\n## Where data lives\n\nSelf-hosted: your servers, your rules. Cloud: Frankfurt (EU customers) or Singapore (APAC). You choose at signup.\n\n## Your rights\n\nExport, delete, or correct your data at any time from Settings → Data.\n\n## Contact\n\nQuestions? privacy@mero.cms."
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "legal-security",
+        "title": "Security",
+        "description": "How we protect customer data.",
+        "data": {
+          "sections": [
+            {
+              "id": "hero",
+              "data": {
+                "eyebrow": "Legal",
+                "title": "Security at Mero",
+                "subtitle": "Defense-in-depth, not security theater."
+              }
+            },
+            {
+              "id": "practices",
+              "data": {
+                "eyebrow": "Practices",
+                "title": "What we do.",
+                "items": [
+                  {
+                    "title": "Encryption",
+                    "body": "TLS 1.3 in transit. AES-256 at rest. Per-tenant key wrapping."
+                  },
+                  {
+                    "title": "Authentication",
+                    "body": "JWT + refresh-token rotation. WebAuthn 2FA on every account."
+                  },
+                  {
+                    "title": "Audit log",
+                    "body": "Every settings change is logged with actor, IP, and diff."
+                  },
+                  {
+                    "title": "Backups",
+                    "body": "Hourly snapshots, 30-day retention, monthly restore drills."
+                  },
+                  {
+                    "title": "Disclosure",
+                    "body": "Bug bounty live. 90-day disclosure SLA. security.txt published."
+                  },
+                  {
+                    "title": "Compliance",
+                    "body": "SOC 2 Type II in progress. GDPR-ready DPA available on request."
+                  }
+                ]
+              }
+            },
+            {
+              "id": "body",
+              "data": {
+                "title": "Reporting a vulnerability",
+                "body": "Email security@mero.cms with steps to reproduce. We acknowledge within 24 hours and triage within 72. Eligible reports earn bounties up to $5,000."
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slug": "legal-dpa",
+        "title": "Data processing addendum",
+        "description": "GDPR-aligned terms for processing personal data.",
+        "data": {
+          "sections": [
+            {
+              "id": "hero",
+              "data": {
+                "eyebrow": "Legal",
+                "title": "Data processing addendum",
+                "subtitle": "Last updated: April 2026."
+              }
+            },
+            {
+              "id": "body",
+              "data": {
+                "title": "DPA",
+                "body": "## 1. Roles\n\nYou are the Controller. Mero CMS is the Processor.\n\n## 2. Subject matter\n\nProcessing of personal data submitted to the service by your end users in the course of providing the service.\n\n## 3. Sub-processors\n\nA current list is published at /legal/sub-processors. We notify you 30 days in advance of any addition.\n\n## 4. Security\n\nWe implement and maintain the technical and organizational measures described in our Security page.\n\n## 5. International transfers\n\nFor EU customers, we rely on EU Standard Contractual Clauses. Data residency in Frankfurt is available.\n\n## 6. Termination\n\nUpon termination, we delete or return all personal data within 30 days, at your option."
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "testimonials": [
+      {
+        "name": "Anjali Shrestha",
+        "role": "Editor-in-Chief",
+        "company": "Paperline",
+        "quote": "Our editorial team stopped pinging engineering for content changes. That alone paid for the licence in week one.",
+        "rating": 5
+      },
+      {
+        "name": "Rohan Kapoor",
+        "role": "Founder",
+        "company": "Sequence",
+        "quote": "We migrated from WordPress in two days. The visual editor is genuinely better than what we replaced.",
+        "rating": 5
+      },
+      {
+        "name": "Maya Patel",
+        "role": "Marketing Lead",
+        "company": "Atlas",
+        "quote": "AI Studio writes our blog drafts in our voice. I edit, I don't rewrite.",
+        "rating": 5
+      },
+      {
+        "name": "Daniel Cho",
+        "role": "Tech Lead",
+        "company": "Union",
+        "quote": "The capability matrix is the cleanest tier-gating I've seen. We unlock things by paying, not by integrating.",
+        "rating": 5
+      },
+      {
+        "name": "Priya Joshi",
+        "role": "Content Strategist",
+        "company": "Kite",
+        "quote": "Custom collections meant we shipped a portfolio CMS in an afternoon. The schema-to-editor mapping just works.",
+        "rating": 5
+      },
+      {
+        "name": "Saugat Pahari",
+        "role": "Founder",
+        "company": "Blendwit",
+        "quote": "We dogfood Mero for our own marketing site. Every feature ships from the team that uses it daily.",
+        "rating": 5
+      }
+    ],
+    "blogCategories": [
+      {
+        "slug": "product",
+        "name": "Product",
+        "description": "Releases, behind-the-scenes, what we built and why."
+      },
+      {
+        "slug": "engineering",
+        "name": "Engineering",
+        "description": "How we build Mero — architecture decisions, tech notes."
+      },
+      {
+        "slug": "guides",
+        "name": "Guides",
+        "description": "Tutorials, how-tos, and walkthroughs."
+      }
+    ],
+    "posts": [
+      {
+        "slug": "introducing-mero-cms-1-4",
+        "title": "Introducing Mero CMS 1.4",
+        "excerpt": "Forms in Basic, contract-driven branding, and four new starter themes — what's new in the April 2026 release.",
+        "content": "<p>1.4 is the biggest release we've shipped. Here's what changed and why.</p>",
+        "status": "PUBLISHED",
+        "category": "product"
+      },
+      {
+        "slug": "why-we-rebuilt-pricing",
+        "title": "Why we rebuilt pricing",
+        "excerpt": "Single prices replaced ranges, forms moved to Basic, and Mero Cloud got its own tier table.",
+        "content": "<p>Pricing was creating signup friction. Here's how we fixed it.</p>",
+        "status": "PUBLISHED",
+        "category": "product"
+      },
+      {
+        "slug": "the-branding-contract",
+        "title": "How the branding contract works",
+        "excerpt": "Themes declare the CSS variables they respect; the admin renders only those controls. Here's the architecture.",
+        "content": "<p>A simple JSON contract removed half the bespoke admin code we used to maintain.</p>",
+        "status": "PUBLISHED",
+        "category": "engineering"
+      }
+    ],
+    "team": [
+      {
+        "name": "Saugat Pahari",
+        "role": "Founder",
+        "bio": "Building Mero CMS from Kathmandu. Previously product engineer at a Y Combinator startup.",
+        "isActive": true,
+        "order": 1
+      },
+      {
+        "name": "Aarav Sharma",
+        "role": "Engineering Lead",
+        "bio": "10 years across Rails, Node, and now NestJS. Believes in boring tech that ships.",
+        "isActive": true,
+        "order": 2
+      },
+      {
+        "name": "Niraj Khatri",
+        "role": "Design Lead",
+        "bio": "Designs systems that age well. Lighthouse 100s, accessible by default.",
+        "isActive": true,
+        "order": 3
+      }
+    ],
+    "services": [
+      {
+        "name": "Theme development",
+        "slug": "theme-development",
+        "description": "Custom themes built against the Mero contract. Fixed-price, 4-week sprint.",
+        "isActive": true,
+        "order": 1
+      },
+      {
+        "name": "Plugin development",
+        "slug": "plugin-development",
+        "description": "Bespoke plugins shipped to your install or to the public marketplace.",
+        "isActive": true,
+        "order": 2
+      },
+      {
+        "name": "Migration",
+        "slug": "migration",
+        "description": "Move from WordPress, Contentful, or Strapi to Mero. We handle data, redirects, and DNS cutover.",
+        "isActive": true,
+        "order": 3
+      }
+    ]
+  },
+  "deployedUrl": "http://localhost:3002",
+  "widgetCatalog": [
+    {
+      "type": "Hero",
+      "name": "Hero",
+      "description": "Big headline + subhead + dual CTAs. The signature top-of-page section.",
+      "icon": "Sparkles",
+      "category": "headers",
+      "premium": false,
+      "fields": [
+        {
+          "key": "_variant",
+          "type": "select",
+          "label": "Design",
+          "description": "Pick a Hero layout. All variants share the same content fields — switching is non-destructive.",
+          "options": [
+            "split",
+            "centered",
+            "minimal"
+          ]
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Headline",
+          "required": true
+        },
+        {
+          "key": "subtitle",
+          "type": "text",
+          "label": "Subhead"
+        },
+        {
+          "key": "primaryCta",
+          "type": "string",
+          "label": "Primary CTA label"
+        },
+        {
+          "key": "primaryHref",
+          "type": "string",
+          "label": "Primary CTA URL"
+        },
+        {
+          "key": "secondaryCta",
+          "type": "string",
+          "label": "Secondary CTA label"
+        },
+        {
+          "key": "secondaryHref",
+          "type": "string",
+          "label": "Secondary CTA URL"
+        },
+        {
+          "key": "trustText",
+          "type": "string",
+          "label": "Trust line"
+        },
+        {
+          "key": "heroImage",
+          "type": "image",
+          "label": "Hero illustration",
+          "description": "The character / illustration shown on the right of the hero. Pick from your media library or paste a URL. Leave empty to hide."
+        },
+        {
+          "key": "emblemImage",
+          "type": "image",
+          "label": "Emblem watermark",
+          "description": "Faint watermark behind the hero illustration. Set to 'none' to hide entirely."
+        },
+        {
+          "key": "dashboardVariant",
+          "type": "select",
+          "label": "Dashboard mockup",
+          "description": "The tilted admin UI shown behind the character illustration (split variant only). Pick a variant or hide entirely.",
+          "options": [
+            "overview",
+            "pages",
+            "analytics",
+            "none"
+          ]
+        },
+        {
+          "key": "dashboardImage",
+          "type": "image",
+          "label": "Custom dashboard image",
+          "description": "Replace the built-in mockup with your own screenshot. Useful when the customer's actual product is more compelling than a generic admin UI. Leave empty to use the built-in."
+        }
+      ]
+    },
+    {
+      "type": "PageHero",
+      "name": "Page Hero",
+      "description": "Compact hero for inner pages — eyebrow + title + subtitle + CTAs.",
+      "icon": "Heading1",
+      "category": "headers",
+      "premium": false,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Headline",
+          "required": true
+        },
+        {
+          "key": "subtitle",
+          "type": "text",
+          "label": "Subhead"
+        },
+        {
+          "key": "primaryCta",
+          "type": "string",
+          "label": "Primary CTA label"
+        },
+        {
+          "key": "primaryHref",
+          "type": "string",
+          "label": "Primary CTA URL"
+        },
+        {
+          "key": "secondaryCta",
+          "type": "string",
+          "label": "Secondary CTA label"
+        },
+        {
+          "key": "secondaryHref",
+          "type": "string",
+          "label": "Secondary CTA URL"
+        }
+      ]
+    },
+    {
+      "type": "RichContent",
+      "name": "Rich Content",
+      "description": "Markdown-formatted body text. Use for legal pages, articles, long-form copy.",
+      "icon": "FileText",
+      "category": "content",
+      "premium": false,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Section title"
+        },
+        {
+          "key": "body",
+          "type": "richtext",
+          "label": "Body (Markdown supported)"
+        }
+      ]
+    },
+    {
+      "type": "ListSection",
+      "name": "List Section",
+      "description": "Title + an array of items (each with title, body, optional link). Great for case studies, careers, doc tiles.",
+      "icon": "List",
+      "category": "content",
+      "premium": false,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Section title"
+        },
+        {
+          "key": "subtitle",
+          "type": "text",
+          "label": "Subhead"
+        },
+        {
+          "key": "items",
+          "type": "json",
+          "label": "Items",
+          "itemShape": [
+            {
+              "key": "title",
+              "type": "string",
+              "label": "Title"
+            },
+            {
+              "key": "body",
+              "type": "text",
+              "label": "Body"
+            },
+            {
+              "key": "href",
+              "type": "string",
+              "label": "Link (optional)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "LogoStrip",
+      "name": "Logo Strip",
+      "description": "Eyebrow + a horizontal row of customer / partner logos.",
+      "icon": "Building2",
+      "category": "social-proof",
+      "premium": false,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "logos",
+          "type": "text",
+          "label": "Logos (newline-separated)"
+        }
+      ]
+    },
+    {
+      "type": "Stats",
+      "name": "Stats Band",
+      "description": "Four chunky numbers with labels. Great for credibility metrics.",
+      "icon": "BarChart3",
+      "category": "social-proof",
+      "premium": false,
+      "fields": [
+        {
+          "key": "items",
+          "type": "json",
+          "label": "Stats"
+        }
+      ]
+    },
+    {
+      "type": "FinalCTA",
+      "name": "Final CTA",
+      "description": "Big closing call-to-action — title + subtitle + dual buttons.",
+      "icon": "Megaphone",
+      "category": "headers",
+      "premium": false,
+      "fields": [
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Title"
+        },
+        {
+          "key": "subtitle",
+          "type": "text",
+          "label": "Subtitle"
+        },
+        {
+          "key": "primaryCta",
+          "type": "string",
+          "label": "Primary CTA label"
+        },
+        {
+          "key": "primaryHref",
+          "type": "string",
+          "label": "Primary CTA URL"
+        },
+        {
+          "key": "secondaryCta",
+          "type": "string",
+          "label": "Secondary CTA label"
+        },
+        {
+          "key": "secondaryHref",
+          "type": "string",
+          "label": "Secondary CTA URL"
+        },
+        {
+          "key": "trustText",
+          "type": "string",
+          "label": "Trust line"
+        },
+        {
+          "key": "emblemImage",
+          "type": "image",
+          "label": "Decorative emblem",
+          "description": "Small emblem shown beside the CTA copy. Leave empty for the default brand emblem."
+        }
+      ]
+    },
+    {
+      "type": "FeatureBlocks",
+      "name": "Feature Blocks",
+      "description": "Grid of feature cards with icon, title, body, optional bullet list.",
+      "icon": "LayoutGrid",
+      "category": "content",
+      "premium": true,
+      "fields": [
+        {
+          "key": "_variant",
+          "type": "select",
+          "label": "Design",
+          "description": "Pick a feature-block layout. All variants share the same data.",
+          "options": [
+            "alternating",
+            "grid-3up",
+            "iconed-list"
+          ]
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Section title"
+        },
+        {
+          "key": "subtitle",
+          "type": "text",
+          "label": "Section subtitle"
+        },
+        {
+          "key": "blocks",
+          "type": "json",
+          "label": "Feature blocks",
+          "itemShape": [
+            {
+              "key": "image",
+              "type": "image",
+              "label": "Block image",
+              "description": "Visual shown alongside this feature block."
+            },
+            {
+              "key": "imageAlt",
+              "type": "string",
+              "label": "Image alt text",
+              "description": "Accessibility — describe the image for screen readers."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "UseCases",
+      "name": "Use Cases",
+      "description": "Three columns of use-case stories with icon + title + body. Best on landing pages.",
+      "icon": "Compass",
+      "category": "content",
+      "premium": true,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Title"
+        },
+        {
+          "key": "subtitle",
+          "type": "text",
+          "label": "Subtitle"
+        },
+        {
+          "key": "cases",
+          "type": "json",
+          "label": "Cases",
+          "itemShape": [
+            {
+              "key": "character",
+              "type": "image",
+              "label": "Character image",
+              "description": "Optional illustration shown beside this use case."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "PricingTeaser",
+      "name": "Pricing Teaser",
+      "description": "Three-tier pricing table with feature lists, price, and a CTA per tier.",
+      "icon": "DollarSign",
+      "category": "commerce",
+      "premium": true,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Title"
+        },
+        {
+          "key": "subtitle",
+          "type": "text",
+          "label": "Subtitle"
+        },
+        {
+          "key": "personal",
+          "type": "json",
+          "label": "Personal tiers"
+        },
+        {
+          "key": "organizational",
+          "type": "json",
+          "label": "Organizational tiers"
+        }
+      ]
+    },
+    {
+      "type": "Testimonials",
+      "name": "Testimonials Carousel",
+      "description": "Sliding carousel of customer quotes with name, role, optional avatar.",
+      "icon": "Quote",
+      "category": "social-proof",
+      "premium": true,
+      "fields": [
+        {
+          "key": "_variant",
+          "type": "select",
+          "label": "Design",
+          "description": "Pick a testimonials layout: carousel (horizontal scroll), grid (3-up cards), or quote-tile (single big quote).",
+          "options": [
+            "carousel",
+            "grid",
+            "quote-tile"
+          ]
+        },
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Title"
+        },
+        {
+          "key": "subtitle",
+          "type": "text",
+          "label": "Subtitle"
+        },
+        {
+          "key": "_managedNote",
+          "type": "managed",
+          "label": "Testimonials content",
+          "managedLabel": "Testimonials",
+          "managedHref": "/dashboard/testimonials",
+          "description": "Testimonials shown on this section come from your Testimonials collection. Add, edit, or reorder them there — the rendered section automatically reflects the latest list."
+        }
+      ]
+    },
+    {
+      "type": "FAQ",
+      "name": "FAQ Accordion",
+      "description": "Expandable Q&A list. Click a question to reveal the answer.",
+      "icon": "HelpCircle",
+      "category": "content",
+      "premium": true,
+      "fields": [
+        {
+          "key": "_variant",
+          "type": "select",
+          "label": "Design",
+          "description": "Pick a FAQ layout: accordion (expandable), two-column (Q-on-left), or inline (flat list).",
+          "options": [
+            "accordion",
+            "two-column",
+            "inline"
+          ]
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Title"
+        },
+        {
+          "key": "items",
+          "type": "json",
+          "label": "Q&A"
+        }
+      ]
+    },
+    {
+      "type": "ContactForm",
+      "name": "Contact Form",
+      "description": "Customizable contact form — name, email, message, custom submit label.",
+      "icon": "Mail",
+      "category": "forms",
+      "premium": true,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Headline"
+        },
+        {
+          "key": "subtitle",
+          "type": "text",
+          "label": "Subhead"
+        },
+        {
+          "key": "submitLabel",
+          "type": "string",
+          "label": "Submit button label"
+        },
+        {
+          "key": "successText",
+          "type": "text",
+          "label": "Success message"
+        },
+        {
+          "key": "email",
+          "type": "string",
+          "label": "Reply-to email"
+        },
+        {
+          "key": "phone",
+          "type": "string",
+          "label": "Phone (optional)"
+        },
+        {
+          "key": "address",
+          "type": "text",
+          "label": "Address (optional)"
+        }
+      ]
+    },
+    {
+      "type": "Carousel",
+      "name": "Carousel",
+      "description": "Auto-rotating slides with prev/next + dots. Hero replacement for product launches.",
+      "icon": "GalleryHorizontal",
+      "category": "media",
+      "premium": true,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Section title"
+        },
+        {
+          "key": "interval",
+          "type": "slider",
+          "label": "Auto-rotate (ms)",
+          "min": 0,
+          "max": 15000,
+          "step": 500,
+          "unit": "ms"
+        },
+        {
+          "key": "slides",
+          "type": "repeater",
+          "label": "Slides",
+          "itemSchema": [
+            {
+              "key": "title",
+              "type": "string",
+              "label": "Title"
+            },
+            {
+              "key": "body",
+              "type": "textarea",
+              "label": "Body"
+            },
+            {
+              "key": "image",
+              "type": "image",
+              "label": "Background image"
+            },
+            {
+              "key": "cta",
+              "type": "string",
+              "label": "CTA label"
+            },
+            {
+              "key": "href",
+              "type": "string",
+              "label": "CTA URL"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "VideoEmbed",
+      "name": "Video",
+      "description": "Embed YouTube, Vimeo, or a direct MP4. Lazy-loaded iframe, custom poster optional.",
+      "icon": "Play",
+      "category": "media",
+      "premium": true,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Section title"
+        },
+        {
+          "key": "subtitle",
+          "type": "textarea",
+          "label": "Subtitle"
+        },
+        {
+          "key": "url",
+          "type": "string",
+          "label": "Video URL",
+          "placeholder": "https://www.youtube.com/watch?v=…"
+        },
+        {
+          "key": "poster",
+          "type": "image",
+          "label": "Poster (mp4 only)"
+        },
+        {
+          "key": "aspectRatio",
+          "type": "select",
+          "label": "Aspect ratio",
+          "options": [
+            "16 / 9",
+            "4 / 3",
+            "1 / 1",
+            "21 / 9"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Gallery",
+      "name": "Gallery",
+      "description": "Responsive image grid with built-in lightbox. Captions optional.",
+      "icon": "Images",
+      "category": "media",
+      "premium": true,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Section title"
+        },
+        {
+          "key": "columns",
+          "type": "select",
+          "label": "Columns",
+          "options": [
+            "2",
+            "3",
+            "4"
+          ]
+        },
+        {
+          "key": "items",
+          "type": "repeater",
+          "label": "Images",
+          "itemSchema": [
+            {
+              "key": "image",
+              "type": "image",
+              "label": "Image"
+            },
+            {
+              "key": "caption",
+              "type": "string",
+              "label": "Caption"
+            },
+            {
+              "key": "alt",
+              "type": "string",
+              "label": "Alt text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Accordion",
+      "name": "Accordion",
+      "description": "Collapsible disclosure list — long-form Q&A, install steps, troubleshooting.",
+      "icon": "ChevronsUpDown",
+      "category": "content",
+      "premium": true,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Section title"
+        },
+        {
+          "key": "exclusive",
+          "type": "select",
+          "label": "Exclusive open",
+          "options": [
+            "false",
+            "true"
+          ]
+        },
+        {
+          "key": "items",
+          "type": "repeater",
+          "label": "Items",
+          "itemSchema": [
+            {
+              "key": "title",
+              "type": "string",
+              "label": "Heading"
+            },
+            {
+              "key": "body",
+              "type": "textarea",
+              "label": "Body"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Tabs",
+      "name": "Tabs",
+      "description": "Tab strip + content panes. Great for \"how it works\" walkthroughs and role-based content.",
+      "icon": "PanelTop",
+      "category": "content",
+      "premium": true,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Section title"
+        },
+        {
+          "key": "tabs",
+          "type": "repeater",
+          "label": "Tabs",
+          "itemSchema": [
+            {
+              "key": "label",
+              "type": "string",
+              "label": "Tab label"
+            },
+            {
+              "key": "body",
+              "type": "textarea",
+              "label": "Body"
+            },
+            {
+              "key": "image",
+              "type": "image",
+              "label": "Side image"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Countdown",
+      "name": "Countdown",
+      "description": "Live-updating timer to a target date. Days / hours / minutes / seconds tiles.",
+      "icon": "Timer",
+      "category": "marketing",
+      "premium": true,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Headline"
+        },
+        {
+          "key": "subtitle",
+          "type": "textarea",
+          "label": "Subhead"
+        },
+        {
+          "key": "targetDate",
+          "type": "string",
+          "label": "Target date (ISO)",
+          "placeholder": "2026-12-31T23:59:59Z"
+        },
+        {
+          "key": "expiredText",
+          "type": "string",
+          "label": "Expired copy"
+        }
+      ]
+    },
+    {
+      "type": "PricingTable",
+      "name": "Pricing Table",
+      "description": "Full pricing comparison: 2-4 tiers with feature checklists and a featured ring.",
+      "icon": "Receipt",
+      "category": "commerce",
+      "premium": true,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Section title"
+        },
+        {
+          "key": "subtitle",
+          "type": "textarea",
+          "label": "Subtitle"
+        },
+        {
+          "key": "footnote",
+          "type": "textarea",
+          "label": "Footnote"
+        },
+        {
+          "key": "tiers",
+          "type": "repeater",
+          "label": "Tiers",
+          "itemSchema": [
+            {
+              "key": "name",
+              "type": "string",
+              "label": "Name"
+            },
+            {
+              "key": "price",
+              "type": "string",
+              "label": "Price"
+            },
+            {
+              "key": "period",
+              "type": "string",
+              "label": "Period (/mo, one-time...)"
+            },
+            {
+              "key": "description",
+              "type": "string",
+              "label": "Description"
+            },
+            {
+              "key": "cta",
+              "type": "string",
+              "label": "CTA label"
+            },
+            {
+              "key": "href",
+              "type": "string",
+              "label": "CTA URL"
+            },
+            {
+              "key": "featured",
+              "type": "select",
+              "label": "Featured?",
+              "options": [
+                "false",
+                "true"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "ComparisonTable",
+      "name": "Comparison Table",
+      "description": "Side-by-side feature comparison vs. competitors. Highlight your column.",
+      "icon": "Table",
+      "category": "commerce",
+      "premium": true,
+      "fields": [
+        {
+          "key": "eyebrow",
+          "type": "string",
+          "label": "Eyebrow"
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": "Section title"
+        },
+        {
+          "key": "subtitle",
+          "type": "textarea",
+          "label": "Subtitle"
+        },
+        {
+          "key": "columns",
+          "type": "json",
+          "label": "Column headers (array of strings)"
+        },
+        {
+          "key": "highlightColumn",
+          "type": "number",
+          "label": "Highlight column index"
+        },
+        {
+          "key": "rows",
+          "type": "json",
+          "label": "Rows ({feature, description, values[]})"
+        }
+      ]
+    }
+  ],
+  "widgetCategories": [
+    {
+      "key": "headers",
+      "label": "Headers & CTAs",
+      "description": "Big top-of-page sections and call-to-action blocks."
+    },
+    {
+      "key": "content",
+      "label": "Content",
+      "description": "Body content — text, lists, features, FAQs."
+    },
+    {
+      "key": "social-proof",
+      "label": "Social Proof",
+      "description": "Logos, stats, testimonials."
+    },
+    {
+      "key": "commerce",
+      "label": "Commerce",
+      "description": "Pricing tables and storefront widgets."
+    },
+    {
+      "key": "forms",
+      "label": "Forms",
+      "description": "Contact, newsletter, signup forms."
+    },
+    {
+      "key": "media",
+      "label": "Media",
+      "description": "Images, video, embeds."
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+# Normalize line endings in the repo to LF, but check out as native on
+# each developer's OS. Without this, Windows + Linux + macOS contributors
+# see thousands of phantom changes whenever git switches a checkout.
+#
+# After committing this file the first time, run:
+#     git add --renormalize .
+#     git commit -m "Normalize line endings"
+# to apply the rule retroactively to existing files.
+
+*               text=auto eol=lf
+
+# Shell scripts must always be LF — running them with CRLF endings on
+# Linux fails with `bad interpreter: /bin/bash^M` and similar.
+*.sh            text eol=lf
+
+# Windows scripts must always be CRLF.
+*.bat           text eol=crlf
+*.cmd           text eol=crlf
+*.ps1           text eol=crlf
+
+# Source code — explicit LF for portability.
+*.ts            text eol=lf
+*.tsx           text eol=lf
+*.js            text eol=lf
+*.jsx           text eol=lf
+*.mjs           text eol=lf
+*.cjs           text eol=lf
+*.json          text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+*.css           text eol=lf
+*.scss          text eol=lf
+*.html          text eol=lf
+*.md            text eol=lf
+*.prisma        text eol=lf
+*.sql           text eol=lf
+Dockerfile      text eol=lf
+*.dockerignore  text eol=lf
+*.gitignore     text eol=lf
+*.gitattributes text eol=lf
+
+# Binary / generated — never touch.
+*.png           binary
+*.jpg           binary
+*.jpeg          binary
+*.gif           binary
+*.webp          binary
+*.avif          binary
+*.ico           binary
+*.svg           text eol=lf
+*.woff          binary
+*.woff2         binary
+*.ttf           binary
+*.eot           binary
+*.pdf           binary
+*.docx          binary
+*.xlsx          binary
+*.pptx          binary
+*.zip           binary
+*.gz            binary
+*.tar           binary

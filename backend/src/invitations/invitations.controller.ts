@@ -6,6 +6,8 @@ import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Permission } from '../auth/permissions.enum';
 import { AccessControlService } from '../auth/access-control.service';
+import { PackageEnforcementGuard } from '../packages/package-enforcement.guard';
+import { RequireLimit, PackageLimit } from '../packages/require-limit.decorator';
 
 @Controller('invitations')
 export class InvitationsController {
@@ -14,8 +16,9 @@ export class InvitationsController {
         private readonly accessControl: AccessControlService,
     ) { }
 
-    @UseGuards(JwtAuthGuard, IpGuard, PermissionsGuard)
+    @UseGuards(JwtAuthGuard, IpGuard, PermissionsGuard, PackageEnforcementGuard)
     @RequirePermissions(Permission.USERS_CREATE)
+    @RequireLimit(PackageLimit.TEAM_SIZE)
     @Post()
     async create(@Body() data: { email: string; role: string; ips: string[] }, @Req() req: any) {
         try {

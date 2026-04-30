@@ -1,0 +1,79 @@
+name: PR — Vercel Preview Comment
+
+# Comments the Vercel preview URL on every pull request, so reviewers
+# don't have to hunt for it in the Vercel dashboard.
+#
+# Vercel posts its own preview-URL comment via the GitHub integration
+# already, but only on the main repo — not on forks. This workflow
+# adds a friendlier link block on top of Vercel's default comment, and
+# also prints the staging Render URL alongside so reviewers can see
+# both halves of the stack at once.
+#
+# How it computes the preview URL:
+#   Vercel's default URL pattern for branch deploys is
+#   <project>-git-<branch>-<team>.vercel.app. We can't reliably guess
+#   that without knowing the team slug, so this workflow falls back to
+#   linking the Vercel dashboard for the project. If you've set
+#   VERCEL_PROJECT in repo secrets we link directly.
+
+on:
+    pull_request:
+        types: [opened, synchronize, reopened]
+        branches: [develop, main]
+
+jobs:
+    comment:
+        name: Post preview links
+        runs-on: ubuntu-latest
+        permissions:
+            pull-requests: write
+        steps:
+            - name: Post or update preview comment
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const branch = context.payload.pull_request.head.ref;
+                      const project = '${{ secrets.VERCEL_PROJECT }}';
+                      const stagingApi = '${{ secrets.STAGING_API_URL }}';
+
+                      const previewLink = project
+                          ? `https://${project}-git-${branch.replace(/[^a-z0-9-]/gi, '-').toLowerCase()}.vercel.app`
+                          : 'https://vercel.com/dashboard (project secret VERCEL_PROJECT not set)';
+
+                      const body = [
+                          '## Preview environment',
+                          '',
+                          `**Frontend (Vercel preview):** ${previewLink}`,
+                          stagingApi
+                              ? `**Backend (staging API):** ${stagingApi}`
+                              : '**Backend:** _STAGING_API_URL secret not configured — see ops runbook_',
+                          '',
+                          '_Auto-posted by `.github/workflows/pr-preview-comment.yml`. Vercel\'s native bot will post the canonical preview URL once the build finishes — that one always works._',
+                      ].join('\n');
+
+                      // Find existing comment from this workflow and update
+                      // instead of spamming on every push.
+                      const { data: comments } = await github.rest.issues.listComments({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: context.payload.pull_request.number,
+                      });
+                      const existing = comments.find((c) =>
+                          c.user.type === 'Bot' &&
+                          c.body && c.body.startsWith('## Preview environment')
+                      );
+                      if (existing) {
+                          await github.rest.issues.updateComment({
+                              owner: context.repo.owner,
+                              repo: context.repo.repo,
+                              comment_id: existing.id,
+                              body,
+                          });
+                      } else {
+                          await github.rest.issues.createComment({
+                              owner: context.repo.owner,
+                              repo: context.repo.repo,
+                              issue_number: context.payload.pull_request.number,
+                              body,
+                          });
+                      }

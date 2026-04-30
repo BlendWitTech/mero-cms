@@ -8,11 +8,16 @@ import {
     ClipboardDocumentListIcon,
     XMarkIcon,
     ChevronRightIcon,
+    EyeIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { apiRequest } from '@/lib/api';
 import { useNotification } from '@/context/NotificationContext';
 import AlertDialog from '@/components/ui/AlertDialog';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import PageHeader from '@/components/ui/PageHeader';
+import EmptyState from '@/components/ui/EmptyState';
+import FilterBar from '@/components/ui/FilterBar';
 
 type FieldType = 'text' | 'email' | 'tel' | 'textarea' | 'number' | 'select' | 'checkbox' | 'date';
 
@@ -62,7 +67,10 @@ export default function FormsPage() {
     const [modalOpen, setModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [navigatingId, setNavigatingId] = useState<string | null>(null);
 
     const emptyForm = {
         name: '', slug: '', description: '',
@@ -161,6 +169,7 @@ export default function FormsPage() {
 
     async function handleDelete() {
         if (!deleteId) return;
+        setIsDeleting(true);
         try {
             await apiRequest(`/forms/${deleteId}`, { method: 'DELETE' });
             showToast('Form deleted', 'success');
@@ -168,171 +177,201 @@ export default function FormsPage() {
             fetchForms();
         } catch {
             showToast('Delete failed', 'error');
+        } finally {
+            setIsDeleting(false);
         }
     }
 
     return (
-        <div className="p-6 max-w-5xl mx-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-50 rounded-xl">
-                        <ClipboardDocumentListIcon className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-black text-slate-900">Forms</h1>
-                        <p className="text-sm text-slate-500">Build forms and manage submissions</p>
-                    </div>
-                </div>
-                <button
-                    onClick={openNew}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors"
-                >
-                    <PlusIcon className="h-4 w-4" />
-                    New Form
-                </button>
-            </div>
-
-            {/* List */}
-            {isLoading ? (
-                <div className="space-y-3">
-                    {[1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-50 animate-pulse rounded-2xl" />)}
-                </div>
-            ) : forms.length === 0 ? (
-                <div className="text-center py-20 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                    <ClipboardDocumentListIcon className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-500 font-semibold">No forms yet</p>
-                    <p className="text-sm text-slate-400 mb-4">Create a form to collect submissions from your website</p>
-                    <button onClick={openNew} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors">
-                        Create your first form
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <PageHeader 
+                title="Content" 
+                accent="Forms" 
+                subtitle="Build custom forms and manage user submissions"
+                actions={
+                    <button
+                        onClick={openNew}
+                        className="btn-primary px-6 py-3 text-sm"
+                        disabled={isLoading}
+                    >
+                        <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                        New Form
                     </button>
-                </div>
-            ) : (
-                <div className="space-y-3">
-                    {forms.map(f => (
-                        <div
-                            key={f.id}
-                            className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between hover:border-blue-200 hover:shadow-sm transition-all group"
-                        >
-                            <button
-                                className="flex items-center gap-4 flex-1 text-left"
-                                onClick={() => router.push(`/dashboard/forms/${f.id}`)}
-                            >
-                                <div className="p-2 bg-slate-50 rounded-xl group-hover:bg-blue-50 transition-colors">
-                                    <ClipboardDocumentListIcon className="h-5 w-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-0.5">
-                                        <span className="font-bold text-slate-900 text-sm">{f.name}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-xs text-slate-400">
-                                        <span>/{f.slug}</span>
-                                        <span>{f.fields?.length ?? 0} fields</span>
-                                        <span className="font-semibold text-slate-600">{f._count?.submissions ?? 0} submissions</span>
-                                        {f.description && <span className="truncate max-w-xs">{f.description}</span>}
-                                    </div>
-                                </div>
-                                <ChevronRightIcon className="h-4 w-4 text-slate-300 group-hover:text-blue-400 transition-colors mr-2" />
-                            </button>
-                            <div className="flex items-center gap-1 ml-2">
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); openEdit(f); }}
-                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                >
-                                    <PencilSquareIcon className="h-4 w-4" />
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setDeleteId(f.id); }}
-                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                >
-                                    <TrashIcon className="h-4 w-4" />
-                                </button>
-                            </div>
+                }
+            />
+
+            <FilterBar 
+                search={{
+                    value: searchQuery,
+                    onChange: setSearchQuery,
+                    placeholder: "Find form by name or slug…"
+                }}
+            />
+
+            {/* Unified Content Card */}
+            <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-900/5 border border-slate-100 dark:border-white/[0.06] overflow-hidden transition-all duration-500">
+                {isLoading ? (
+                    <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+                        <LoadingSpinner size="lg" />
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Loading Forms...</p>
+                    </div>
+                ) : forms.length === 0 ? (
+                    <div className="py-24">
+                        <EmptyState 
+                            naked
+                            icon={ClipboardDocumentListIcon}
+                            title="No Forms Found"
+                            description="Build custom forms to collect feedback, leads, or any other user data."
+                            action={{
+                                label: "Create your first form",
+                                onClick: openNew
+                            }}
+                        />
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                            <table className="w-full min-w-[700px] text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.02]">
+                                        <th className="pl-10 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Form Details</th>
+                                        <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Structure</th>
+                                        <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Engagement</th>
+                                        <th className="pr-10 py-5 text-right"></th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50 dark:divide-white/5">
+                                    {forms
+                                        .filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                                        .map(f => (
+                                        <tr key={f.id} className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
+                                            <td className="pl-10 py-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-10 w-10 rounded-xl bg-slate-50 dark:bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                                                        <ClipboardDocumentListIcon className="h-5 w-5" />
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer" onClick={() => router.push(`/dashboard/forms/${f.id}`)}>{f.name}</span>
+                                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 uppercase tracking-widest">/{f.slug}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-6 text-center">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-white/5 px-2 py-1 rounded-md">
+                                                    {f.fields?.length || 0} Defined Fields
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-6 text-center">
+                                                <div className="flex flex-col items-center">
+                                                    <span className="text-sm font-black text-slate-900 dark:text-white">{f._count?.submissions || 0}</span>
+                                                    <span className="text-[9px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-tighter">Submissions</span>
+                                                </div>
+                                            </td>
+                                            <td className="pr-10 py-6 text-right">
+                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => router.push(`/dashboard/forms/${f.id}`)} className="btn-ghost p-2 text-blue-600" title="View submissions">
+                                                        <EyeIcon className="h-4 w-4" />
+                                                    </button>
+                                                    <button onClick={() => openEdit(f)} className="btn-ghost p-2 text-blue-600" title="Edit form">
+                                                        <PencilSquareIcon className="h-4 w-4" />
+                                                    </button>
+                                                    <button onClick={() => setDeleteId(f.id)} className="btn-ghost p-2 text-red-600" title="Delete form">
+                                                        <TrashIcon className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                    ))}
-                </div>
-            )}
+                    )}
+            </div>
 
             {/* Create / Edit Modal */}
             {modalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                            <h2 className="text-base font-black text-slate-900">
-                                {editingId ? 'Edit Form' : 'New Form'}
-                            </h2>
-                            <button onClick={closeModal} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl shadow-slate-900/20 animate-in zoom-in-95 duration-200 overflow-hidden w-full max-w-2xl max-h-[90vh] flex flex-col">
+                        <div className="flex items-center justify-between px-8 pt-8 pb-6 border-b border-slate-100 dark:border-white/[0.06] bg-gradient-to-r from-blue-50 dark:from-blue-950/30 to-white dark:to-slate-900">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
+                                    <ClipboardDocumentListIcon className="h-5 w-5" />
+                                </div>
+                                <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">
+                                    {editingId ? 'Edit Form' : 'New Form'}
+                                </h2>
+                            </div>
+                            <button onClick={closeModal} className="btn-ghost p-2 text-slate-400">
                                 <XMarkIcon className="h-5 w-5" />
                             </button>
                         </div>
 
-                        <div className="overflow-y-auto flex-1 px-6 py-4 space-y-5">
+                        <div className="overflow-y-auto flex-1 px-8 py-6 space-y-5">
                             {/* Name + Slug */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Name *</label>
+                                    <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] mb-1.5">Name *</label>
                                     <input
                                         type="text"
                                         value={form.name}
                                         onChange={e => handleNameChange(e.target.value)}
                                         placeholder="e.g. Contact Form"
-                                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+                                        className="w-full bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Slug *</label>
+                                    <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] mb-1.5">Slug *</label>
                                     <input
                                         type="text"
                                         value={form.slug}
                                         onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
                                         placeholder="e.g. contact-form"
-                                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+                                        className="w-full bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-semibold font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1.5">Description</label>
+                                <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] mb-1.5">Description</label>
                                 <input
                                     type="text"
                                     value={form.description}
                                     onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                                     placeholder="Optional description"
-                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+                                    className="w-full bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
                                 />
                             </div>
 
                             {/* Fields */}
                             <div>
                                 <div className="flex items-center justify-between mb-2">
-                                    <label className="text-xs font-bold text-slate-700">Fields</label>
-                                    <button onClick={addField} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-bold">
+                                    <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em]">Fields</label>
+                                    <button onClick={addField} className="btn-ghost flex items-center gap-1 text-xs text-blue-600 h-auto py-1 px-2">
                                         <PlusIcon className="h-3.5 w-3.5" />
                                         Add Field
                                     </button>
                                 </div>
                                 <div className="space-y-2">
                                     {form.fields.map((field, idx) => (
-                                        <div key={idx} className="flex items-start gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                        <div key={idx} className="flex items-start gap-2 p-3 bg-slate-50 dark:bg-white/[0.02] rounded-xl border border-slate-100 dark:border-white/10">
                                             <div className="grid grid-cols-3 gap-2 flex-1">
                                                 <input
                                                     type="text"
                                                     value={field.label}
                                                     onChange={e => updateField(idx, { label: e.target.value })}
                                                     placeholder="Label"
-                                                    className="border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-white"
+                                                    className="border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 bg-white dark:bg-white/[0.02] dark:text-white transition-all"
                                                 />
                                                 <input
                                                     type="text"
                                                     value={field.name}
                                                     onChange={e => updateField(idx, { name: e.target.value })}
                                                     placeholder="field_name"
-                                                    className="border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-white"
+                                                    className="border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 bg-white dark:bg-white/[0.02] dark:text-white transition-all"
                                                 />
                                                 <select
                                                     value={field.type}
                                                     onChange={e => updateField(idx, { type: e.target.value as FieldType })}
-                                                    className="border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-white"
+                                                    className="border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 bg-white dark:bg-white/[0.02] dark:text-white transition-all"
                                                 >
                                                     {FIELD_TYPES.map(t => (
                                                         <option key={t.value} value={t.value}>{t.label}</option>
@@ -343,7 +382,7 @@ export default function FormsPage() {
                                                     value={field.placeholder || ''}
                                                     onChange={e => updateField(idx, { placeholder: e.target.value })}
                                                     placeholder="Placeholder (optional)"
-                                                    className="col-span-2 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-white"
+                                                    className="col-span-2 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 bg-white dark:bg-white/[0.02] dark:text-white transition-all"
                                                 />
                                                 {field.type === 'select' && (
                                                     <input
@@ -351,7 +390,7 @@ export default function FormsPage() {
                                                         value={field.options || ''}
                                                         onChange={e => updateField(idx, { options: e.target.value })}
                                                         placeholder="Option 1, Option 2"
-                                                        className="col-span-3 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-white"
+                                                        className="col-span-3 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 bg-white dark:bg-white/[0.02] dark:text-white transition-all"
                                                     />
                                                 )}
                                             </div>
@@ -368,7 +407,7 @@ export default function FormsPage() {
                                                 <button
                                                     onClick={() => removeField(idx)}
                                                     disabled={form.fields.length === 1}
-                                                    className="text-slate-300 hover:text-red-500 transition-colors disabled:opacity-30"
+                                                    className="btn-ghost p-1 text-slate-300 hover:text-red-500"
                                                 >
                                                     <XMarkIcon className="h-4 w-4" />
                                                 </button>
@@ -379,40 +418,41 @@ export default function FormsPage() {
                             </div>
 
                             {/* Settings */}
-                            <div className="border-t border-slate-100 pt-4 space-y-3">
-                                <p className="text-xs font-bold text-slate-700">Settings</p>
+                            <div className="border-t border-slate-100 dark:border-white/[0.06] pt-4 space-y-3">
+                                <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em]">Settings</p>
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-500 mb-1.5">Success Message</label>
+                                    <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] mb-1.5">Success Message</label>
                                     <input
                                         type="text"
                                         value={form.settings?.successMessage || ''}
                                         onChange={e => setForm(f => ({ ...f, settings: { ...f.settings, successMessage: e.target.value } }))}
                                         placeholder="Thank you for your submission!"
-                                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+                                        className="w-full bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-500 mb-1.5">Notify Email <span className="font-normal">(optional)</span></label>
+                                    <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] mb-1.5">Notify Email <span className="font-normal">(optional)</span></label>
                                     <input
                                         type="email"
                                         value={form.settings?.notifyEmail || ''}
                                         onChange={e => setForm(f => ({ ...f, settings: { ...f.settings, notifyEmail: e.target.value } }))}
                                         placeholder="admin@example.com"
-                                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+                                        className="w-full bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100">
-                            <button onClick={closeModal} className="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                        <div className="flex items-center justify-end gap-3 px-8 py-5 border-t border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.02]">
+                            <button onClick={closeModal} className="btn-ghost px-5 py-2.5 text-sm">
                                 Cancel
                             </button>
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving}
-                                className="px-5 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors disabled:opacity-50"
+                                className="btn-primary px-6 py-2.5 text-sm"
                             >
+                                {isSaving && <LoadingSpinner size="sm" variant="white" />}
                                 {isSaving ? 'Saving...' : editingId ? 'Save Changes' : 'Create Form'}
                             </button>
                         </div>
@@ -426,6 +466,7 @@ export default function FormsPage() {
                 description="This will permanently delete the form and all its submissions."
                 confirmLabel="Delete"
                 variant="danger"
+                isLoading={isDeleting}
                 onConfirm={handleDelete}
                 onCancel={() => setDeleteId(null)}
             />

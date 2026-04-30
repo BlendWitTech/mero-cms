@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { XMarkIcon, ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import LoadingSpinner from './LoadingSpinner';
 
 interface AlertDialogProps {
     isOpen: boolean;
@@ -9,6 +10,7 @@ interface AlertDialogProps {
     confirmLabel?: string;
     cancelLabel?: string;
     variant?: 'danger' | 'info' | 'success' | 'warning';
+    isLoading?: boolean;
     onConfirm: () => void;
     onCancel: () => void;
 }
@@ -20,6 +22,7 @@ export default function AlertDialog({
     confirmLabel = 'Confirm',
     cancelLabel = 'Cancel',
     variant = 'info',
+    isLoading = false,
     onConfirm,
     onCancel,
     onSecondary,
@@ -72,7 +75,8 @@ export default function AlertDialog({
                     {/* Cancel Button */}
                     <button
                         onClick={onCancel}
-                        className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-800 transition-all"
+                        disabled={isLoading}
+                        className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {cancelLabel}
                     </button>
@@ -81,7 +85,8 @@ export default function AlertDialog({
                     {onSecondary && secondaryLabel && (
                         <button
                             onClick={onSecondary}
-                            className="px-5 py-2.5 rounded-xl text-sm font-bold text-red-600 bg-white border border-red-200 hover:bg-red-50 hover:border-red-300 transition-all shadow-sm"
+                            disabled={isLoading}
+                            className="px-5 py-2.5 rounded-xl text-sm font-bold text-red-600 bg-white border border-red-200 hover:bg-red-50 hover:border-red-300 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {secondaryLabel}
                         </button>
@@ -90,13 +95,15 @@ export default function AlertDialog({
                     {/* Primary Button (Confirm) */}
                     <button
                         onClick={onConfirm}
-                        className={`px-6 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all active:scale-95 ${variant === 'danger'
+                        disabled={isLoading}
+                        className={`px-6 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all active:scale-95 inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${variant === 'danger'
                             ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30'
                             : variant === 'success'
                                 ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/30'
                                 : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/30'
                             }`}
                     >
+                        {isLoading && <LoadingSpinner size="sm" variant="white" />}
                         {confirmLabel}
                     </button>
                 </div>

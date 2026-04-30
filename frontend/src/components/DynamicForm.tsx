@@ -22,7 +22,9 @@ interface DynamicFormProps {
     apiUrl?: string;
 }
 
-export default function DynamicForm({ form, apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001' }: DynamicFormProps) {
+import { getApiBaseUrl } from '@/lib/api';
+
+export default function DynamicForm({ form, apiUrl = getApiBaseUrl() }: DynamicFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);

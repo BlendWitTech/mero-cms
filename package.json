@@ -5,19 +5,21 @@
   "workspaces": [
     "backend",
     "frontend",
-    "themes/marketing-theme"
+    "themes/mero-pro"
   ],
   "scripts": {
-    "dev:backend": "npm run start:dev -w backend",
+    "dev:backend": "npm run start:dev:watch -w backend",
     "dev:frontend": "npm run dev -w frontend",
     "dev:theme": "node scripts/dev-theme.js",
     "dev:db": "docker compose up db -d",
-    "dev": "concurrently --restart-tries 5 --restart-after 1500 \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:theme\"",
-    "dev:all": "docker compose up db -d && concurrently --restart-tries 5 --restart-after 1500 \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:theme\"",
+    "dev": "node scripts/mero.js dev",
+    "dev:all": "node scripts/mero.js dev:all",
+    "prisma:generate": "npm run generate -w backend",
     "build": "npm run build -w backend && npm run build -w frontend",
     "install:all": "npm install",
-    "setup": "powershell -ExecutionPolicy Bypass -File ./scripts/setup.ps1",
-    "reset": "powershell -ExecutionPolicy Bypass -File ./scripts/reset.ps1",
+    "setup": "node scripts/mero.js setup",
+    "reset": "node scripts/mero.js reset",
+    "clean": "node scripts/mero.js clean",
     "db:init": "npx prisma migrate dev -w backend",
     "db:migrate": "npx prisma migrate dev -w backend",
     "db:push": "npx prisma db push -w backend",
@@ -25,7 +27,11 @@
     "start": "node ./scripts/start.js",
     "start:prod": "node backend/dist/main",
     "package-theme": "node scripts/package-theme.js",
-    "zip-theme": "node scripts/zip-theme.js"
+    "zip-theme": "node scripts/zip-theme.js",
+    "repair-theme": "node scripts/repair-theme.js",
+    "theme:validate": "node scripts/theme-validate.js",
+    "theme:build-registry": "node scripts/theme-build-registry.js",
+    "mint-license": "node scripts/mint-license.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
@@ -33,5 +39,14 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.2"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "//overrides": "Pin @aws-sdk/xml-builder to a stable older range so it doesn't pull in the ESM-only @nodable/entities transitive that crashes the backend with ERR_REQUIRE_ESM. We DELIBERATELY do NOT override entities globally — that breaks htmlparser2 (used by sanitize-html) which needs entities >=5 with the new './decode' subpath. The scoped override below applies the entities pin ONLY inside the AWS SDK subtree, leaving htmlparser2 free to use the modern entities it expects. Re-run `npm install` after editing this block.",
+  "overrides": {
+    "@aws-sdk/xml-builder": {
+      ".": "^3.700.0",
+      "entities": "^4.5.0",
+      "@nodable/entities": "npm:entities@^4.5.0"
+    }
   }
 }

@@ -7,25 +7,23 @@ import { Tier } from './tier.enum';
  * Keys match the ENABLED_MODULES values used in app.module.ts.
  */
 export const TIER_FEATURES: Record<Tier, string[]> = {
+    // Personal Basic / Org Basic — core content, blog, menus, media, basic SEO
     [Tier.Basic]: [
-        // Core content
         'blogs',
         'categories',
         'tags',
         'pages',
         'menus',
         'media',
-        'forms',
     ],
+    // Personal Premium / Org Premium — adds team, services, testimonials, leads, full SEO, analytics
     [Tier.Premium]: [
-        // Basic +
         'blogs',
         'categories',
         'tags',
         'pages',
         'menus',
         'media',
-        'forms',
         'team',
         'services',
         'testimonials',
@@ -35,17 +33,15 @@ export const TIER_FEATURES: Record<Tier, string[]> = {
         'analytics',
         'sitemap',
         'robots',
-        'webhooks',
     ],
+    // Personal Professional / Org Enterprise — adds webhooks, collections, forms, comments, API
     [Tier.Enterprise]: [
-        // Premium +
         'blogs',
         'categories',
         'tags',
         'pages',
         'menus',
         'media',
-        'forms',
         'team',
         'services',
         'testimonials',
@@ -57,17 +53,17 @@ export const TIER_FEATURES: Record<Tier, string[]> = {
         'robots',
         'webhooks',
         'collections',
+        'forms',
         'comments',
     ],
+    // Personal Custom / Org Custom — all modules
     [Tier.Custom]: [
-        // All modules — used for bespoke / white-label deployments
         'blogs',
         'categories',
         'tags',
         'pages',
         'menus',
         'media',
-        'forms',
         'team',
         'services',
         'testimonials',
@@ -79,6 +75,7 @@ export const TIER_FEATURES: Record<Tier, string[]> = {
         'robots',
         'webhooks',
         'collections',
+        'forms',
         'comments',
     ],
 };

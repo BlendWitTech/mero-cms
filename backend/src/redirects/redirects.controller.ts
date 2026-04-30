@@ -6,10 +6,13 @@ import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Permission } from '../auth/permissions.enum';
 import { RequireModule } from '../setup/require-module.decorator';
+import { PackageEnforcementGuard } from '../packages/package-enforcement.guard';
+import { RequireLimit, PackageLimit } from '../packages/require-limit.decorator';
 
 @RequireModule('redirects')
 @Controller('redirects')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, PackageEnforcementGuard)
+@RequireLimit(PackageLimit.SEO_FULL)
 export class RedirectsController {
     constructor(
         private readonly redirectsService: RedirectsService,

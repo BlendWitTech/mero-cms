@@ -2,20 +2,25 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-    DocumentTextIcon,
-    PencilSquareIcon,
-    GlobeAltIcon,
-    HashtagIcon,
-    Square3Stack3DIcon,
-    Squares2X2Icon,
-    MagnifyingGlassIcon,
-    ArrowTopRightOnSquareIcon,
-    PlusIcon,
-    TrashIcon,
-} from '@heroicons/react/24/outline';
+    FileText,
+    Edit3,
+    Globe,
+    Hash,
+    Layers,
+    Layout,
+    Search,
+    ExternalLink,
+    Plus,
+    Trash2,
+    SearchX
+} from 'lucide-react';
 import { apiRequest } from '@/lib/api';
 import { useNotification } from '@/context/NotificationContext';
 import { useSettings } from '@/context/SettingsContext';
+import AlertDialog from '@/components/ui/AlertDialog';
+import PageHeader from '@/components/ui/PageHeader';
+import EmptyState from '@/components/ui/EmptyState';
+import FilterBar from '@/components/ui/FilterBar';
 
 interface PageItem {
     id: string;
@@ -34,6 +39,7 @@ export default function PagesIndex() {
     const [editingPage, setEditingPage] = useState<PageItem | null>(null);
     const [seoFormData, setSeoFormData] = useState({ title: '', description: '', keywords: '' });
     const [isSaving, setIsSaving] = useState(false);
+    const [deletePageModal, setDeletePageModal] = useState<{ isOpen: boolean; page: PageItem | null }>({ isOpen: false, page: null });
     const [activeThemeName, setActiveThemeName] = useState<string | null>(null);
     const [themeBaseUrl, setThemeBaseUrl] = useState('http://localhost:3002');
     const { showToast } = useNotification();
@@ -160,16 +166,23 @@ export default function PagesIndex() {
         }
     };
 
-    const handleDeletePage = async (page: PageItem) => {
-        if (!confirm(`Delete "${page.title}"? This cannot be undone.`)) return;
+    const handleDeletePage = (page: PageItem) => {
+        setDeletePageModal({ isOpen: true, page });
+    };
+
+    const confirmDeletePage = async () => {
+        if (!deletePageModal.page) return;
+
         try {
-            await apiRequest(`/pages/${page.id}`, { method: 'DELETE' });
+            await apiRequest(`/pages/${deletePageModal.page.id}`, { method: 'DELETE' });
             showToast('Page deleted.', 'success');
+            setDeletePageModal({ isOpen: false, page: null });
             fetchPages();
         } catch (error: any) {
             showToast(error.message || 'Failed to delete page.', 'error');
         }
     };
+
 
     const filteredPages = pages.filter(p =>
         p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -177,131 +190,137 @@ export default function PagesIndex() {
     );
 
     const typeConfig: Record<string, { label: string; bg: string; text: string; icon: React.ReactNode }> = {
-        theme:          { label: 'Theme Page',      bg: 'bg-blue-50',   text: 'text-blue-600',   icon: <Squares2X2Icon className="h-5 w-5" /> },
-        content:        { label: 'Content Page',    bg: 'bg-emerald-50', text: 'text-emerald-600', icon: <DocumentTextIcon className="h-5 w-5" /> },
-        category:       { label: 'Blog Category',   bg: 'bg-amber-50',  text: 'text-amber-600',  icon: <Square3Stack3DIcon className="h-5 w-5" /> },
-        tag:            { label: 'Tag',             bg: 'bg-purple-50', text: 'text-purple-600', icon: <HashtagIcon className="h-5 w-5" /> },
+        theme:          { label: 'Theme Page',      bg: 'bg-blue-50 dark:bg-blue-500/10',   text: 'text-blue-600 dark:text-blue-400',   icon: <Layout className="h-4 w-4" /> },
+        content:        { label: 'Content Page',    bg: 'bg-emerald-50 dark:bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400', icon: <FileText className="h-4 w-4" /> },
+        category:       { label: 'Blog Category',   bg: 'bg-amber-50 dark:bg-amber-500/10',  text: 'text-amber-600 dark:text-amber-400',  icon: <Layers className="h-4 w-4" /> },
+        tag:            { label: 'Tag',             bg: 'bg-purple-50 dark:bg-purple-500/10', text: 'text-purple-600 dark:text-purple-400', icon: <Hash className="h-4 w-4" /> },
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-2">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight font-display">
-                        All <span className="text-blue-600 font-bold">Pages</span>
-                    </h1>
-                    <p className="mt-1 text-xs text-slate-500 font-semibold tracking-tight">
-                        Manage SEO metadata for all routes.
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <PageHeader 
+                title="Site" 
+                accent="Routes" 
+                subtitle="Configure SEO and managed paths for your website"
+                actions={
+                    <>
                         {activeThemeName && (
-                            <span className="ml-2 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                            <div className="px-3 py-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg text-[9px] font-black uppercase tracking-widest border border-blue-100 dark:border-blue-500/20">
                                 {activeThemeName}
-                            </span>
+                            </div>
                         )}
-                    </p>
-                </div>
-                <a
-                    href="/dashboard/pages/new"
-                    className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all"
-                >
-                    <PlusIcon className="h-4 w-4" />
-                    New Page
-                </a>
-            </div>
+                        <button
+                            onClick={() => window.location.href = '/dashboard/pages/new'}
+                            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-lg shadow-blue-600/20 transition-all active:scale-95 shrink-0"
+                        >
+                            <Plus className="h-4 w-4" strokeWidth={3} />
+                            New Document
+                        </button>
+                    </>
+                }
+            />
 
-            {/* Legend */}
-            <div className="px-2 flex flex-wrap gap-3">
+            <FilterBar 
+                search={{
+                    value: searchQuery,
+                    onChange: setSearchQuery,
+                    placeholder: "Find route by name or slug…"
+                }}
+            />
+
+            <div className="flex flex-wrap gap-3 px-2 mb-2">
                 {Object.entries(typeConfig).map(([type, cfg]) => (
-                    <span key={type} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest ${cfg.bg} ${cfg.text}`}>
+                    <span key={type} className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-[9px] font-black uppercase tracking-widest ${cfg.bg} ${cfg.text} border border-black/5 dark:border-white/5 shadow-sm`}>
                         {cfg.icon}
                         {cfg.label}
                     </span>
                 ))}
             </div>
 
-            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="p-6 border-b border-slate-100 bg-slate-50/10">
-                    <div className="relative group max-w-md">
-                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="Search pages and routes..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all"
-                        />
-                    </div>
+            {/* Empty state — rendered directly when no results, no card wrapper */}
+            {!isLoading && filteredPages.length === 0 ? (
+                <div className="py-16">
+                    <EmptyState
+                        icon={SearchX}
+                        title="No Routes Found"
+                        description="We couldn't find any routes matching your search. Try adjusting your query or creating a new document."
+                    />
                 </div>
-
+            ) : (
+            <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-900/5 border border-slate-100 dark:border-white/[0.06] overflow-hidden transition-all duration-500">
                 <div className="overflow-x-auto">
-                    <table className="w-full min-w-[700px] text-left border-collapse">
+                    <table className="w-full min-w-[800px] text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50/30">
-                                <th className="pl-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center w-16">Type</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Page / Route</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Slug</th>
-                                <th className="pr-8 py-4 text-right"></th>
+                            <tr className="border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/30 dark:bg-white/[0.01]">
+                                <th className="pl-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-24">Category</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Descriptor</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Route Path</th>
+                                <th className="pr-10 py-5 text-right"></th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-50 dark:divide-white/5">
                             {isLoading ? (
                                 [1, 2, 3, 4, 5].map(i => (
                                     <tr key={i} className="animate-pulse">
                                         <td colSpan={4} className="px-8 py-5"><div className="h-10 bg-slate-50 rounded-2xl" /></td>
                                     </tr>
                                 ))
-                            ) : filteredPages.length === 0 ? (
-                                <tr>
-                                    <td colSpan={4} className="px-8 py-20 text-center text-slate-400 text-sm font-bold">No pages found.</td>
-                                </tr>
                             ) : (
                                 filteredPages.map((page) => {
                                     const cfg = typeConfig[page.type];
                                     return (
-                                        <tr key={`${page.type}-${page.id}`} className="group hover:bg-slate-50/50 transition-colors">
-                                            <td className="pl-8 py-5">
-                                                <div className={`p-2 rounded-xl w-fit ${cfg.bg} ${cfg.text}`}>
+                                        <tr key={`${page.type}-${page.id}`} className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
+                                            <td className="pl-10 py-6">
+                                                <div className={`h-10 w-10 rounded-xl flex items-center justify-center shadow-lg shadow-black/5 ${cfg.bg} ${cfg.text} border border-black/5 dark:border-white/[0.06]`}>
                                                     {cfg.icon}
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-5">
-                                                <p className="font-bold text-slate-900 text-sm">{page.title}</p>
-                                                <p className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${cfg.text}`}>{cfg.label}</p>
+                                            <td className="px-6 py-6">
+                                                <p className="text-xs font-black text-slate-900 dark:text-white leading-tight">{page.title}</p>
+                                                <div className="flex items-center gap-2 mt-1.5 opacity-60">
+                                                    <div className={`h-1 w-1 rounded-full ${cfg.bg.replace('bg-', 'bg-')}`} />
+                                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{cfg.label}</p>
+                                                </div>
                                             </td>
-                                            <td className="px-4 py-5 font-mono text-[10px] text-blue-500 font-bold">{page.slug}</td>
-                                            <td className="pr-8 py-5 text-right">
-                                                <div className="flex items-center justify-end gap-2">
+                                            <td className="px-6 py-6">
+                                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 font-mono text-[10px] text-blue-600 dark:text-blue-400 font-bold border border-slate-100 dark:border-white/[0.06]">
+                                                    {page.slug}
+                                                </div>
+                                            </td>
+                                            <td className="pr-10 py-6 text-right">
+                                                <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <a
                                                         href={`${themeBaseUrl}${page.slug}`}
                                                         target="_blank"
-                                                        className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-blue-600 transition-all"
-                                                        title="View on theme"
+                                                        className="h-9 w-9 flex items-center justify-center rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-white/[0.06] text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-105 active:scale-95 transition-all shadow-sm"
+                                                        title="View URL"
                                                     >
-                                                        <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                                                        <ExternalLink className="h-4 w-4" />
                                                     </a>
                                                     {page.editableContent && (
-                                                        <a
-                                                            href={`/dashboard/pages/${page.id}`}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-emerald-600 hover:border-emerald-200 transition-all font-bold text-[10px] uppercase tracking-widest"
+                                                        <button
+                                                            onClick={() => window.location.href = `/dashboard/pages/${page.id}`}
+                                                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-white/[0.06] text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-200 transition-all font-black text-[9px] uppercase tracking-widest shadow-sm"
                                                             title="Edit Content"
                                                         >
-                                                            <PencilSquareIcon className="h-4 w-4" />
+                                                            <Edit3 className="h-3.5 w-3.5" />
                                                             Edit
-                                                        </a>
+                                                        </button>
                                                     )}
                                                     <button
                                                         onClick={() => handleEditSeo(page)}
-                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all font-bold text-[10px] uppercase tracking-widest"
+                                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-white/[0.06] text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 transition-all font-black text-[9px] uppercase tracking-widest shadow-sm"
                                                     >
-                                                        <GlobeAltIcon className="h-4 w-4" />
+                                                        <Globe className="h-3.5 w-3.5" />
                                                         SEO
                                                     </button>
                                                     {page.editableContent && (
                                                         <button
                                                             onClick={() => handleDeletePage(page)}
-                                                            className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 transition-all"
+                                                            className="h-9 w-9 flex items-center justify-center rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-white/[0.06] text-slate-400 hover:text-red-500 hover:border-red-200 transition-all shadow-sm"
                                                             title="Delete"
                                                         >
-                                                            <TrashIcon className="h-4 w-4" />
+                                                            <Trash2 className="h-4 w-4" />
                                                         </button>
                                                     )}
                                                 </div>
@@ -310,71 +329,89 @@ export default function PagesIndex() {
                                     );
                                 })
                             )}
+
                         </tbody>
                     </table>
                 </div>
             </div>
+            )}
 
             {/* SEO Modal */}
             {editingPage && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white dark:bg-slate-900 rounded-[3rem] w-full max-w-xl shadow-3xl overflow-hidden animate-in zoom-in-95 duration-500 border border-slate-100 dark:border-white/[0.06]">
+                        <div className="p-10 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between bg-slate-50/50 dark:bg-white/[0.02]">
                             <div>
-                                <h3 className="text-base font-bold text-slate-900 font-display">SEO Metadata</h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{editingPage.title} · {editingPage.slug}</p>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white font-display tracking-tight">Index Protocol</h3>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{editingPage.title} · {editingPage.slug}</p>
                             </div>
-                            <button onClick={() => setEditingPage(null)} className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
+                            <button onClick={() => setEditingPage(null)} className="h-10 w-10 flex items-center justify-center rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-white/[0.06] text-slate-400 hover:text-slate-600 dark:hover:text-white transition-all text-2xl leading-none shadow-sm">×</button>
                         </div>
-                        <div className="p-8 space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Meta Title</label>
+                        <div className="p-10 space-y-8">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Meta Title</label>
                                 <input
                                     type="text"
                                     value={seoFormData.title}
                                     onChange={(e) => setSeoFormData({ ...seoFormData, title: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10"
+                                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl py-4 px-6 text-xs font-black text-slate-950 dark:text-white focus:outline-none focus:ring-4 focus:ring-blue-600/5 transition-all shadow-inner"
                                     placeholder="Enter search engine title..."
                                 />
-                                <p className="text-[10px] text-slate-400 text-right">{seoFormData.title.length}/60</p>
+                                <div className="flex justify-between items-center px-1">
+                                    <p className="text-[9px] text-slate-400 font-bold italic">Recommended: 50-60 characters</p>
+                                    <p className={`text-[10px] font-black ${seoFormData.title.length > 60 ? 'text-red-500' : 'text-slate-400'}`}>{seoFormData.title.length}/60</p>
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Meta Description</label>
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Meta Description</label>
                                 <textarea
                                     value={seoFormData.description}
                                     onChange={(e) => setSeoFormData({ ...seoFormData, description: e.target.value })}
                                     rows={4}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 resize-none"
+                                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl py-4 px-6 text-xs font-black text-slate-950 dark:text-white focus:outline-none focus:ring-4 focus:ring-blue-600/5 transition-all shadow-inner resize-none"
                                     placeholder="Enter a brief, compelling summary..."
                                 />
-                                <p className="text-[10px] text-slate-400 text-right">{seoFormData.description.length}/160</p>
+                                <div className="flex justify-between items-center px-1">
+                                    <p className="text-[9px] text-slate-400 font-bold italic">Recommended: 120-160 characters</p>
+                                    <p className={`text-[10px] font-black ${seoFormData.description.length > 160 ? 'text-red-500' : 'text-slate-400'}`}>{seoFormData.description.length}/160</p>
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Keywords</label>
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Search Keywords</label>
                                 <input
                                     type="text"
                                     value={seoFormData.keywords}
                                     onChange={(e) => setSeoFormData({ ...seoFormData, keywords: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10"
+                                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl py-4 px-6 text-xs font-black text-slate-950 dark:text-white focus:outline-none focus:ring-4 focus:ring-blue-600/5 transition-all shadow-inner"
                                     placeholder="cms, content management, website builder..."
                                 />
                             </div>
                         </div>
-                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
-                            <button onClick={() => setEditingPage(null)} className="px-6 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors">
+                        <div className="p-8 bg-slate-50 dark:bg-white/[0.01] border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-end gap-6">
+                            <button onClick={() => setEditingPage(null)} className="text-[11px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 dark:hover:text-white transition-colors">
                                 Cancel
                             </button>
                             <button
                                 onClick={handleSaveSeo}
                                 disabled={isSaving}
-                                className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-xs shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all disabled:opacity-50"
+                                className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
                             >
-                                {isSaving ? 'Saving...' : 'Save Metadata'}
+                                {isSaving ? 'Synchronizing...' : 'Update Meta'}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
+            <AlertDialog
+                isOpen={deletePageModal.isOpen}
+                title="Delete Page"
+                description={`Delete "${deletePageModal.page?.title}"? This action cannot be undone.`}
+                confirmLabel="Delete"
+                variant="danger"
+                isLoading={false}
+                onConfirm={confirmDeletePage}
+                onCancel={() => setDeletePageModal({ isOpen: false, page: null })}
+            />
         </div>
     );
 }

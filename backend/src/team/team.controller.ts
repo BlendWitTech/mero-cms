@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { TeamService } from './team.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
@@ -8,54 +8,40 @@ import { RequireModule } from '../setup/require-module.decorator';
 
 @RequireModule('team')
 @Controller('team')
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class TeamController {
     constructor(private readonly teamService: TeamService) { }
 
     @Post()
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @RequirePermissions(Permission.CONTENT_CREATE)
-    create(@Body() createTeamMemberDto: any) {
-        return this.teamService.create(createTeamMemberDto);
+    @RequirePermissions(Permission.CONTENT_EDIT)
+    create(@Body() data: any) {
+        return this.teamService.create(data);
     }
 
     @Get()
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @RequirePermissions(Permission.CONTENT_VIEW)
-    findAll() {
-        return this.teamService.findAll();
+    findAll(@Query('theme') theme?: string, @Query('isActive') isActive?: string) {
+        return this.teamService.findAll({ 
+            theme, 
+            isActive: isActive !== undefined ? isActive === 'true' : undefined 
+        });
     }
 
     @Get(':id')
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @RequirePermissions(Permission.CONTENT_VIEW)
     findOne(@Param('id') id: string) {
-        return this.teamService.findOne(id);
+        return this.teamService.findById(id);
     }
 
     @Patch(':id')
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @RequirePermissions(Permission.CONTENT_EDIT)
-    update(@Param('id') id: string, @Body() updateTeamMemberDto: any) {
-        return this.teamService.update(id, updateTeamMemberDto);
+    update(@Param('id') id: string, @Body() data: any) {
+        return this.teamService.update(id, data);
     }
 
     @Delete(':id')
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @RequirePermissions(Permission.CONTENT_DELETE)
+    @RequirePermissions(Permission.CONTENT_EDIT)
     remove(@Param('id') id: string) {
         return this.teamService.remove(id);
-    }
-
-    @Post('reorder')
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @RequirePermissions(Permission.CONTENT_EDIT)
-    reorder(@Body() updates: Array<{ id: string; order: number }>) {
-        return this.teamService.reorder(updates);
-    }
-
-    // Public route
-    @Get('public/list')
-    getPublic() {
-        return this.teamService.findAll();
     }
 }

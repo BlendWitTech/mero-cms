@@ -4,7 +4,11 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Permission } from '../auth/permissions.enum';
+import { PackageEnforcementGuard } from '../packages/package-enforcement.guard';
+import { RequireLimit, PackageLimit } from '../packages/require-limit.decorator';
 
+@UseGuards(JwtAuthGuard, PackageEnforcementGuard)
+@RequireLimit(PackageLimit.COLLECTIONS)
 @Controller('content-items')
 export class ContentItemsController {
     constructor(private readonly contentItemsService: ContentItemsService) { }

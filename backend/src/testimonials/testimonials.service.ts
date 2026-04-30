@@ -5,50 +5,29 @@ import { PrismaService } from '../prisma/prisma.service';
 export class TestimonialsService {
     constructor(private prisma: PrismaService) { }
 
-    async create(createTestimonialDto: any) {
-        const siteSettings = await (this.prisma as any).setting.findMany({
-            where: { key: 'active_theme' }
-        });
-        const activeTheme = siteSettings[0]?.value;
-
-        return (this.prisma as any).testimonial.create({
-            data: {
-                ...createTestimonialDto,
-                theme: activeTheme
+    async findAll(filters: { theme?: string, isActive?: boolean }): Promise<any[]> {
+        return (this.prisma as any).testimonial.findMany({
+            where: {
+                ...(filters.theme ? { theme: filters.theme } : {}),
+                ...(filters.isActive !== undefined ? { isActive: filters.isActive } : {}),
             },
+            orderBy: { order: 'asc' },
         });
     }
 
-    async findAll() {
-        return (this.prisma as any).testimonial.findMany({
-            orderBy: { createdAt: 'desc' },
-        });
+    async findById(id: string): Promise<any | null> {
+        return (this.prisma as any).testimonial.findUnique({ where: { id } });
     }
 
-    async findOne(id: string) {
-        return (this.prisma as any).testimonial.findUnique({
-            where: { id },
-        });
+    async create(data: any): Promise<any> {
+        return (this.prisma as any).testimonial.create({ data });
     }
 
-    async update(id: string, updateTestimonialDto: any) {
-        return (this.prisma as any).testimonial.update({
-            where: { id },
-            data: updateTestimonialDto,
-        });
+    async update(id: string, data: any): Promise<any> {
+        return (this.prisma as any).testimonial.update({ where: { id }, data });
     }
 
-    async remove(id: string) {
-        return (this.prisma as any).testimonial.delete({
-            where: { id },
-        });
-    }
-
-    async findFeatured(limit: number = 5) {
-        return (this.prisma as any).testimonial.findMany({
-            where: { rating: { gte: 4 } },
-            orderBy: { createdAt: 'desc' },
-            take: limit,
-        });
+    async remove(id: string): Promise<any> {
+        return (this.prisma as any).testimonial.delete({ where: { id } });
     }
 }

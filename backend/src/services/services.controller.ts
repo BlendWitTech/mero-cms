@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
@@ -8,54 +8,40 @@ import { RequireModule } from '../setup/require-module.decorator';
 
 @RequireModule('services')
 @Controller('services')
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ServicesController {
     constructor(private readonly servicesService: ServicesService) { }
 
     @Post()
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @RequirePermissions(Permission.CONTENT_CREATE)
-    create(@Body() createServiceDto: any) {
-        return this.servicesService.create(createServiceDto);
+    @RequirePermissions(Permission.CONTENT_EDIT)
+    create(@Body() data: any) {
+        return this.servicesService.create(data);
     }
 
     @Get()
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @RequirePermissions(Permission.CONTENT_VIEW)
-    findAll() {
-        return this.servicesService.findAll();
+    findAll(@Query('theme') theme?: string, @Query('isActive') isActive?: string) {
+        return this.servicesService.findAll({ 
+            theme, 
+            isActive: isActive !== undefined ? isActive === 'true' : undefined 
+        });
     }
 
     @Get(':id')
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @RequirePermissions(Permission.CONTENT_VIEW)
     findOne(@Param('id') id: string) {
-        return this.servicesService.findOne(id);
+        return this.servicesService.findById(id);
     }
 
     @Patch(':id')
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @RequirePermissions(Permission.CONTENT_EDIT)
-    update(@Param('id') id: string, @Body() updateServiceDto: any) {
-        return this.servicesService.update(id, updateServiceDto);
+    update(@Param('id') id: string, @Body() data: any) {
+        return this.servicesService.update(id, data);
     }
 
     @Delete(':id')
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @RequirePermissions(Permission.CONTENT_DELETE)
+    @RequirePermissions(Permission.CONTENT_EDIT)
     remove(@Param('id') id: string) {
         return this.servicesService.remove(id);
-    }
-
-    @Post('reorder')
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @RequirePermissions(Permission.CONTENT_EDIT)
-    reorder(@Body() updates: Array<{ id: string; order: number }>) {
-        return this.servicesService.reorder(updates);
-    }
-
-    // Public route
-    @Get('public/list')
-    getPublic() {
-        return this.servicesService.findAll();
     }
 }

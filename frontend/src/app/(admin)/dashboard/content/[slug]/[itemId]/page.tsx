@@ -22,6 +22,7 @@ import { useNotification } from '@/context/NotificationContext';
 import PostEditor from '@/components/blog/PostEditor';
 import MediaLibrary from '@/components/media/MediaLibrary';
 import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 function ContentEditorContent({ params }: { params: Promise<{ slug: string, itemId: string }> }) {
     const router = useRouter();
@@ -135,7 +136,11 @@ function ContentEditorContent({ params }: { params: Promise<{ slug: string, item
         setIsMediaOpen(true);
     };
 
-    if (isLoading) return <div className="p-10 text-center">Loading...</div>;
+    if (isLoading) return (
+        <div className="flex items-center justify-center p-20">
+            <LoadingSpinner size="lg" />
+        </div>
+    );
     if (!collection) return null;
 
     return (
@@ -363,7 +368,11 @@ function ContentEditorContent({ params }: { params: Promise<{ slug: string, item
 
 export default function ContentEditorPage({ params }: { params: Promise<{ slug: string, itemId: string }> }) {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={
+            <div className="flex items-center justify-center p-20">
+                <LoadingSpinner size="lg" />
+            </div>
+        }>
             <ContentEditorContent params={params} />
         </Suspense>
     );

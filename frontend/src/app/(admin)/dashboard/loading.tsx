@@ -4,7 +4,7 @@ import Skeleton from '@/components/ui/Skeleton';
 function StatCardSkeleton({ delay }: { delay: number }) {
     return (
         <div
-            className="relative overflow-hidden rounded-[2.5rem] p-8 bg-white border border-slate-200 shadow-sm"
+            className="relative overflow-hidden rounded-[2.5rem] p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-sm"
             style={{ animationDelay: `${delay}ms` }}
         >
             {/* icon + badge row */}
@@ -18,7 +18,7 @@ function StatCardSkeleton({ delay }: { delay: number }) {
                 <Skeleton className="w-16 h-8 rounded-xl" />
             </div>
             {/* decorative circle */}
-            <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-slate-100 rounded-full" />
+            <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-slate-100 dark:bg-white/5 rounded-full" />
         </div>
     );
 }
@@ -81,7 +81,7 @@ export default function DashboardLoading() {
                         <Skeleton className="w-40 h-6 rounded-xl" />
                         <Skeleton className="w-16 h-4 rounded-full" />
                     </div>
-                    <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-2xl shadow-slate-200 p-2">
+                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/10 shadow-sm p-2">
                         <ActivityRowSkeleton delay={0} />
                         <ActivityRowSkeleton delay={60} />
                         <ActivityRowSkeleton delay={120} />
@@ -94,8 +94,8 @@ export default function DashboardLoading() {
                 <div className="space-y-6">
                     <Skeleton className="w-36 h-6 rounded-xl ml-4" />
                     <div className="space-y-5">
-                        {/* Dark "Create Content" button */}
-                        <div className="overflow-hidden rounded-[2.5rem] bg-slate-900/8 border border-slate-200 p-7">
+                        {/* Create Content button */}
+                        <div className="overflow-hidden rounded-[2.5rem] bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 p-7">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <Skeleton className="w-12 h-12 rounded-2xl" />
@@ -106,7 +106,7 @@ export default function DashboardLoading() {
                         </div>
 
                         {/* Media Library button */}
-                        <div className="overflow-hidden rounded-[2.5rem] bg-white border border-slate-200 shadow-sm p-7">
+                        <div className="overflow-hidden rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-sm p-7">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <Skeleton className="w-12 h-12 rounded-2xl" />
@@ -117,14 +117,14 @@ export default function DashboardLoading() {
                         </div>
 
                         {/* Security card */}
-                        <div className="overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-blue-100/60 to-indigo-100/60 border border-blue-200/40 p-9 space-y-4">
+                        <div className="overflow-hidden rounded-[2.5rem] bg-[#DC1F2E]/5 dark:bg-[#DC1F2E]/10 border border-[#DC1F2E]/15 dark:border-[#DC1F2E]/20 p-9 space-y-4">
                             <div className="flex items-center gap-4">
-                                <Skeleton className="w-12 h-12 rounded-2xl" style={{ backgroundColor: '#bfdbfe' }} />
-                                <Skeleton className="w-24 h-5 rounded-full" style={{ backgroundColor: '#bfdbfe' }} />
+                                <Skeleton className="w-12 h-12 rounded-2xl" style={{ backgroundColor: 'rgba(220,31,46,0.15)' }} />
+                                <Skeleton className="w-24 h-5 rounded-full" style={{ backgroundColor: 'rgba(220,31,46,0.15)' }} />
                             </div>
-                            <Skeleton className="w-full h-3.5 rounded-full" style={{ backgroundColor: '#bfdbfe' }} />
-                            <Skeleton className="w-4/5 h-3.5 rounded-full" style={{ backgroundColor: '#bfdbfe' }} />
-                            <Skeleton className="w-full h-12 rounded-2xl mt-6" style={{ backgroundColor: '#bfdbfe' }} />
+                            <Skeleton className="w-full h-3.5 rounded-full" style={{ backgroundColor: 'rgba(220,31,46,0.12)' }} />
+                            <Skeleton className="w-4/5 h-3.5 rounded-full" style={{ backgroundColor: 'rgba(220,31,46,0.12)' }} />
+                            <Skeleton className="w-full h-12 rounded-2xl mt-6" style={{ backgroundColor: 'rgba(220,31,46,0.15)' }} />
                         </div>
                     </div>
                 </div>

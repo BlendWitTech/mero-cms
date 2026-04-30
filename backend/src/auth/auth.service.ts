@@ -52,7 +52,7 @@ export class AuthService {
                 },
             });
 
-            await this.auditLogService.log(user.id, 'LOGIN_SUCCESS', { ip: 'unknown' });
+            await this.auditLogService.log(user.id, 'LOGIN_SUCCESS', { email: user.email, method: 'password' });
             const { password, ...result } = user;
             return result;
         }
@@ -80,7 +80,112 @@ export class AuthService {
 
 
 
-    async login(user: any, rememberMe: boolean = false) {
+    // ── Refresh token helpers ───────────────────────────────────────────────
+    //
+    // Access tokens stay short (15 min). Refresh tokens are stored as a
+    // SHA-256 hash so a DB leak doesn't yield live bearer credentials.
+    // Every refresh *rotates* the token: the old hash is marked revoked
+    // and replaced by a new one sharing the same `family`. If a caller
+    // ever presents a token whose hash is already marked revoked, we
+    // treat that as replay (attacker stole it) and revoke the whole
+    // family — forcing a real re-login on every device.
+
+    private refreshTokenTtlMs(rememberMe: boolean): number {
+        return rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000;
+    }
+
+    private hashRefreshToken(token: string): string {
+        return crypto.createHash('sha256').update(token).digest('hex');
+    }
+
+    private async issueRefreshToken(userId: string, family: string, rememberMe: boolean) {
+        const token = crypto.randomBytes(48).toString('hex');
+        const tokenHash = this.hashRefreshToken(token);
+        const expiresAt = new Date(Date.now() + this.refreshTokenTtlMs(rememberMe));
+        await (this.prisma as any).refreshToken.create({
+            data: { tokenHash, family, userId, expiresAt },
+        });
+        return { token, expiresAt };
+    }
+
+    private signAccessToken(user: any, demoDbUrl?: string) {
+        const payload = {
+            email: user.email,
+            sub: user.id,
+            role: (user as any).role?.name,
+            forcePasswordChange: user.forcePasswordChange,
+            demoDbUrl: demoDbUrl || undefined,
+        };
+        return this.jwtService.sign(payload, { expiresIn: '15m' });
+    }
+
+    /**
+     * Rotate a refresh token. If the token is already revoked but exists, the
+     * whole family is killed — classic replay detection.
+     */
+    async rotateRefreshToken(presentedToken: string) {
+        const tokenHash = this.hashRefreshToken(presentedToken);
+        const row = await (this.prisma as any).refreshToken.findUnique({
+            where: { tokenHash },
+            include: { user: { include: { role: true } } },
+        });
+        if (!row) throw new UnauthorizedException('Invalid refresh token');
+
+        if (row.revokedAt) {
+            // Replay detected — nuke the entire family.
+            await (this.prisma as any).refreshToken.updateMany({
+                where: { family: row.family, revokedAt: null },
+                data: { revokedAt: new Date() },
+            });
+            await this.auditLogService.log(row.userId, 'REFRESH_TOKEN_REPLAY', { family: row.family }, 'DANGER');
+            throw new UnauthorizedException('Refresh token replay detected — please log in again');
+        }
+
+        if (row.expiresAt < new Date()) {
+            throw new UnauthorizedException('Refresh token expired');
+        }
+
+        if (!row.user || row.user.status === 'DEACTIVATED') {
+            throw new UnauthorizedException('Account no longer active');
+        }
+
+        // Rotate: mark old revoked, issue new in the same family.
+        const isLongLived = row.expiresAt.getTime() - row.createdAt.getTime() > 8 * 24 * 60 * 60 * 1000;
+        const { token: newToken, expiresAt } = await this.issueRefreshToken(row.userId, row.family, isLongLived);
+        await (this.prisma as any).refreshToken.update({
+            where: { id: row.id },
+            data: { revokedAt: new Date(), replacedBy: this.hashRefreshToken(newToken) },
+        });
+
+        const access_token = this.signAccessToken(row.user);
+        return { access_token, refresh_token: newToken, refresh_expires_at: expiresAt };
+    }
+
+    /**
+     * Build a freshly-minted session (access + refresh) for a user who just
+     * passed whatever gate they needed to pass — password login, 2FA verify,
+     * forced-2FA enrolment, etc. Shared helper so every code path rotates
+     * refresh tokens with the same invariants.
+     */
+    async buildSessionResponse(user: any, rememberMe: boolean = false, demoDbUrl?: string) {
+        const access_token = this.signAccessToken(user, demoDbUrl);
+        const family = crypto.randomUUID();
+        const { token: refresh_token, expiresAt: refresh_expires_at } =
+            await this.issueRefreshToken(user.id, family, rememberMe);
+        return { access_token, refresh_token, refresh_expires_at };
+    }
+
+    async revokeRefreshToken(presentedToken: string) {
+        if (!presentedToken) return { success: true };
+        const tokenHash = this.hashRefreshToken(presentedToken);
+        await (this.prisma as any).refreshToken.updateMany({
+            where: { tokenHash, revokedAt: null },
+            data: { revokedAt: new Date() },
+        });
+        return { success: true };
+    }
+
+    async login(user: any, rememberMe: boolean = false, demoDbUrl?: string) {
         if (user.twoFactorEnabled) {
             const tempPayload = { email: user.email, sub: user.id, scope: '2fa_pending' };
             return {
@@ -89,18 +194,30 @@ export class AuthService {
             };
         }
 
-        const payload = {
-            email: user.email,
-            sub: user.id,
-            role: (user as any).role.name,
-            forcePasswordChange: user.forcePasswordChange
-        };
+        // Enforce 2FA for privileged roles if the policy is enabled.
+        // Block login by returning a setup-required temp token the frontend
+        // uses to walk the user through enrolment. The jwt strategy rejects
+        // this scope on any protected route (see jwt.strategy.ts).
+        const force2faSetting = await (this.prisma as any).setting.findUnique({
+            where: { key: 'security_force_2fa_for_admins' },
+        });
+        if (force2faSetting?.value === 'true') {
+            const roleName = (user.role?.name || '').toLowerCase();
+            const isPrivileged = roleName === 'super admin' || roleName === 'admin';
+            if (isPrivileged) {
+                const tempPayload = { email: user.email, sub: user.id, scope: '2fa_setup_required' };
+                return {
+                    requires2faSetup: true,
+                    temp_token: this.jwtService.sign(tempPayload, { expiresIn: '15m' }),
+                };
+            }
+        }
 
-        const jwtOptions = { expiresIn: rememberMe ? '30d' : '24h' };
-
+        // Issue short-lived access token + rotating refresh token.
+        const session = await this.buildSessionResponse(user, rememberMe, demoDbUrl);
         return {
-            access_token: this.jwtService.sign(payload, jwtOptions as any),
-            forcePasswordChange: user.forcePasswordChange
+            ...session,
+            forcePasswordChange: user.forcePasswordChange,
         };
     }
 
@@ -194,7 +311,21 @@ export class AuthService {
             data: { passwordResetToken: token, passwordResetExpiry: expiry },
         });
 
-        const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+        // Resolve the public site URL the same way SettingsService does
+        // — DB setting first, then env vars, then localhost. We don't
+        // inject SettingsService here to avoid pulling another foundational
+        // module into auth's dependency graph; the inline lookup is fine
+        // because we already read settings inline elsewhere in this file.
+        const siteUrlRow = await (this.prisma as any).setting.findUnique({
+            where: { key: 'site_url' },
+        }).catch(() => null);
+        const frontendUrl = (
+            (siteUrlRow?.value as string) ||
+            process.env.NEXT_PUBLIC_SITE_URL ||
+            process.env.APP_URL ||
+            process.env.FRONTEND_URL ||
+            'http://localhost:3000'
+        ).trim().replace(/\/+$/, '');
         const resetLink = `${frontendUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
 
         try {

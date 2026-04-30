@@ -1,12 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
 export class SitemapService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        // SettingsService.getSiteUrl() is the canonical way to resolve
+        // the public site URL. Falls through to FRONTEND_URL/APP_URL/
+        // NEXT_PUBLIC_SITE_URL env vars when no DB setting is set.
+        private settings: SettingsService,
+    ) { }
 
     async generateSitemap() {
-        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const baseUrl = await this.settings.getSiteUrl();
 
         // Get all published posts
         const posts = await this.prisma.post.findMany({
@@ -97,7 +104,7 @@ export class SitemapService {
     }
 
     async generatePostsSitemap() {
-        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const baseUrl = await this.settings.getSiteUrl();
 
         const posts = await this.prisma.post.findMany({
             where: { status: 'PUBLISHED' },
@@ -126,7 +133,7 @@ export class SitemapService {
     }
 
     async generateSitemapIndex() {
-        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const baseUrl = await this.settings.getSiteUrl();
 
         let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
         xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';

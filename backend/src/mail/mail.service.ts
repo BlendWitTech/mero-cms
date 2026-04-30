@@ -17,7 +17,18 @@ export class MailService {
     buildTemplate(settings: Record<string, any>, content: string, preheader?: string): string {
         const siteTitle = settings['site_title'] || 'Mero CMS';
         const primaryColor = settings['primary_color'] || '#CC1414';
-        const appBase = (process.env.APP_URL || `http://localhost:${process.env.PORT || 3001}`).replace(/\/$/, '');
+        // Prefer the customer-configured site URL (Settings → Branding /
+        // wizard's Site URL step). Fall through to env then localhost.
+        // This appBase is what mail templates use to absolute-ize the
+        // logo path embedded in the header — getting it wrong means
+        // email clients can't load the logo.
+        const appBase = (
+            (settings['site_url'] as string) ||
+            process.env.NEXT_PUBLIC_SITE_URL ||
+            process.env.APP_URL ||
+            process.env.FRONTEND_URL ||
+            `http://localhost:${process.env.PORT || 3001}`
+        ).trim().replace(/\/+$/, '');
         const rawLogoUrl = settings['logo_url'] || null;
         // Resolve relative paths (e.g. /uploads/logo.png) to absolute so email clients can load them
         const logoUrl = rawLogoUrl
@@ -205,5 +216,91 @@ export class MailService {
         const settings = await this.settingsService.findAll();
         const branded = this.buildTemplate(settings, innerHtml, preheader);
         return this.sendMail(to, subject, branded);
+    }
+
+    /**
+     * Validate provided email credentials without persisting them.
+     *
+     * Used by the setup wizard's "Test connection" button so customers
+     * can verify SMTP / Resend credentials before saving. We don't read
+     * the live settings here — we test the values the customer just
+     * typed in, so they get an answer about *those* credentials and
+     * don't accidentally validate stale ones.
+     *
+     * For SMTP we run `transporter.verify()` which opens a real
+     * connection, performs the EHLO + AUTH handshake, and disconnects.
+     * It does not actually deliver any mail.
+     *
+     * For Resend we hit `resend.emails.send` with `{ dryRun: true }` is
+     * NOT supported by the SDK, so we instead validate the API key by
+     * fetching the domains list — a free, idempotent call that fails
+     * fast with a clear 401 on a bad key.
+     */
+    async testEmailConnection(opts: {
+        provider?: 'smtp' | 'resend';
+        smtpHost?: string;
+        smtpPort?: number;
+        smtpUser?: string;
+        smtpPass?: string;
+        smtpSecure?: boolean;
+        resendApiKey?: string;
+    }): Promise<{ success: boolean; error?: string }> {
+        const provider = opts.provider || 'smtp';
+
+        if (provider === 'resend') {
+            if (!opts.resendApiKey) {
+                return { success: false, error: 'Resend API key is required.' };
+            }
+            try {
+                const resend = new Resend(opts.resendApiKey);
+                // domains.list() is the cheapest authenticated GET on the
+                // Resend SDK — confirms the key is valid without any side
+                // effects. A 401/403 surfaces as an SDK error here.
+                const { error } = await resend.domains.list();
+                if (error) return { success: false, error: error.message };
+                return { success: true };
+            } catch (err: any) {
+                return {
+                    success: false,
+                    error: err?.message?.slice(0, 200) || 'Resend verification failed.',
+                };
+            }
+        }
+
+        // SMTP path
+        const host = opts.smtpHost?.trim();
+        const user = opts.smtpUser?.trim();
+        const pass = opts.smtpPass;
+        const port = Number(opts.smtpPort || 587);
+        if (!host || !user || !pass) {
+            return { success: false, error: 'Host, username, and password are required.' };
+        }
+
+        // Same secure-port autocorrect logic as createTransporter() so
+        // the test reflects what we'd actually do at send time.
+        const explicitSecure = opts.smtpSecure === true;
+        const autoSecure = port === 465 ? true : port === 587 ? false : explicitSecure;
+
+        try {
+            const transporter = nodemailer.createTransport({
+                host,
+                port: port || 587,
+                secure: autoSecure,
+                ...(autoSecure === false && { requireTLS: true }),
+                connectionTimeout: 10000,
+                greetingTimeout: 10000,
+                socketTimeout: 15000,
+                auth: { user, pass },
+                tls: { rejectUnauthorized: false },
+            });
+            await transporter.verify();
+            transporter.close();
+            return { success: true };
+        } catch (err: any) {
+            return {
+                success: false,
+                error: err?.message?.slice(0, 200) || 'SMTP verification failed.',
+            };
+        }
     }
 }

@@ -25,6 +25,7 @@ export enum Permission {
     MEDIA_DELETE = 'media_delete',
 
     // System & Settings
+    SETTINGS_VIEW = 'settings_view',
     SETTINGS_EDIT = 'settings_edit',
     AUDIT_VIEW = 'audit_view',
     THEMES_MANAGE = 'themes_manage',

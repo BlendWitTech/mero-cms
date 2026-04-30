@@ -277,9 +277,9 @@ export default function CollectionItemsPage() {
     if (isLoading) {
         return (
             <div className="p-6 max-w-5xl mx-auto">
-                <div className="h-8 w-48 bg-slate-100 animate-pulse rounded-xl mb-6" />
+                <div className="content-skeleton h-8 w-48 mb-6" />
                 <div className="space-y-3">
-                    {[1, 2, 3].map(i => <div key={i} className="h-16 bg-slate-50 animate-pulse rounded-2xl" />)}
+                    {[1, 2, 3].map(i => <div key={i} className="content-skeleton h-16" />)}
                 </div>
             </div>
         );
@@ -299,33 +299,30 @@ export default function CollectionItemsPage() {
     const isSingleton = collection.type === 'SINGLETON';
 
     return (
-        <div className="p-6 max-w-5xl mx-auto">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => router.push('/dashboard/collections')}
-                        className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                        className="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors"
                     >
                         <ArrowLeftIcon className="h-4 w-4" />
                     </button>
-                    <div className="p-2 bg-blue-50 rounded-xl">
-                        <CircleStackIcon className="h-5 w-5 text-blue-600" />
-                    </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h1 className="text-xl font-black text-slate-900">{collection.name}</h1>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isSingleton ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                            <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{collection.name}</h1>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider ${isSingleton ? 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 border border-violet-100 dark:border-violet-500/20' : 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20'}`}>
                                 {collection.type}
                             </span>
                         </div>
-                        <p className="text-xs text-slate-400">/{collection.slug} · {collection.fields.length} fields</p>
+                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 font-medium">/{collection.slug} · {collection.fields.length} fields</p>
                     </div>
                 </div>
                 {isSingleton ? (
                     <button
                         onClick={openSingleton}
-                        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-[11px] uppercase tracking-widest shadow-sm shadow-blue-600/20 transition-all active:scale-95 shrink-0"
                     >
                         <PencilSquareIcon className="h-4 w-4" />
                         Edit Record
@@ -333,7 +330,7 @@ export default function CollectionItemsPage() {
                 ) : (
                     <button
                         onClick={openNew}
-                        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-[11px] uppercase tracking-widest shadow-sm shadow-blue-600/20 transition-all active:scale-95 shrink-0"
                     >
                         <PlusIcon className="h-4 w-4" />
                         Add Item
@@ -343,22 +340,22 @@ export default function CollectionItemsPage() {
 
             {/* Singleton: show inline empty state or "record exists" card */}
             {isSingleton && items.length === 0 && (
-                <div className="text-center py-20 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                    <CircleStackIcon className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-500 font-semibold">No record yet</p>
-                    <p className="text-sm text-slate-400 mb-4">Click "Edit Record" to create the singleton entry</p>
+                <div className="text-center py-20 bg-white dark:bg-slate-900/60 rounded-2xl border border-slate-100 dark:border-white/[0.06]">
+                    <CircleStackIcon className="h-10 w-10 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
+                    <p className="text-slate-500 dark:text-slate-400 font-semibold">No record yet</p>
+                    <p className="text-sm text-slate-400 dark:text-slate-500 mb-4">Click "Edit Record" to create the singleton entry</p>
                 </div>
             )}
 
             {isSingleton && items.length > 0 && (
-                <div className="bg-white border border-slate-200 rounded-2xl p-5">
+                <div className="bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-white/[0.06] rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-4">
-                        <span className="text-sm font-bold text-slate-700">Record</span>
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Record</span>
                         <div className="flex gap-2">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${items[0].isPublished ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${items[0].isPublished ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
                                 {items[0].isPublished ? 'Published' : 'Draft'}
                             </span>
-                            <button onClick={() => openEdit(items[0])} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                            <button onClick={() => openEdit(items[0])} className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors">
                                 <PencilSquareIcon className="h-4 w-4" />
                             </button>
                         </div>
@@ -366,8 +363,8 @@ export default function CollectionItemsPage() {
                     <dl className="grid grid-cols-2 gap-x-6 gap-y-3">
                         {collection.fields.map(field => (
                             <div key={field.name}>
-                                <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{field.label}</dt>
-                                <dd className="text-sm text-slate-700 mt-0.5 truncate">
+                                <dt className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{field.label}</dt>
+                                <dd className="text-sm text-slate-700 dark:text-slate-300 mt-0.5 truncate">
                                     {field.type === 'boolean'
                                         ? (items[0].data[field.name] ? 'Yes' : 'No')
                                         : field.type === 'image' && items[0].data[field.name]
@@ -383,37 +380,37 @@ export default function CollectionItemsPage() {
 
             {/* Collection type: items table */}
             {!isSingleton && items.length === 0 && (
-                <div className="text-center py-20 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                    <CircleStackIcon className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-500 font-semibold">No items yet</p>
-                    <button onClick={openNew} className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors">
+                <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/10">
+                    <CircleStackIcon className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                    <p className="text-slate-500 dark:text-slate-400 font-semibold">No items yet</p>
+                    <button onClick={openNew} className="mt-3 border border-blue-600/60 dark:border-blue-500/40 text-blue-600 dark:text-blue-400 bg-transparent px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-500/[0.08] transition-colors">
                         Add first item
                     </button>
                 </div>
             )}
 
             {!isSingleton && items.length > 0 && (
-                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                <div className="bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-white/[0.06] rounded-2xl overflow-hidden">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50/60">
-                                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Item</th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Slug</th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                            <tr className="border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/60 dark:bg-slate-800/30">
+                                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Item</th>
+                                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Slug</th>
+                                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
                                 <th className="px-4 py-3 w-20" />
                             </tr>
                         </thead>
                         <tbody>
                             {items.map((item, idx) => (
-                                <tr key={item.id} className={`border-b border-slate-50 hover:bg-slate-50/50 transition-colors ${idx === items.length - 1 ? 'border-0' : ''}`}>
-                                    <td className="px-4 py-3 font-medium text-slate-700">
+                                <tr key={item.id} className={`border-b border-slate-50 dark:border-white/[0.06] hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors ${idx === items.length - 1 ? 'border-0' : ''}`}>
+                                    <td className="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">
                                         {summarizeData(item.data, collection.fields)}
                                     </td>
-                                    <td className="px-4 py-3 text-slate-400 font-mono text-xs">
+                                    <td className="px-4 py-3 text-slate-400 dark:text-slate-500 font-mono text-xs">
                                         {item.slug || '—'}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${item.isPublished ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${item.isPublished ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
                                             {item.isPublished ? 'Published' : 'Draft'}
                                         </span>
                                     </td>
@@ -421,13 +418,13 @@ export default function CollectionItemsPage() {
                                         <div className="flex items-center justify-end gap-1">
                                             <button
                                                 onClick={() => openEdit(item)}
-                                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                                             >
                                                 <PencilSquareIcon className="h-4 w-4" />
                                             </button>
                                             <button
                                                 onClick={() => setDeleteId(item.id)}
-                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                className="p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                                             >
                                                 <TrashIcon className="h-4 w-4" />
                                             </button>
@@ -443,12 +440,12 @@ export default function CollectionItemsPage() {
             {/* Item editor modal */}
             {modalOpen && collection && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                            <h2 className="text-base font-black text-slate-900">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col ring-1 ring-slate-200 dark:ring-white/10">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+                            <h2 className="text-base font-black text-slate-900 dark:text-white">
                                 {editingItemId ? 'Edit Item' : 'New Item'}
                             </h2>
-                            <button onClick={closeModal} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
+                            <button onClick={closeModal} className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
                                 <XMarkIcon className="h-5 w-5" />
                             </button>
                         </div>
@@ -456,7 +453,7 @@ export default function CollectionItemsPage() {
                         <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
                             {collection.fields.map(field => (
                                 <div key={field.name}>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                                         {field.label}
                                         {field.required && <span className="text-red-500 ml-1">*</span>}
                                         <span className="ml-2 text-[10px] font-normal text-slate-400">{field.type}</span>

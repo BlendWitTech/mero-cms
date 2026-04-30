@@ -1,13 +1,14 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
 import * as sharp from 'sharp';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as crypto from 'crypto';
 import * as ffmpeg from 'fluent-ffmpeg';
 import * as process from 'process';
 import { v2 as cloudinary } from 'cloudinary';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 
 // Handle ffmpeg paths defensively
@@ -81,6 +82,65 @@ export class MediaService {
             return { bucket, endpoint };
         }
         return null;
+    }
+
+    /**
+     * Validate provided S3-compatible credentials without persisting them.
+     *
+     * Used by the setup wizard's "Test connection" button so customers
+     * can verify their S3 / R2 / Minio credentials before saving. We
+     * test the values the customer just typed in (not the saved
+     * settings) and only do a `HeadBucket` — that's the smallest
+     * possible call that proves all four things we care about:
+     *   - access key is valid
+     *   - secret matches the access key
+     *   - bucket exists and is reachable from the configured endpoint
+     *   - region/endpoint combo is right
+     *
+     * No object is read or written. Bucket policy errors (e.g. region
+     * mismatch on AWS, missing bucket on R2) bubble up as the SDK error
+     * message, sliced to 200 chars.
+     */
+    async testS3Connection(opts: {
+        accessKey?: string;
+        secretKey?: string;
+        bucket?: string;
+        region?: string;
+        endpoint?: string;
+    }): Promise<{ success: boolean; error?: string }> {
+        const accessKey = opts.accessKey?.trim();
+        const secretKey = opts.secretKey?.trim();
+        const bucket = opts.bucket?.trim();
+        if (!accessKey || !secretKey || !bucket) {
+            return {
+                success: false,
+                error: 'Access key, secret key, and bucket are required.',
+            };
+        }
+
+        try {
+            const client = new S3Client({
+                region: opts.region?.trim() || 'auto',
+                endpoint: opts.endpoint?.trim() || undefined,
+                credentials: {
+                    accessKeyId: accessKey,
+                    secretAccessKey: secretKey,
+                },
+                // Path-style is required for most non-AWS S3 services
+                // (R2, Minio, Wasabi). Safe on AWS too — just slightly
+                // older URL shape.
+                forcePathStyle: !!opts.endpoint?.trim(),
+            });
+            await client.send(new HeadBucketCommand({ Bucket: bucket }));
+            return { success: true };
+        } catch (err: any) {
+            const code = err?.Code || err?.name;
+            const msg = err?.message || 'S3 verification failed.';
+            return {
+                success: false,
+                error: `${code ? `[${code}] ` : ''}${msg}`.slice(0, 200),
+            };
+        }
     }
 
     private async uploadToS3(filePath: string, filename: string, mimeType: string) {
@@ -333,6 +393,53 @@ export class MediaService {
         return (this.prisma as any).media.findMany({
             orderBy: { createdAt: 'desc' },
         });
+    }
+
+    /**
+     * Mint a signed URL for a PRIVATE media asset. PUBLIC assets don't need
+     * this — their /uploads/* paths are already world-readable. PRIVATE
+     * assets live under /uploads/private/ and the static handler (see
+     * main.ts) refuses unsigned requests.
+     *
+     * Signature payload: `{basename}.{expiryEpochSeconds}` HMAC-SHA256 with
+     * WEBHOOK_SECRET_KEY (any stable server-side secret works — we reuse this
+     * one because it's already in scope). Returned URL includes both `exp`
+     * and `sig` query params.
+     */
+    async signPrivateUrl(mediaId: string, ttlSeconds: number) {
+        const media = await (this.prisma as any).media.findUnique({ where: { id: mediaId } });
+        if (!media) throw new NotFoundException(`Media ${mediaId} not found`);
+        if (media.visibility !== 'PRIVATE') {
+            // Public assets return their URL unchanged — callers don't need
+            // a signed URL and asking for one should be a quiet no-op.
+            return { url: media.url, signed: false };
+        }
+
+        const key = process.env.WEBHOOK_SECRET_KEY!; // guaranteed by assertRequiredSecrets()
+        const basename = path.basename(media.url);
+        const exp = Math.floor(Date.now() / 1000) + ttlSeconds;
+        const sig = crypto
+            .createHmac('sha256', key)
+            .update(`${basename}.${exp}`)
+            .digest('hex');
+        const base = process.env.APP_URL || '';
+        const url = `${base}/uploads/private/${basename}?exp=${exp}&sig=${sig}`;
+        return { url, signed: true, expiresAt: new Date(exp * 1000) };
+    }
+
+    /** Verify a signed-URL request. Called from the /uploads/private middleware. */
+    static verifyPrivateSignature(basename: string, exp: string | undefined, sig: string | undefined): boolean {
+        if (!exp || !sig) return false;
+        const expNum = parseInt(exp, 10);
+        if (!Number.isFinite(expNum) || expNum < Math.floor(Date.now() / 1000)) return false;
+        const key = process.env.WEBHOOK_SECRET_KEY;
+        if (!key) return false;
+        const expected = crypto.createHmac('sha256', key).update(`${basename}.${expNum}`).digest('hex');
+        try {
+            return crypto.timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex'));
+        } catch {
+            return false;
+        }
     }
 
     async update(id: string, data: { altText?: string, folder?: string }) {

@@ -1,17 +1,13 @@
 import { Controller, Get } from '@nestjs/common';
-import { LicenseService } from './license.service';
+import { SaasLicenseService } from '../packages/license.service';
 
+/** Alias for /packages/license — kept for backward compat. */
 @Controller('license')
 export class LicenseController {
-    constructor(private licenseService: LicenseService) {}
+    constructor(private licenseService: SaasLicenseService) {}
 
-    /**
-     * Returns the current license status.
-     * Used by the Settings > License tab in the frontend.
-     * Requires authentication (default JWT guard applies).
-     */
     @Get('status')
     getStatus() {
-        return this.licenseService.getLicenseStatus();
+        return this.licenseService.getLicenseInfo();
     }
 }

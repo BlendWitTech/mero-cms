@@ -9,6 +9,10 @@ model Page {
   status        String   @default("DRAFT")
   settings      Json?
   theme         String?
+  // Scheduled publish time. When status='SCHEDULED' and publishAt <= now,
+  // the content-scheduler cron flips status to 'PUBLISHED'.
+  publishAt     DateTime?
+  publishedAt   DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

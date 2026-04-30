@@ -6,6 +6,7 @@ import RoleForm from '@/components/roles/RoleForm';
 import { useNotification } from '@/context/NotificationContext';
 import { use } from 'react';
 import { apiRequest } from '@/lib/api';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function EditRolePage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params);
@@ -50,7 +51,7 @@ export default function EditRolePage({ params }: { params: Promise<{ id: string 
     if (isLoading) {
         return (
             <div className="flex items-center justify-center p-20">
-                <div className="h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                <LoadingSpinner size="lg" />
             </div>
         );
     }

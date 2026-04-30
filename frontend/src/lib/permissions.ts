@@ -46,16 +46,31 @@ export const checkPermission = (
 };
 
 /**
- * Filter navigation items based on user permissions and enabled modules
- * @param navigation - Array of navigation items
- * @param userPermissions - User's permission object
- * @param enabledModules - Array of enabled module names (optional)
- * @returns Filtered navigation array
+ * Check if the active plan's capabilities include the given key.
+ * Capabilities are a shallow record { key: boolean | number }. Numeric keys
+ * (e.g. themeCount) are considered enabled when -1 (unlimited) or > 0.
+ */
+export const checkCapability = (
+    capabilities: Record<string, boolean | number> | null | undefined,
+    key: string,
+): boolean => {
+    if (!capabilities) return false;
+    const v = capabilities[key];
+    if (typeof v === 'boolean') return v;
+    if (typeof v === 'number') return v === -1 || v > 0;
+    return false;
+};
+
+/**
+ * Filter navigation items based on user permissions, enabled modules, and plan capabilities.
+ * Items may declare `requiresModule` (setup wizard gate) or `requiresCapability`
+ * (package tier gate). Both must be satisfied.
  */
 export const getVisibleNavItems = (
     navigation: any[],
     userPermissions: UserPermissions | null | undefined,
-    enabledModules?: string[]
+    enabledModules?: string[],
+    capabilities?: Record<string, boolean | number> | null,
 ): any[] => {
     if (!userPermissions) return [];
 
@@ -64,6 +79,14 @@ export const getVisibleNavItems = (
             // Module check: hide items for disabled modules
             if (item.requiresModule && enabledModules !== undefined) {
                 if (!enabledModules.includes(item.requiresModule)) return false;
+            }
+
+            // Capability check: hide items the user's plan doesn't include.
+            // Skip when capabilities haven't loaded yet (undefined) so items
+            // don't flash in and out on first render. Null means load failed
+            // and we fall back to Basic (hide gated items).
+            if (item.requiresCapability && capabilities !== undefined) {
+                if (!checkCapability(capabilities, item.requiresCapability)) return false;
             }
 
             // Permission check: if no permission required, show to everyone
@@ -76,7 +99,7 @@ export const getVisibleNavItems = (
             if (item.children) {
                 return {
                     ...item,
-                    children: getVisibleNavItems(item.children, userPermissions, enabledModules)
+                    children: getVisibleNavItems(item.children, userPermissions, enabledModules, capabilities)
                 };
             }
             return item;

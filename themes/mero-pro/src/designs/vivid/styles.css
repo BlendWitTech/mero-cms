@@ -1,0 +1,118 @@
+/**
+ * Blendwit Tech — Whitepace-aesthetic design tokens.
+ *
+ * Scoped under [data-design="vivid"] so the marketing classic
+ * design and this one can coexist in the same bundle without bleeding
+ * styles. The active design is set on the <main> wrapper (or a parent)
+ * by the page renderer once Phase 7's design dispatch lands.
+ *
+ * The palette mirrors Whitepace: deep navy as the dominant surface,
+ * a single warm-yellow accent for primary CTAs and emphasised words,
+ * a soft sky-blue tint for alternating feature rows, and white space
+ * everywhere. No gradients. No drop shadows beyond a single soft tier
+ * for raised cards.
+ */
+[data-design="vivid"] {
+    /* Surfaces */
+    --bw-navy:        #043873;     /* primary deep navy — hero, footer, CTA band */
+    --bw-navy-deep:   #032550;     /* even deeper for footer / nav strip */
+    --bw-blue-tint:   #d6e4f5;     /* Whitepace's pale-blue alt sections */
+    --bw-paper:       #ffffff;     /* default content surface */
+
+    /* Accents */
+    --bw-yellow:      #ffe492;     /* the highlight underline + Try-Free button */
+    --bw-yellow-deep: #fbb01b;     /* hover / pressed */
+    --bw-blue:        #4f9cf9;     /* link blue, secondary buttons */
+    --bw-blue-soft:   #b9d6f3;     /* card backdrops on navy */
+
+    /* Ink */
+    --bw-ink-on-navy:  #ffffff;
+    --bw-ink-1:        #043873;    /* primary heading on light surfaces */
+    --bw-ink-2:        #212529;    /* body text */
+    --bw-ink-3:        #5b6478;    /* secondary copy */
+    --bw-ink-muted:    #8896ab;
+
+    /* Geometry */
+    --bw-radius:       8px;
+    --bw-radius-lg:    12px;
+    --bw-shadow-card:  0 8px 24px rgba(4, 56, 115, 0.08);
+    --bw-shadow-cta:   0 12px 32px rgba(251, 176, 27, 0.28);
+
+    /* Typography */
+    --bw-font-display: 'Epilogue', 'Inter', system-ui, sans-serif;
+    --bw-font-body:    'Inter', system-ui, sans-serif;
+
+    /* Spacing rhythm */
+    --bw-section-py:   clamp(64px, 9vw, 128px);
+    --bw-container:    1200px;
+}
+
+[data-design="vivid"] .bw-container {
+    max-width: var(--bw-container);
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+[data-design="vivid"] .bw-section {
+    padding: var(--bw-section-py) 0;
+}
+
+[data-design="vivid"] .bw-headline {
+    font-family: var(--bw-font-display);
+    font-weight: 700;
+    color: var(--bw-ink-1);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+}
+
+/* The signature Whitepace "highlighted word" — yellow underline behind
+   a single emphasised token. Used on hero + section headings. */
+[data-design="vivid"] .bw-mark {
+    background: linear-gradient(transparent 70%, var(--bw-yellow) 70%);
+    padding: 0 2px;
+}
+
+[data-design="vivid"] .bw-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--bw-font-body);
+    font-weight: 600;
+    font-size: 16px;
+    padding: 12px 22px;
+    border-radius: var(--bw-radius);
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+[data-design="vivid"] .bw-btn-primary {
+    background: var(--bw-yellow);
+    color: var(--bw-ink-1);
+    box-shadow: var(--bw-shadow-cta);
+}
+[data-design="vivid"] .bw-btn-primary:hover {
+    background: var(--bw-yellow-deep);
+    transform: translateY(-1px);
+}
+
+[data-design="vivid"] .bw-btn-ghost {
+    background: transparent;
+    color: var(--bw-ink-on-navy);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+[data-design="vivid"] .bw-btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Surfaces alternate: navy → light → blue-tint → light → navy. The
+   page composer flips `bw-surface-*` on each <section> to drive that
+   rhythm without each component knowing what surrounds it. */
+[data-design="vivid"] .bw-surface-navy {
+    background: var(--bw-navy);
+    color: var(--bw-ink-on-navy);
+}
+[data-design="vivid"] .bw-surface-navy .bw-headline { color: var(--bw-ink-on-navy); }
+
+[data-design="vivid"] .bw-surface-tint {
+    background: var(--bw-blue-tint);
+}

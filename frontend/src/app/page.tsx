@@ -6,8 +6,9 @@ import Image from 'next/image';
 import { LockClosedIcon, EnvelopeIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useNotification } from '@/context/NotificationContext';
 import { setAuthToken } from '@/lib/auth';
+import { getApiBaseUrl } from '@/lib/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = getApiBaseUrl();
 
 function LoginPageInner() {
     const { showToast } = useNotification();
@@ -26,7 +27,7 @@ function LoginPageInner() {
     const [tempToken, setTempToken] = useState('');
     const [token, setToken] = useState('');
     const [settings, setSettings] = useState({
-        cms_title: 'Blendwit CMS',
+        cms_title: 'Mero CMS',
         cms_subtitle: 'Elevate Your Content Strategy',
         cms_login_avatar: '/assets/boy_idea_shock.png'
     });
@@ -41,9 +42,21 @@ function LoginPageInner() {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const res = await fetch(`${API_URL}/settings`);
+                // Use the public endpoint — /settings is now authenticated and
+                // the login page has no session yet. /public/site-data exposes
+                // just the login-page-safe branding keys (cmsTitle, cmsSubtitle,
+                // cmsLogo) without leaking SMTP creds, license info, etc.
+                const res = await fetch(`${API_URL}/public/site-data`);
                 const data = await res.json();
-                if (data.cms_title) setSettings(data);
+                const pub = data?.settings ?? {};
+                if (pub.cmsTitle) {
+                    setSettings(prev => ({
+                        ...prev,
+                        cms_title: pub.cmsTitle,
+                        cms_subtitle: pub.cmsSubtitle ?? prev.cms_subtitle,
+                        cms_logo: pub.cmsLogo ?? (prev as any).cms_logo,
+                    }));
+                }
             } catch { }
         };
         fetchSettings();
@@ -79,7 +92,7 @@ function LoginPageInner() {
             });
             const data = await res.json();
             if (data.success && data.access_token) {
-                setAuthToken(data.access_token);
+                setAuthToken(data.access_token, false, data.refresh_token);
                 window.location.href = '/dashboard';
             } else {
                 showToast(data.message || 'Invalid 2FA code', 'error');
@@ -113,9 +126,14 @@ function LoginPageInner() {
                     setToken(data.access_token);
                     setShowChangePassword(true);
                 } else {
-                    setAuthToken(data.access_token);
+                    setAuthToken(data.access_token, false, data.refresh_token);
                     window.location.href = '/dashboard';
                 }
+            } else if (data.requires2faSetup && data.temp_token) {
+                // Forced 2FA enrolment for an admin. The /two-factor-setup
+                // page accepts the tempToken, walks the user through the QR
+                // scan, and lands them in /dashboard on completion.
+                window.location.href = `/two-factor-setup?token=${encodeURIComponent(data.temp_token)}`;
             } else {
                 showToast(data.message || 'Invalid credentials. Please try again.', 'error');
             }
@@ -160,44 +178,37 @@ function LoginPageInner() {
 
     return (
         <div className="min-h-screen flex font-sans">
-            {/* ── Left brand panel ──────────────────────────────── */}
-            <div className="hidden lg:flex lg:w-[45%] xl:w-[42%] flex-col items-center justify-center relative overflow-hidden bg-slate-900 text-white p-12">
-                {/* Decorative grid */}
-                <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-                {/* Gradient orbs */}
-                <div className="absolute top-[-80px] left-[-80px] w-[360px] h-[360px] rounded-full bg-blue-600/20 blur-[80px] pointer-events-none" />
-                <div className="absolute bottom-[-60px] right-[-60px] w-[280px] h-[280px] rounded-full bg-indigo-600/15 blur-[60px] pointer-events-none" />
+            {/* ── Left brand panel ──────────────────────────────────
+                Warm cream-tinted background with strong brand-coloured
+                gradient orbs (red, navy, amber). Same treatment as the
+                setup wizard — real visual difference from the white
+                form panel without going to a stark dark slate. */}
+            <div className="hidden lg:flex lg:w-[45%] xl:w-[42%] flex-col items-center justify-center relative overflow-hidden text-slate-900 p-12 bg-gradient-to-br from-[#f5ecd7] via-[#efe4c7] to-[#f9f1de]">
+                <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'linear-gradient(rgba(13,14,20,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(13,14,20,0.6) 1px, transparent 1px)', backgroundSize: '56px 56px' }} />
+                <div className="absolute top-[-140px] left-[-140px] w-[480px] h-[480px] rounded-full bg-[#cb172b]/30 blur-[110px] pointer-events-none" />
+                <div className="absolute bottom-[-120px] right-[-120px] w-[400px] h-[400px] rounded-full bg-[#023d91]/22 blur-[100px] pointer-events-none" />
+                <div className="absolute top-[35%] right-[-160px] w-[280px] h-[280px] rounded-full bg-amber-300/40 blur-[100px] pointer-events-none" />
 
-                <div className="relative z-10 flex flex-col items-center text-center max-w-sm">
-                    {/* Avatar */}
-                    <div className="w-28 h-28 rounded-2xl overflow-hidden mb-8 ring-4 ring-white/10 shadow-2xl">
-                        <Image
-                            src={settings.cms_login_avatar}
-                            alt="CMS"
-                            width={112}
-                            height={112}
-                            className="object-cover w-full h-full"
-                            priority
-                        />
-                    </div>
+                <div className="relative z-10 flex flex-col items-center text-center max-w-sm w-full">
+                    {/* Big logo — natural colours, no frame, no duplicate
+                        title underneath. Carries the entire brand panel. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src="/logo.svg"
+                        alt="Mero CMS"
+                        className="h-24 w-auto mb-12 select-none"
+                    />
 
-                    <h1 className="text-3xl font-black tracking-tight mb-3 leading-tight">
-                        {settings.cms_title}
-                    </h1>
-                    <p className="text-sm text-slate-400 font-medium leading-relaxed mb-12">
-                        {settings.cms_subtitle}
-                    </p>
-
-                    {/* Feature bullets */}
+                    {/* Feature bullets — adapted for light background. */}
                     <div className="space-y-3 w-full text-left">
                         {[
                             { icon: '🔒', text: 'Role-based access control' },
                             { icon: '⚡', text: 'Real-time content management' },
                             { icon: '🎨', text: 'Multi-theme support' },
                         ].map((f) => (
-                            <div key={f.text} className="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3 border border-white/5">
+                            <div key={f.text} className="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
                                 <span className="text-lg">{f.icon}</span>
-                                <span className="text-xs font-semibold text-slate-300">{f.text}</span>
+                                <span className="text-xs font-semibold text-slate-700">{f.text}</span>
                             </div>
                         ))}
                     </div>
@@ -206,13 +217,13 @@ function LoginPageInner() {
 
             {/* ── Right form panel ───────────────────────────────── */}
             <div className="flex-1 flex flex-col items-center justify-center bg-white px-6 py-12">
-                {/* Mobile logo */}
-                <div className="flex lg:hidden items-center gap-3 mb-10">
-                    <div className="w-10 h-10 rounded-xl overflow-hidden">
-                        <Image src={settings.cms_login_avatar} alt="CMS" width={40} height={40} className="object-cover w-full h-full" />
-                    </div>
-                    <span className="text-lg font-black text-slate-900">{settings.cms_title}</span>
-                </div>
+                {/* Mobile-only brand mark — Mero logo, no text. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                    src="/logo.svg"
+                    alt="Mero CMS"
+                    className="lg:hidden h-12 w-auto mb-10 select-none"
+                />
 
                 <div className="w-full max-w-sm">
                     {!showChangePassword && !showForgotPassword && !showTwoFactor ? (
@@ -294,6 +305,7 @@ function LoginPageInner() {
                                         </span>
                                     ) : 'Sign In'}
                                 </button>
+
                             </form>
                         </>
                     ) : showForgotPassword ? (
@@ -372,7 +384,7 @@ function LoginPageInner() {
                 </div>
 
                 <p className="mt-12 text-[10px] font-semibold text-slate-300 tracking-widest uppercase">
-                    {settings.cms_title} · Admin Portal
+                    Admin Portal
                 </p>
             </div>
         </div>

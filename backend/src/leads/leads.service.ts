@@ -1,163 +1,77 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { MailService } from '../mail/mail.service';
-import { SettingsService } from '../settings/settings.service';
-import { WebhooksService } from '../webhooks/webhooks.service';
 
 @Injectable()
 export class LeadsService {
-    private readonly logger = new Logger(LeadsService.name);
+    constructor(private prisma: PrismaService) { }
 
-    constructor(
-        private prisma: PrismaService,
-        private mailService: MailService,
-        private settingsService: SettingsService,
-        private webhooksService: WebhooksService,
-    ) { }
-
-    async create(createLeadDto: any) {
-        const lead = await this.prisma.lead.create({ data: createLeadDto });
-
-        // Send branded admin notification email (fire-and-forget)
-        this.sendLeadNotification(lead).catch(err =>
-            this.logger.warn(`Lead notification email failed: ${err.message}`)
-        );
-
-        // Fire webhooks (fire-and-forget)
-        this.webhooksService.dispatch('lead.created', { id: lead.id, name: lead.name, email: lead.email, source: lead.originPage }).catch(() => { });
-
-        return lead;
-    }
-
-    private async sendLeadNotification(lead: any) {
-        const settings = await this.settingsService.findAll();
-        const adminEmail = settings['notification_email'] || settings['contact_email'] || settings['smtp_from'] || settings['smtp_user'];
-        if (!adminEmail) {
-            this.logger.warn('Lead notification skipped: no admin email configured (set Contact Email in Settings → General)');
-            return;
-        }
-
-        const submittedAt = new Date(lead.createdAt).toLocaleString('en-NP', {
-            timeZone: 'Asia/Kathmandu', day: '2-digit', month: 'short', year: 'numeric',
-            hour: '2-digit', minute: '2-digit',
-        });
-
-        const innerHtml = `
-            <h2 style="margin:0 0 4px;font-size:22px;font-weight:900;color:#1E1E1E;line-height:1.2;">New Lead Received</h2>
-            <p style="margin:0 0 28px;font-size:13px;color:#6B7280;line-height:1.6;">A new enquiry was submitted${lead.originPage ? ` from <strong style="color:#374151;">${lead.originPage}</strong>` : ''}.</p>
-
-            <!-- Lead details card -->
-            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-radius:12px;overflow:hidden;border:1px solid #E5E7EB;margin-bottom:24px;">
-              <tr>
-                <td style="background:#CC1414;padding:12px 20px;">
-                  <span style="color:#FFFFFF;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Lead Details</span>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:0;">
-                  <table cellpadding="0" cellspacing="0" border="0" width="100%">
-                    <tr style="border-bottom:1px solid #F3F4F6;">
-                      <td style="padding:12px 20px;background:#F9FAFB;width:120px;"><span style="font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;">Name</span></td>
-                      <td style="padding:12px 20px;"><span style="font-size:14px;font-weight:700;color:#1E1E1E;">${lead.name}</span></td>
-                    </tr>
-                    <tr style="border-bottom:1px solid #F3F4F6;">
-                      <td style="padding:12px 20px;background:#F9FAFB;"><span style="font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;">Email</span></td>
-                      <td style="padding:12px 20px;"><a href="mailto:${lead.email}" style="font-size:14px;font-weight:600;color:#CC1414;text-decoration:none;">${lead.email}</a></td>
-                    </tr>
-                    ${lead.phone ? `<tr style="border-bottom:1px solid #F3F4F6;">
-                      <td style="padding:12px 20px;background:#F9FAFB;"><span style="font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;">Phone</span></td>
-                      <td style="padding:12px 20px;"><a href="tel:${lead.phone}" style="font-size:14px;font-weight:600;color:#1E1E1E;text-decoration:none;">${lead.phone}</a></td>
-                    </tr>` : ''}
-                    ${lead.message ? `<tr style="border-bottom:1px solid #F3F4F6;">
-                      <td style="padding:12px 20px;background:#F9FAFB;vertical-align:top;"><span style="font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;">Message</span></td>
-                      <td style="padding:12px 20px;"><span style="font-size:13px;color:#374151;line-height:1.6;">${lead.message.replace(/\n/g, '<br>')}</span></td>
-                    </tr>` : ''}
-                    <tr>
-                      <td style="padding:12px 20px;background:#F9FAFB;"><span style="font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;">Received</span></td>
-                      <td style="padding:12px 20px;"><span style="font-size:13px;color:#374151;">${submittedAt}</span></td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-
-            <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
-              <tr>
-                <td style="background-color:#CC1414;border-radius:8px;">
-                  <a href="mailto:${lead.email}" style="display:inline-block;padding:12px 28px;color:#ffffff;font-size:13px;font-weight:700;text-decoration:none;">Reply to ${lead.name} →</a>
-                </td>
-              </tr>
-            </table>
-            <p style="margin:0;font-size:11px;color:#9CA3AF;">You can also manage this lead from the CMS Dashboard → Leads.</p>
-        `;
-
-        await this.mailService.sendTemplatedMail(
-            adminEmail,
-            `New Lead: ${lead.name} — ${lead.email}`,
-            innerHtml,
-            `New enquiry from ${lead.name} (${lead.email})`
-        );
-    }
-
-    async findAll(status?: string) {
-        const where: any = {};
-        if (status) where.status = status;
-
-        return this.prisma.lead.findMany({
-            where,
+    async findAll(filters: { status?: string, search?: string }): Promise<any[]> {
+        return (this.prisma as any).lead.findMany({
+            where: {
+                ...(filters.status ? { status: filters.status } : {}),
+                ...(filters.search ? {
+                    OR: [
+                        { name: { contains: filters.search, mode: 'insensitive' } },
+                        { email: { contains: filters.search, mode: 'insensitive' } },
+                        { company: { contains: filters.search, mode: 'insensitive' } },
+                    ],
+                } : {}),
+            },
             orderBy: { createdAt: 'desc' },
         });
     }
 
-    async findOne(id: string) {
-        return this.prisma.lead.findUnique({
-            where: { id },
+    async findById(id: string): Promise<any | null> {
+        return (this.prisma as any).lead.findUnique({ where: { id } });
+    }
+
+    async create(data: any): Promise<any> {
+        return (this.prisma as any).lead.create({ data });
+    }
+
+    async update(id: string, data: any): Promise<any> {
+        return (this.prisma as any).lead.update({ where: { id }, data });
+    }
+
+    async remove(id: string): Promise<any> {
+        return (this.prisma as any).lead.delete({ where: { id } });
+    }
+
+    /**
+     * Daily lead counts for the last `days` days (zero-filled). Used by
+     * the dashboard's leads-over-time chart.
+     *
+     * Why we zero-fill in code instead of SQL: Postgres can do
+     * generate_series + LEFT JOIN, but that requires raw SQL which
+     * differs by dialect. Doing it in app land keeps us portable to
+     * MySQL/SQLite if we ever add them.
+     */
+    async countByDay(days: number): Promise<Array<{ date: string; count: number }>> {
+        const since = new Date();
+        since.setHours(0, 0, 0, 0);
+        since.setDate(since.getDate() - (days - 1));
+
+        const rows: Array<{ createdAt: Date }> = await (this.prisma as any).lead.findMany({
+            where: { createdAt: { gte: since } },
+            select: { createdAt: true },
         });
+
+        // Bucket into a map keyed by YYYY-MM-DD.
+        const buckets = new Map<string, number>();
+        for (let i = 0; i < days; i++) {
+            const d = new Date(since);
+            d.setDate(since.getDate() + i);
+            buckets.set(this.toIsoDate(d), 0);
+        }
+        for (const row of rows) {
+            const key = this.toIsoDate(row.createdAt);
+            if (buckets.has(key)) buckets.set(key, (buckets.get(key) || 0) + 1);
+        }
+
+        return Array.from(buckets.entries()).map(([date, count]) => ({ date, count }));
     }
 
-    async update(id: string, updateLeadDto: any) {
-        return this.prisma.lead.update({
-            where: { id },
-            data: updateLeadDto,
-        });
-    }
-
-    async remove(id: string) {
-        return this.prisma.lead.delete({
-            where: { id },
-        });
-    }
-
-    async updateStatus(id: string, status: string) {
-        return this.prisma.lead.update({
-            where: { id },
-            data: { status },
-        });
-    }
-
-    async exportCsv(status?: string): Promise<string> {
-        const where: any = {};
-        if (status) where.status = status;
-        const leads = await this.prisma.lead.findMany({ where, orderBy: { createdAt: 'desc' } });
-        const headers = ['ID', 'Name', 'Email', 'Phone', 'Message', 'Source', 'Status', 'Created At'];
-        const escape = (v: any) => {
-            const s = v == null ? '' : String(v).replace(/"/g, '""');
-            return /[",\n\r]/.test(s) ? `"${s}"` : s;
-        };
-        const rows = leads.map(l =>
-            [l.id, l.name, l.email, (l as any).phone, (l as any).message, (l as any).originPage, l.status, l.createdAt.toISOString()].map(escape).join(',')
-        );
-        return [headers.join(','), ...rows].join('\r\n');
-    }
-
-    async getStats() {
-        const [total, newLeads, contacted, converted] = await Promise.all([
-            this.prisma.lead.count(),
-            this.prisma.lead.count({ where: { status: 'NEW' } }),
-            this.prisma.lead.count({ where: { status: 'CONTACTED' } }),
-            this.prisma.lead.count({ where: { status: 'CONVERTED' } }),
-        ]);
-
-        return { total, newLeads, contacted, converted };
+    private toIsoDate(d: Date): string {
+        return d.toISOString().slice(0, 10);
     }
 }

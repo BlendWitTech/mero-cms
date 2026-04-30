@@ -13,6 +13,9 @@ model Post {
   featured    Boolean    @default(false)
   theme       String?
   publishedAt DateTime?
+  // Scheduled publish time. When status='SCHEDULED' and publishAt <= now,
+  // the content-scheduler cron flips status to 'PUBLISHED' and stamps publishedAt.
+  publishAt   DateTime?
   comments    Comment[]
   author      User       @relation(fields: [authorId], references: [id])
   categories  Category[] @relation("CategoryToPost")

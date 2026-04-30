@@ -1,10 +1,25 @@
-# docker-compose.yml — Standard agency/client deployment
-# Copy .env.example → .env and fill in the required values before running.
+# docker-compose.yml — Zero-config self-host
 #
 # Usage:
-#   docker compose up -d          # start all services
-#   docker compose logs -f        # tail logs
-#   docker compose down -v        # stop and remove volumes
+#   docker compose up -d            # start all services
+#   docker compose logs -f          # tail logs
+#   docker compose down             # stop (data preserved)
+#   docker compose down -v          # stop AND wipe data
+#
+# After `docker compose up`, open http://localhost:3000/setup in your
+# browser. The wizard collects every other piece of configuration —
+# admin user, license key, site URL, email, storage, modules — and
+# writes them to a persistent volume. No `.env` file required.
+#
+# The two volumes that matter:
+#   postgres_data — Postgres data files
+#   backend_data  — secrets.json (auto-generated JWT_SECRET) +
+#                   setup.json (license + site URL captured by wizard)
+#                   + uploads/ (media library files)
+#
+# To override anything (custom domain, external Postgres, etc.), copy
+# .env.example to .env and set the variables you want; everything in
+# the compose file falls back to a sensible default if .env is missing.
 
 services:
   db:
@@ -12,15 +27,15 @@ services:
     container_name: ${ORG_NAME:-mero}-cms-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER:     ${DB_USER:-admin}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_USER:     ${DB_USER:-mero}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mero_local_dev}
       POSTGRES_DB:       ${DB_NAME:-mero_cms}
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d ${DB_NAME:-mero_cms}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-mero} -d ${DB_NAME:-mero_cms}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -34,33 +49,48 @@ services:
     ports:
       - "${BACKEND_PORT:-3001}:3001"
     environment:
-      DATABASE_URL:  postgresql://${DB_USER:-admin}:${DB_PASSWORD:-changeme}@db:5432/${DB_NAME:-mero_cms}?schema=public
-      JWT_SECRET:    ${JWT_SECRET:?JWT_SECRET is required}
-      PORT:          3001
-      NODE_ENV:      production
-      CORS_ORIGINS:  ${CORS_ORIGINS:-http://localhost:3000}
+      # Wired up automatically — Postgres lives at the `db` service name.
+      DATABASE_URL: postgresql://${DB_USER:-mero}:${DB_PASSWORD:-mero_local_dev}@db:5432/${DB_NAME:-mero_cms}?schema=public
 
-      # Licensing — obtain LICENSE_KEY from Blendwit
-      LICENSE_KEY:   ${LICENSE_KEY:-}
+      # JWT_SECRET is intentionally NOT required here. On first boot
+      # bootstrapSecrets() in main.ts auto-generates one to
+      # /app/data/secrets.json (mounted volume below). To override,
+      # set JWT_SECRET in .env and it'll win — file is only used when
+      # the env var is empty.
+      JWT_SECRET: ${JWT_SECRET:-}
 
-      # Module selection — set by setup wizard on first run
-      ENABLED_MODULES: ${ENABLED_MODULES:-}
-      SETUP_COMPLETE:  ${SETUP_COMPLETE:-false}
+      PORT: 3001
+      NODE_ENV: production
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
 
-      # Storage paths (mounted below)
+      # Persistent state directory — secrets.json and setup.json land
+      # here so they survive `docker compose up --build` rebuilds. The
+      # `backend_data` volume is mounted at this path below.
+      MERO_DATA_DIR: /app/data
+
+      # Theme + scripts directories — read-only mounts of the repo
+      # checkout so themes pre-shipped with the install are visible.
       THEMES_DIR:  /themes
       SCRIPTS_DIR: /scripts
 
-      # Optional: mail
-      MAIL_HOST:     ${MAIL_HOST:-}
-      MAIL_PORT:     ${MAIL_PORT:-587}
-      MAIL_USER:     ${MAIL_USER:-}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      MAIL_FROM:     ${MAIL_FROM:-}
+      # Optional: pre-set a license key for hands-free deploys. The
+      # wizard's License & Modules step accepts this in-browser too
+      # so you don't HAVE to set it here.
+      LICENSE_KEY: ${LICENSE_KEY:-}
+
+      # Module selection — the wizard writes these on first run via
+      # /setup/complete; not needed in env on a fresh install.
+      ENABLED_MODULES: ${ENABLED_MODULES:-}
+      SETUP_COMPLETE:  ${SETUP_COMPLETE:-false}
     volumes:
       - ./themes:/themes:ro
       - ./scripts:/scripts:ro
-      - backend_uploads:/app/uploads
+      # backend_data persists secrets.json + setup.json + uploads/.
+      # Without this, every `docker compose up --build` regenerates
+      # JWT_SECRET (invalidating sessions) and forgets the wizard's
+      # saved license / site URL.
+      - backend_data:/app/data
+      - backend_uploads:/app/backend/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -89,4 +119,11 @@ services:
 
 volumes:
   postgres_data:
+  # backend_data holds secrets.json + setup.json — the persistent
+  # state that lets the install survive container rebuilds without
+  # nuking the JWT secret or saved wizard config.
+  backend_data:
+  # backend_uploads holds the media library files (images, videos,
+  # documents). When the wizard's storage step picks 'local', this
+  # is where uploads land. S3-backed installs don't use it.
   backend_uploads:

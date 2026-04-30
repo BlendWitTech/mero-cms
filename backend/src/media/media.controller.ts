@@ -23,8 +23,10 @@ import { AuditLogService } from '../audit-log/audit-log.service';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Permission } from '../auth/permissions.enum';
+import { PackageEnforcementGuard } from '../packages/package-enforcement.guard';
+import { RequireLimit, PackageLimit } from '../packages/require-limit.decorator';
 
-@UseGuards(JwtAuthGuard, IpGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, IpGuard, PermissionsGuard, PackageEnforcementGuard)
 @Controller('media')
 export class MediaController {
     constructor(
@@ -46,6 +48,7 @@ export class MediaController {
 
     @Post('upload')
     @RequirePermissions(Permission.MEDIA_UPLOAD)
+    @RequireLimit(PackageLimit.STORAGE)
     @UseInterceptors(
         FilesInterceptor('files', 10, {
             storage: diskStorage({
@@ -90,6 +93,19 @@ export class MediaController {
         const res = await this.mediaService.remove(id);
         await this.auditLog.log(req.user.id, 'MEDIA_DELETE', { id });
         return res;
+    }
+
+    /**
+     * Mint a time-limited signed URL for a PRIVATE media asset. PUBLIC assets
+     * don't need this — their /uploads/... URLs are already valid. PRIVATE
+     * assets live under /uploads/private/ and are only reachable when the
+     * request carries a valid HMAC signature with a non-expired `exp` param.
+     */
+    @Post(':id/sign')
+    @RequirePermissions(Permission.MEDIA_VIEW)
+    async signAsset(@Param('id') id: string, @Body() body: { ttlSeconds?: number }) {
+        const ttl = Math.max(5, Math.min(body?.ttlSeconds ?? 300, 3600)); // 5s–1h
+        return this.mediaService.signPrivateUrl(id, ttl);
     }
 
     @Post('migrate')

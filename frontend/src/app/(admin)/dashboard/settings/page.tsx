@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
     Cog6ToothIcon,
     GlobeAltIcon,
@@ -28,6 +29,9 @@ import { apiRequest } from '@/lib/api';
 import Alert from '@/components/ui/Alert';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import MediaPickerModal from '@/components/ui/MediaPickerModal';
+import ContractBrandingTab from '@/components/admin/ContractBrandingTab';
+import LicenseSettingsTab from '@/components/admin/LicenseSettingsTab';
+import DangerZoneTab from '@/components/admin/DangerZoneTab';
 import { useNotification } from '@/context/NotificationContext';
 import { useModules } from '@/context/ModulesContext';
 
@@ -98,8 +102,30 @@ function ClearThemeCacheCard() {
 
 export default function SettingsPage() {
     const [settings, setSettings] = useState<any>({});
+
+    // Branding-fields contract from the active theme. Read on mount and used
+    // by <ContractBrandingTab> to render only the controls the active theme
+    // declares it respects (theme.json `brandingFields`).
+    const [brandingContract, setBrandingContract] = useState<any[] | null>(null);
+    const [activeThemeName, setActiveThemeName] = useState<string | null>(null);
+    const [usage] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('branding');
+
+    // Sidebar links to /dashboard/settings?tab=<id>. Read the URL on
+    // mount so the initial render lands on the right tab; sync into
+    // local state when the user navigates within Settings (back/
+    // forward buttons + sidebar clicks both update searchParams). The
+    // local state is still the source of truth for in-page tab
+    // switches that don't change the URL (the visual tab strip on
+    // mobile, etc.).
+    const searchParams = useSearchParams();
+    const tabFromUrl = searchParams?.get('tab') || 'branding';
+    const [activeTab, setActiveTab] = useState(tabFromUrl);
+    useEffect(() => {
+        if (tabFromUrl && tabFromUrl !== activeTab) setActiveTab(tabFromUrl);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tabFromUrl]);
+
     const { showToast } = useNotification();
     const { enabledModules, refresh: refreshModules } = useModules();
 
@@ -117,7 +143,6 @@ export default function SettingsPage() {
     const [showResendKey, setShowResendKey] = useState(false);
     // Track sections that auto-entered edit mode from being all-empty, so they stay editable while typing
     const autoEditSections = useRef<Set<string>>(new Set());
-    const [mediaPickerTarget, setMediaPickerTarget] = useState<'logo' | 'favicon' | null>(null);
     const [cancelModal, setCancelModal] = useState<{ isOpen: boolean, section: string | null }>({
         isOpen: false,
         section: null
@@ -165,6 +190,14 @@ export default function SettingsPage() {
         fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/setup/modules`)
             .then(r => r.json())
             .then(data => setAvailableModules(data.optional || []))
+            .catch(() => { });
+
+        // Active-theme branding contract — drives <ContractBrandingTab>.
+        apiRequest('/themes/active/branding-fields')
+            .then((data: any) => { if (Array.isArray(data)) setBrandingContract(data); })
+            .catch(() => { });
+        apiRequest('/themes/active')
+            .then((data: any) => { if (data?.slug || data?.name) setActiveThemeName(data.name || data.slug); })
             .catch(() => { });
     }, []);
 
@@ -223,6 +256,10 @@ export default function SettingsPage() {
         { id: 'security', label: 'Security & Access', icon: ShieldCheckIcon },
         { id: 'performance', label: 'Performance', icon: RocketLaunchIcon },
         { id: 'audit-logs', label: 'Audit Ledger', icon: FingerPrintIcon },
+        // Danger Zone lives last because every other tab is non-destructive.
+        // The red icon + label is intentional — it should look unmistakeable
+        // in the breadcrumb when a user lands here.
+        { id: 'danger-zone', label: 'Danger Zone', icon: ExclamationTriangleIcon },
     ];
 
     return (
@@ -235,23 +272,25 @@ export default function SettingsPage() {
                 <p className="mt-1 text-xs text-slate-500 font-semibold tracking-tight">Fine-tune your CMS architecture and global parameters.</p>
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="overflow-x-auto custom-scrollbar-hidden -mx-2 px-2 sticky top-0 z-50">
-                <div className="flex items-center gap-1 p-1 bg-white shadow-lg shadow-slate-200/50 rounded-[2rem] border border-slate-200 w-max min-w-full">
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={classNames(
-                                "flex-shrink-0 sm:flex-1 flex items-center justify-center gap-2 px-3 sm:px-6 py-3 sm:py-4 rounded-[1.75rem] text-[10px] sm:text-[11px] font-bold uppercase tracking-widest transition-all whitespace-nowrap",
-                                activeTab === tab.id ? "bg-white text-blue-600 shadow-xl shadow-slate-200 ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-900"
-                            )}
-                        >
-                            <tab.icon className="h-4 w-4 shrink-0" />
-                            <span className="hidden sm:inline">{tab.label}</span>
-                        </button>
-                    ))}
-                </div>
+            {/* In-page tab strip removed — navigation now lives in the sidebar
+                under the Settings group. The activeTab state is still driven
+                by the ?tab= query param the sidebar links emit, so deep
+                links continue to work. Showing a current-section breadcrumb
+                instead so users still know where they are. */}
+            <div className="px-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                <span>Settings</span>
+                <span className="text-slate-300">/</span>
+                {(() => {
+                    const current = tabs.find(t => t.id === activeTab);
+                    if (!current) return <span className="text-slate-700">{activeTab}</span>;
+                    const Icon = current.icon;
+                    return (
+                        <span className="inline-flex items-center gap-1.5 text-blue-600">
+                            <Icon className="h-3.5 w-3.5" />
+                            {current.label}
+                        </span>
+                    );
+                })()}
             </div>
 
             <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 relative">
@@ -259,340 +298,24 @@ export default function SettingsPage() {
                 <div className="absolute top-[10%] left-[-5%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none -z-10" />
                 <div className="absolute bottom-[10%] right-[-5%] w-[40%] h-[40%] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none -z-10" />
                 <div className="absolute inset-0 bg-grid opacity-[0.02] pointer-events-none -z-10" />
-                {/* Branding Tab */}
+                {/* Branding Tab — contract-driven. The component renders
+                    only the fields the active theme declares in its
+                    theme.json `brandingFields` block (or the 16-key default
+                    from themes.service.ts when a theme doesn't declare one). */}
                 {activeTab === 'branding' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                        <div className="lg:col-span-2 space-y-8">
-                            <div className="bg-white rounded-[3rem] p-5 sm:p-8 lg:p-12 shadow-2xl shadow-slate-200 border border-slate-200 space-y-10 relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-colors pointer-events-none"></div>
-
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-indigo-600 rounded-2xl shadow-xl shadow-indigo-500/20 text-white">
-                                            <GlobeAltIcon className="h-6 w-6" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xl font-bold text-slate-900 font-display">Identity & SEO</h3>
-                                            <p className="text-sm font-medium text-slate-400">Configure how your site appears to engines and users.</p>
-                                        </div>
-                                    </div>
-                                    {!isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && (
-                                        <button
-                                            onClick={() => toggleEdit('branding')}
-                                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
-                                        >
-                                            Edit Details
-                                        </button>
-                                    )}
-                                </div>
-
-                                <div className="space-y-3">
-                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Master Site Title</label>
-                                    <input
-                                        type="text"
-                                        disabled={!isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text'])}
-                                        value={settings.site_title || ''}
-                                        onChange={(e) => setSettings({ ...settings, site_title: e.target.value })}
-                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
-                                    />
-                                </div>
-
-                                <div className="space-y-3">
-                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Site Tagline <span className="normal-case text-slate-300">(default meta description — overridden per-page in SEO Management)</span></label>
-                                    <textarea
-                                        rows={2}
-                                        disabled={!isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text'])}
-                                        value={settings.site_tagline || ''}
-                                        onChange={(e) => setSettings({ ...settings, site_tagline: e.target.value })}
-                                        placeholder="Kathmandu Valley's Trusted Land Partner"
-                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50 disabled:cursor-default resize-none"
-                                    />
-                                </div>
-
-                                <div className="space-y-3">
-                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Footer Text / Tagline <span className="normal-case text-slate-300">(shown in footer)</span></label>
-                                    <textarea
-                                        rows={3}
-                                        disabled={!isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text'])}
-                                        value={settings.footer_text || ''}
-                                        onChange={(e) => setSettings({ ...settings, footer_text: e.target.value })}
-                                        placeholder="Kathmandu Valley's Trusted Land Partner"
-                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50 disabled:cursor-default resize-none"
-                                    />
-                                </div>
-
-                                <div className="space-y-3">
-                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Copyright Disclaimer</label>
-                                    <input
-                                        type="text"
-                                        disabled={!isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text'])}
-                                        value={settings.copyright_text || ''}
-                                        onChange={(e) => setSettings({ ...settings, copyright_text: e.target.value })}
-                                        className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:ring-4 focus:ring-blue-500/10 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {/* Logo */}
-                                    <div className="space-y-3">
-                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Logo</label>
-                                        <div
-                                            onClick={() => isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && setMediaPickerTarget('logo')}
-                                            className={`relative flex items-center gap-4 p-4 bg-white border-2 border-slate-200 rounded-2xl shadow-sm transition-all ${isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) ? 'cursor-pointer hover:border-blue-400 hover:bg-blue-50/30' : 'opacity-60'}`}
-                                        >
-                                            <div className="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-                                                {settings.logo_url
-                                                    ? <img src={settings.logo_url} alt="Logo" className="w-full h-full object-contain p-1" onError={(e) => (e.currentTarget.style.display = 'none')} />
-                                                    : <PhotoIcon className="w-7 h-7 text-slate-300" />
-                                                }
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-bold text-slate-700 mb-1">{settings.logo_url ? 'Logo set' : 'No logo'}</p>
-                                                {settings.logo_url && <p className="text-[10px] text-slate-400 truncate">{settings.logo_url}</p>}
-                                                {isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && (
-                                                    <span className="text-[10px] font-bold text-blue-600 mt-1 block">Click to choose from media library</span>
-                                                )}
-                                            </div>
-                                            {settings.logo_url && isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && (
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); setSettings({ ...settings, logo_url: '' }); }}
-                                                    className="absolute top-2 right-2 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center text-red-500 hover:bg-red-200"
-                                                >
-                                                    <XCircleIcon className="w-4 h-4" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                    {/* Favicon */}
-                                    <div className="space-y-3">
-                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Favicon</label>
-                                        <div
-                                            onClick={() => isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && setMediaPickerTarget('favicon')}
-                                            className={`relative flex items-center gap-4 p-4 bg-white border-2 border-slate-200 rounded-2xl shadow-sm transition-all ${isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) ? 'cursor-pointer hover:border-blue-400 hover:bg-blue-50/30' : 'opacity-60'}`}
-                                        >
-                                            <div className="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-                                                {settings.favicon_url
-                                                    ? <img src={settings.favicon_url} alt="Favicon" className="w-full h-full object-contain p-1" onError={(e) => (e.currentTarget.style.display = 'none')} />
-                                                    : <PhotoIcon className="w-7 h-7 text-slate-300" />
-                                                }
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-bold text-slate-700 mb-1">{settings.favicon_url ? 'Favicon set' : 'No favicon'}</p>
-                                                {settings.favicon_url && <p className="text-[10px] text-slate-400 truncate">{settings.favicon_url}</p>}
-                                                {isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && (
-                                                    <span className="text-[10px] font-bold text-blue-600 mt-1 block">Click to choose from media library</span>
-                                                )}
-                                            </div>
-                                            {settings.favicon_url && isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && (
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); setSettings({ ...settings, favicon_url: '' }); }}
-                                                    className="absolute top-2 right-2 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center text-red-500 hover:bg-red-200"
-                                                >
-                                                    <XCircleIcon className="w-4 h-4" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Media Picker Modal */}
-                                {mediaPickerTarget && (
-                                    <MediaPickerModal
-                                        isOpen={true}
-                                        onClose={() => setMediaPickerTarget(null)}
-                                        onSelect={(url) => {
-                                            if (mediaPickerTarget === 'logo') setSettings((s: any) => ({ ...s, logo_url: url }));
-                                            if (mediaPickerTarget === 'favicon') setSettings((s: any) => ({ ...s, favicon_url: url }));
-                                            setMediaPickerTarget(null);
-                                        }}
-                                    />
-                                )}
-
-                                {isSectionEditing('branding', ['site_title', 'site_tagline', 'footer_text', 'copyright_text']) && (
-                                    <div className="flex flex-wrap gap-3 pt-4">
-                                        <button
-                                            onClick={() => handleSave('branding')}
-                                            className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all"
-                                        >
-                                            Save Changes
-                                        </button>
-                                        <button
-                                            onClick={() => handleCancel('branding')}
-                                            className="bg-slate-100 text-slate-500 px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all font-bold"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Design System Card */}
-                            <div className="bg-white rounded-[3rem] p-5 sm:p-8 lg:p-12 shadow-2xl shadow-slate-200 border border-slate-200 space-y-10 relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl pointer-events-none" />
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-violet-600 rounded-2xl shadow-xl shadow-violet-500/20 text-white">
-                                            <AdjustmentsHorizontalIcon className="h-6 w-6" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xl font-bold text-slate-900">Design System</h3>
-                                            <p className="text-sm font-medium text-slate-400">Global brand color and typography applied to the public website.</p>
-                                        </div>
-                                    </div>
-                                    {!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font']) && (
-                                        <button onClick={() => toggleEdit('design')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">Edit</button>
-                                    )}
-                                </div>
-
-                                {/* Primary Color */}
-                                <div className="space-y-3">
-                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Brand Primary Color</label>
-                                    <div className="flex items-center gap-4">
-                                        <input
-                                            type="color"
-                                            disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
-                                            value={settings.primary_color || '#CC1414'}
-                                            onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })}
-                                            className="w-14 h-14 rounded-2xl border-2 border-slate-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed p-1"
-                                        />
-                                        <div className="flex-1">
-                                            <input
-                                                type="text"
-                                                disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
-                                                value={settings.primary_color || '#CC1414'}
-                                                onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })}
-                                                placeholder="#CC1414"
-                                                className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50 disabled:cursor-default font-mono"
-                                            />
-                                            <p className="text-[10px] text-slate-400 mt-1.5 ml-2">Applied to buttons, links, accents, and headings across the website.</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Secondary & Accent Colors */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-3">
-                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Secondary Color <span className="text-slate-300 normal-case tracking-normal font-medium">(dark/charcoal)</span></label>
-                                        <div className="flex items-center gap-3">
-                                            <input
-                                                type="color"
-                                                disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
-                                                value={settings.secondary_color || '#1E1E1E'}
-                                                onChange={(e) => setSettings({ ...settings, secondary_color: e.target.value })}
-                                                className="w-12 h-12 rounded-xl border-2 border-slate-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed p-1"
-                                            />
-                                            <input
-                                                type="text"
-                                                disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
-                                                value={settings.secondary_color || '#1E1E1E'}
-                                                onChange={(e) => setSettings({ ...settings, secondary_color: e.target.value })}
-                                                placeholder="#1E1E1E"
-                                                className="flex-1 bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-3 px-4 text-sm font-bold text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600/20 transition-all disabled:opacity-60 disabled:bg-slate-50 disabled:cursor-default font-mono"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Accent / Background Color</label>
-                                        <div className="flex items-center gap-3">
-                                            <input
-                                                type="color"
-                                                disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
-                                                value={settings.accent_color || '#F4F4F4'}
-                                                onChange={(e) => setSettings({ ...settings, accent_color: e.target.value })}
-                                                className="w-12 h-12 rounded-xl border-2 border-slate-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed p-1"
-                                            />
-                                            <input
-                                                type="text"
-                                                disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
-                                                value={settings.accent_color || '#F4F4F4'}
-                                                onChange={(e) => setSettings({ ...settings, accent_color: e.target.value })}
-                                                placeholder="#F4F4F4"
-                                                className="flex-1 bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-3 px-4 text-sm font-bold text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600/20 transition-all disabled:opacity-60 disabled:bg-slate-50 disabled:cursor-default font-mono"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Font pickers */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-3">
-                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Heading Font</label>
-                                        <select
-                                            disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
-                                            value={settings.heading_font || ''}
-                                            onChange={(e) => setSettings({ ...settings, heading_font: e.target.value })}
-                                            className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
-                                        >
-                                            <option value="">Inter (default)</option>
-                                            <option value="Poppins">Poppins — Modern &amp; Clean</option>
-                                            <option value="Montserrat">Montserrat — Bold &amp; Strong</option>
-                                            <option value="Raleway">Raleway — Elegant</option>
-                                            <option value="Playfair Display">Playfair Display — Serif</option>
-                                            <option value="Nunito">Nunito — Friendly &amp; Rounded</option>
-                                            <option value="Lato">Lato — Light &amp; Clean</option>
-                                            <option value="Roboto">Roboto — Standard</option>
-                                            <option value="Open Sans">Open Sans — Readable</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-[0.15em]">Body Font</label>
-                                        <select
-                                            disabled={!isSectionEditing('design', ['primary_color', 'heading_font', 'body_font'])}
-                                            value={settings.body_font || ''}
-                                            onChange={(e) => setSettings({ ...settings, body_font: e.target.value })}
-                                            className="w-full bg-white border-2 border-slate-200 rounded-2xl shadow-sm py-4 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all disabled:opacity-60 disabled:bg-slate-50/80 disabled:cursor-default"
-                                        >
-                                            <option value="">Inter (default)</option>
-                                            <option value="Poppins">Poppins — Modern &amp; Clean</option>
-                                            <option value="Montserrat">Montserrat — Bold &amp; Strong</option>
-                                            <option value="Raleway">Raleway — Elegant</option>
-                                            <option value="Nunito">Nunito — Friendly &amp; Rounded</option>
-                                            <option value="Lato">Lato — Light &amp; Clean</option>
-                                            <option value="Roboto">Roboto — Standard</option>
-                                            <option value="Open Sans">Open Sans — Readable</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {/* Preview swatch */}
-                                {isSectionEditing('design', ['primary_color', 'heading_font', 'body_font']) && (
-                                    <div className="p-5 rounded-2xl border-2 border-dashed border-slate-200 space-y-2">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Live Preview</p>
-                                        <div className="flex items-center gap-3 flex-wrap">
-                                            <div className="w-8 h-8 rounded-lg" style={{ background: settings.primary_color || '#CC1414' }} title="Primary" />
-                                            <div className="w-8 h-8 rounded-lg border border-slate-200" style={{ background: settings.secondary_color || '#1E1E1E' }} title="Secondary" />
-                                            <div className="w-8 h-8 rounded-lg border border-slate-200" style={{ background: settings.accent_color || '#F4F4F4' }} title="Accent" />
-                                            <span className="text-sm font-bold" style={{ color: settings.primary_color || '#CC1414', fontFamily: settings.heading_font || 'inherit' }}>
-                                                Heading: {settings.heading_font || 'Inter (default)'}
-                                            </span>
-                                        </div>
-                                        <p className="text-sm" style={{ color: settings.secondary_color || '#1E1E1E', fontFamily: settings.body_font || 'inherit' }}>
-                                            Body: {settings.body_font || 'Inter (default)'} — The quick brown fox jumps over the lazy dog.
-                                        </p>
-                                    </div>
-                                )}
-
-                                {isSectionEditing('design', ['primary_color', 'heading_font', 'body_font']) && (
-                                    <div className="flex flex-wrap gap-3 pt-2">
-                                        <button onClick={() => handleSave('design')} className="bg-violet-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-violet-500/20 hover:bg-violet-700 transition-all">Save Design</button>
-                                        <button onClick={() => handleCancel('design')} className="bg-slate-100 text-slate-500 px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="space-y-8">
-                            <div className="bg-slate-900 rounded-[3rem] p-10 text-white relative overflow-hidden shadow-2xl shadow-slate-900/40 group">
-                                <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-blue-500/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000 pointer-events-none" />
-                                <h3 className="text-xl font-bold font-display relative z-10">Sync Configuration</h3>
-                                <p className="text-xs font-semibold text-slate-400 mt-2 relative z-10 leading-relaxed mb-8">Updates are broadcasted instantly to all active frontend instances via the core hub.</p>
-                                <button onClick={() => handleSave('global')} className="w-full bg-white text-slate-900 hover:bg-blue-600 hover:text-white py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all active:scale-95 shadow-xl relative z-10">
-                                    Push Global Update
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <ContractBrandingTab
+                        settings={settings}
+                        setSettings={setSettings}
+                        contract={brandingContract || []}
+                        activeThemeName={activeThemeName}
+                        usage={usage}
+                    />
                 )}
+
+                {/* License Tab — view current tier, replace key, see what
+                    each tier unlocks. Persists via /packages/activate
+                    which the wizard also writes through. */}
+                {activeTab === 'license' && <LicenseSettingsTab />}
 
                 {/* Website & Social Tab */}
                 {activeTab === 'website' && (
@@ -1302,6 +1025,13 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     </div>
+                )}
+
+                {/* Danger Zone — destructive operations with live progress.
+                    Component owns its own state and its own ProgressTerminal,
+                    so the rest of the settings page stays clean. */}
+                {activeTab === 'danger-zone' && (
+                    <DangerZoneTab />
                 )}
 
                 {/* Performance Tab */}

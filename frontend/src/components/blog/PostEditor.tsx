@@ -89,6 +89,7 @@ import {
     Bars3Icon as UnderlineIcon // We'll keep this but rename internally if needed, or find better
 } from '@heroicons/react/24/outline';
 import MediaLibrary from '../media/MediaLibrary';
+import AiAssistant from './AiAssistant';
 
 // Custom icons for headings since Heroicons doesn't provide them
 const H1Icon = () => <span className="text-[10px] font-black leading-none">H1</span>;
@@ -135,6 +136,11 @@ const MenuBar = ({ editor, onOpenMedia }: { editor: any, onOpenMedia: () => void
 
     return (
         <div className="flex flex-wrap items-center gap-1.5 p-4 border-b border-slate-100 bg-slate-50/30 backdrop-blur-sm sticky top-0 z-20 rounded-t-[2.5rem]">
+            {/* AI Assistant */}
+            <div className="flex items-center pr-3 mr-3 border-r border-slate-200">
+                <AiAssistant editor={editor} />
+            </div>
+
             {/* History */}
             <div className="flex items-center gap-1 pr-3 mr-3 border-r border-slate-200">
                 <MenuButton onClick={() => editor.chain().focus().undo().run()} icon={ArrowUturnLeftIcon} title="Undo" />

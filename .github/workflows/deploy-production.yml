@@ -2,7 +2,7 @@ name: Deploy — Production
 
 # Triggered when main branch is updated.
 # Uses the "production" GitHub Environment for manual approval gate.
-# Railway and Vercel auto-deploy via their GitHub integrations once the
+# Render and Vercel auto-deploy via their GitHub integrations once the
 # approval is granted and this workflow completes successfully.
 
 on:
@@ -70,8 +70,16 @@ jobs:
         needs: approve
         if: success()
         steps:
+            - name: Verify production secrets are configured
+              run: |
+                  if [ -z "${{ secrets.PRODUCTION_API_URL }}" ]; then
+                      echo "::error::PRODUCTION_API_URL secret is not set in repo settings."
+                      echo "::error::Settings → Secrets and variables → Actions → New repository secret."
+                      exit 1
+                  fi
+
             - name: Print production URLs
               run: |
-                  echo "Approved! Railway and Vercel are deploying to production..."
+                  echo "Approved! Render and Vercel are deploying to production..."
                   echo "Backend:  ${{ secrets.PRODUCTION_API_URL }}"
                   echo "Frontend: https://blendwit.com (or configured production domain)"

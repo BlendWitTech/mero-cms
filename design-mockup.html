@@ -1,0 +1,1808 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mero CMS — Design mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  /* ── Tokens ───────────────────────────────────────────────────────── */
+  :root {
+    /* Brand */
+    --brand: #cb172b;
+    --brand-deep: #9e0f1f;
+    --brand-soft: #ffd9dd;
+    --navy: #023d91;
+    --navy-deep: #001f5c;
+
+    /* Ink (text) */
+    --ink: #0d0e14;
+    --ink-2: #2a2c35;
+    --ink-3: #5b5e6b;
+    --ink-4: #8b8f9c;
+
+    /* Paper (light surfaces) */
+    --paper: #fbfaf6;
+    --paper-2: #f4f2ec;
+    --paper-3: #ebe8df;
+
+    /* Workleap-style pastel palette for testimonials + accents */
+    --pastel-coral:  #ffc9b8;
+    --pastel-sky:    #c6daff;
+    --pastel-butter: #ffe6b0;
+    --pastel-lav:    #e1ddff;
+    --pastel-pist:   #dbf3b9;
+    --pastel-pink:   #ffd9ea;
+    --pastel-mint:   #c4f0d9;
+    --pastel-lime:   #ebffb3;
+
+    /* Effect tokens */
+    --shadow-sm: 0 1px 2px rgba(13,14,20,0.06);
+    --shadow-md: 0 6px 24px rgba(13,14,20,0.08);
+    --shadow-lg: 0 24px 60px rgba(13,14,20,0.12);
+    --shadow-xl: 0 40px 90px rgba(13,14,20,0.18);
+    --r-sm: 14px;
+    --r-md: 20px;
+    --r-lg: 28px;
+    --r-xl: 36px;
+  }
+
+  /* ── Reset ────────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  img, svg { display: block; max-width: 100%; }
+  a { color: inherit; }
+
+  .display {
+    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 0.96;
+  }
+  .serif-em {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── Layout ───────────────────────────────────────────────────────── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  .container-narrow { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── Buttons ──────────────────────────────────────────────────────── */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; cursor: pointer; text-decoration: none;
+    font-family: inherit; font-weight: 600; font-size: 15px;
+    border-radius: 100px; padding: 11px 22px;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    white-space: nowrap;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: var(--ink); color: #fff; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset; }
+  .btn-primary:hover { box-shadow: 0 12px 28px rgba(13,14,20,.25), 0 1px 0 rgba(255,255,255,.08) inset; }
+  .btn-brand { background: var(--brand); color: #fff; }
+  .btn-brand:hover { box-shadow: 0 12px 28px rgba(203,23,43,.32); background: var(--brand-deep); }
+  .btn-ghost { background: transparent; color: var(--ink-2); }
+  .btn-ghost:hover { background: rgba(13,14,20,.05); }
+  .btn-light { background: #fff; color: var(--ink); border: 1px solid rgba(13,14,20,.08); }
+  .btn-lg { padding: 14px 28px; font-size: 16px; }
+
+  /* ── Nav ──────────────────────────────────────────────────────────── */
+  .nav-shell {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 100; width: calc(100% - 32px); max-width: 1140px;
+  }
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(255,255,255,.78);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(13,14,20,.06);
+    border-radius: 100px; padding: 8px 8px 8px 24px;
+    box-shadow: var(--shadow-md);
+  }
+  .nav-logo svg { height: 44px; width: auto; display: block; }
+  .nav { padding: 6px 8px 6px 20px; }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a {
+    color: var(--ink-2); text-decoration: none; font-size: 14px; font-weight: 500;
+    padding: 8px 4px;
+  }
+  .nav-links a:hover { color: var(--brand); }
+  .nav-actions { display: flex; gap: 6px; align-items: center; }
+
+  /* ── Hero ─────────────────────────────────────────────────────────── */
+  .hero {
+    position: relative; overflow: hidden;
+    padding: 140px 0 80px;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, var(--pastel-pink) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 100% 30%, var(--pastel-butter) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 0% 70%, var(--pastel-lav) 0%, transparent 60%),
+      var(--paper);
+  }
+  .hero-grid {
+    display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; align-items: center;
+    position: relative; z-index: 1;
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #fff; border: 1px solid rgba(13,14,20,.08);
+    border-radius: 100px; padding: 6px 14px;
+    font-size: 13px; font-weight: 500; color: var(--ink-2);
+    margin-bottom: 24px;
+  }
+  .hero-eyebrow-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--brand); animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .55; transform: scale(.85); }
+  }
+  .hero h1 {
+    font-size: clamp(48px, 7vw, 92px);
+    margin-bottom: 22px;
+  }
+  .hero h1 .em {
+    color: var(--brand);
+  }
+  .hero-sub {
+    font-size: 19px; line-height: 1.5; color: var(--ink-3);
+    max-width: 540px; margin-bottom: 32px;
+  }
+  .hero-ctas { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .hero-trust {
+    display: flex; gap: 16px; align-items: center;
+    margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(13,14,20,.08);
+    font-size: 13px; color: var(--ink-3);
+  }
+  .hero-trust-stars { color: #f5b400; letter-spacing: -1px; }
+
+  /* Hero visual — clean branded backdrop, no random blobs.
+     Layered (z-index ascending):
+       0. Brand halo: soft radial that gives the mockup a "spotlight" lift
+       1. Faint emblem watermark: meaningful brand mark behind the product
+       2. The product mockup itself */
+  .hero-visual { position: relative; aspect-ratio: 5/4.4; }
+  .hero-halo {
+    position: absolute; inset: -12%;
+    background: radial-gradient(circle at 50% 50%,
+      rgba(203,23,43,0.20) 0%,
+      rgba(203,23,43,0.10) 30%,
+      transparent 70%);
+    z-index: 0; pointer-events: none;
+    filter: blur(8px);
+  }
+  .hero-emblem-bg {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    z-index: 0; pointer-events: none;
+  }
+  .hero-emblem-bg svg {
+    width: 95%; height: 95%; opacity: 0.07;
+  }
+  /* Dashboard sits BEHIND the character — recreated in HTML so it
+     matches the actual Mero CMS admin (sidebar, KPI cards, panels)
+     instead of a generic SVG placeholder. Slight rotation for personality,
+     soft shadow, scales down responsively. The character overlaps the
+     lower-left so the visible "above-the-fold" portion of the dashboard
+     stays the most important part. */
+  .hero-dashboard {
+    position: absolute;
+    top: 0; right: 0;
+    width: 100%; aspect-ratio: 16/10;
+    z-index: 1;
+    border-radius: 14px;
+    box-shadow: 0 30px 70px rgba(13,14,20,0.18),
+                0 1px 0 rgba(255,255,255,.4) inset;
+    transform: rotate(-1.5deg);
+    transform-origin: 50% 50%;
+    overflow: hidden;
+    background: #f4f5f9;
+    border: 1px solid rgba(13,14,20,0.06);
+    font-size: 9px;
+    color: var(--ink);
+  }
+  .hd-chrome {
+    height: 22px; padding: 0 10px;
+    display: flex; align-items: center; gap: 4px;
+    background: #fff; border-bottom: 1px solid #ebe8df;
+    flex-shrink: 0;
+  }
+  .hd-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .hd-url {
+    margin-left: 8px; font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; color: #8b8f9c;
+  }
+  .hd-body { display: grid; grid-template-columns: 90px 1fr; height: calc(100% - 22px); }
+  .hd-side {
+    background: #fff; padding: 10px 8px;
+    display: flex; flex-direction: column; gap: 8px;
+    border-right: 1px solid #ebe8df;
+  }
+  .hd-brand {
+    display: flex; align-items: center; gap: 4px;
+    font-weight: 800; font-size: 9px; letter-spacing: -0.01em;
+  }
+  .hd-brand-mark {
+    width: 14px; height: 14px; border-radius: 4px;
+    background: var(--brand); color: #fff;
+    display: grid; place-items: center;
+    font-weight: 800; font-size: 9px;
+  }
+  .hd-brand-mero { color: var(--brand); }
+  .hd-brand-cms { color: var(--navy); }
+  .hd-menu-label {
+    font-size: 7px; font-weight: 700; letter-spacing: 0.1em;
+    color: #8b8f9c; margin-top: 4px;
+  }
+  .hd-menu-item {
+    display: flex; align-items: center; gap: 5px;
+    padding: 4px 6px; border-radius: 5px;
+    font-size: 8px; color: var(--ink-3); font-weight: 500;
+  }
+  .hd-menu-item.active {
+    background: rgba(13,14,20,0.07); color: var(--ink); font-weight: 600;
+  }
+  .hd-menu-item .pip { width: 4px; height: 4px; border-radius: 1px; background: currentColor; }
+  .hd-license {
+    margin-top: auto;
+    background: linear-gradient(135deg, #2557e8, #1c3fb5);
+    border-radius: 6px; padding: 6px 8px;
+    color: #fff; font-size: 7px; line-height: 1.3;
+  }
+  .hd-license b { display: block; font-size: 8px; font-weight: 800; }
+  .hd-license .v { display: block; margin-top: 3px; opacity: 0.85; font-weight: 600; letter-spacing: 0.06em; }
+  .hd-main { padding: 12px; overflow: hidden; background: #f4f5f9; }
+
+  /* When the .hd-* dashboard lives inside a .feature-card (feature row
+     visual), scale the chrome + text up so it reads comfortably at the
+     larger physical size. Hero dashboard stays at the tight 9px base
+     because it's rotated and partially covered by the character. */
+  .feature-card { font-size: 11px; }
+  .feature-card .hd-chrome { height: 28px; padding: 0 12px; }
+  .feature-card .hd-dot { width: 9px; height: 9px; }
+  .feature-card .hd-url { font-size: 10px; }
+  .feature-card .hd-body { grid-template-columns: 120px 1fr; height: calc(100% - 28px); }
+  .feature-card .hd-side { padding: 14px 10px; gap: 8px; }
+  .feature-card .hd-brand { font-size: 12px; }
+  .feature-card .hd-brand-mark { width: 18px; height: 18px; font-size: 11px; border-radius: 5px; }
+  .feature-card .hd-menu-label { font-size: 8px; margin-top: 4px; }
+  .feature-card .hd-menu-item { font-size: 10px; padding: 5px 8px; }
+  .feature-card .hd-menu-item .pip { width: 5px; height: 5px; }
+  .feature-card .hd-license { font-size: 9px; padding: 8px 10px; border-radius: 8px; }
+  .feature-card .hd-license b { font-size: 11px; }
+  .feature-card .hd-license .v { font-size: 8px; }
+  .feature-card .hd-main { padding: 16px; }
+  .feature-card .hd-greeting { font-size: 9px; margin-bottom: 4px; }
+  .feature-card .hd-title { font-size: 20px; margin-bottom: 4px; }
+  .feature-card .hd-subtitle { font-size: 11px; margin-bottom: 14px; }
+  .feature-card .hd-panel { padding: 12px; border-radius: 10px; }
+  .feature-card .hd-panel h6 { font-size: 11px; margin-bottom: 8px; }
+  .hd-topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(13,14,20,.05);
+  }
+  .hd-search {
+    flex: 1; max-width: 130px;
+    height: 18px; border-radius: 100px;
+    background: #fff; border: 1px solid #ebe8df;
+    padding: 0 8px; display: flex; align-items: center;
+    font-size: 7px; color: #8b8f9c;
+  }
+  .hd-greeting { font-size: 7px; color: var(--ink-4); font-weight: 600; letter-spacing: 0.06em; margin-bottom: 3px; }
+  .hd-title { font-size: 14px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 4px; }
+  .hd-subtitle { font-size: 8px; color: var(--ink-3); margin-bottom: 10px; }
+  .hd-actions {
+    display: flex; gap: 4px; margin-left: auto; align-items: center;
+  }
+  .hd-btn {
+    padding: 4px 9px; border-radius: 100px;
+    font-size: 7px; font-weight: 700;
+  }
+  .hd-btn-light { background: #fff; border: 1px solid #ebe8df; color: var(--ink-2); }
+  .hd-btn-brand { background: var(--brand); color: #fff; }
+  .hd-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 6px; margin-bottom: 8px;
+  }
+  .hd-stat {
+    background: #fff; border-radius: 8px;
+    border: 1px solid rgba(13,14,20,.05);
+    padding: 8px; display: flex; justify-content: space-between; align-items: flex-start;
+    min-height: 50px;
+  }
+  .hd-stat-l { display: flex; flex-direction: column; gap: 2px; }
+  .hd-stat-eyebrow { font-size: 6px; font-weight: 700; letter-spacing: 0.1em; color: #8b8f9c; }
+  .hd-stat-num { font-size: 18px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+  .hd-stat-meta { font-size: 7px; color: var(--ink-3); }
+  .hd-stat-icon {
+    width: 18px; height: 18px; border-radius: 5px;
+    display: grid; place-items: center;
+    color: #fff; font-size: 9px;
+  }
+  .hd-stat-icon.b { background: linear-gradient(135deg, #2557e8, #1c3fb5); }
+  .hd-stat-icon.p { background: linear-gradient(135deg, #8344e8, #5e2cb5); }
+  .hd-stat-icon.s { background: linear-gradient(135deg, #2bb8e8, #1c8ab5); }
+  .hd-stat-icon.g { background: linear-gradient(135deg, #2bc28e, #1c9c6e); }
+  .hd-panels {
+    display: grid; grid-template-columns: 1.1fr 1.2fr 1fr;
+    gap: 6px;
+  }
+  .hd-panel {
+    background: #fff; border-radius: 8px;
+    border: 1px solid rgba(13,14,20,.05);
+    padding: 8px;
+  }
+  .hd-panel h6 {
+    font-size: 8px; font-weight: 700; margin-bottom: 6px;
+    color: var(--ink); letter-spacing: -0.005em;
+  }
+  .hd-panel small { font-size: 6px; color: var(--ink-4); }
+  .hd-quick {
+    display: flex; flex-direction: column; gap: 3px; margin-top: 6px;
+  }
+  .hd-quick > div {
+    background: rgba(13,14,20,.03); border-radius: 5px;
+    padding: 4px 6px; font-size: 7px; font-weight: 600;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .hd-status-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 0; border-bottom: 1px solid rgba(13,14,20,.04);
+    font-size: 7px;
+  }
+  .hd-status-row:last-child { border-bottom: none; }
+  .hd-status-pill {
+    font-size: 6px; font-weight: 800; letter-spacing: 0.05em;
+    padding: 2px 5px; border-radius: 100px;
+  }
+  .hd-plan-storage { height: 4px; background: rgba(13,14,20,.06); border-radius: 100px; overflow: hidden; margin: 4px 0; }
+  .hd-plan-storage span { display: block; height: 100%; width: 18%; background: linear-gradient(90deg, var(--brand), #8344e8); }
+  .hd-plan-tags { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 4px; }
+  .hd-plan-tag {
+    background: rgba(13,14,20,.05); padding: 2px 6px;
+    border-radius: 100px; font-size: 6px; font-weight: 700;
+    color: var(--ink-2);
+  }
+
+  /* Character — sits IN FRONT of the dashboard. Pushed down so it
+     overlaps the dashboard's lower portion rather than sitting on top
+     of the screen content. */
+  .hero-mockup {
+    position: relative; z-index: 2;
+    background: transparent;
+    overflow: visible;
+    aspect-ratio: 5/4;
+    display: grid; place-items: end center;
+    padding-top: 14%;
+  }
+  .hero-character {
+    width: 78%; height: auto; max-height: 100%;
+    display: block;
+    filter: drop-shadow(0 24px 36px rgba(13,14,20,0.18));
+    transform: translateX(-12%);
+  }
+
+  /* Reusable mock UI styles */
+  .mock-chrome {
+    height: 32px; padding: 0 14px;
+    display: flex; align-items: center; gap: 6px;
+    background: var(--paper-2);
+    border-bottom: 1px solid var(--paper-3);
+  }
+  .mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .mock-url {
+    margin-left: 12px; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--ink-4);
+  }
+  .mock-body {
+    height: calc(100% - 32px);
+    display: grid; grid-template-columns: 160px 1fr;
+  }
+  .mock-side {
+    background: var(--paper); padding: 16px;
+    border-right: 1px solid var(--paper-3);
+  }
+  .mock-side h6 {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--ink-4); margin-bottom: 10px;
+  }
+  .mock-nav-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: 8px;
+    font-size: 12px; color: var(--ink-3); margin-bottom: 2px;
+  }
+  .mock-nav-item.active {
+    background: var(--brand); color: #fff; font-weight: 600;
+  }
+  .mock-nav-item .pip { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .mock-pane { padding: 22px; }
+  .mock-pane h5 {
+    font-size: 18px; font-weight: 700; margin-bottom: 16px;
+    font-family: 'Bricolage Grotesque'; letter-spacing: -.01em;
+  }
+  .mock-row {
+    background: var(--paper-2); border-radius: 12px;
+    padding: 12px 14px; display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 8px;
+  }
+  .mock-row-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .mock-row-meta { font-size: 11px; color: var(--ink-4); margin-top: 2px; }
+  .mock-tag {
+    font-size: 10px; padding: 3px 9px; border-radius: 100px;
+    font-weight: 700; letter-spacing: .04em;
+  }
+
+  /* ── Section primitives ──────────────────────────────────────────── */
+  .section { padding: 100px 0; }
+  .section-tight { padding: 64px 0; }
+  .section-eyebrow {
+    text-transform: uppercase; font-size: 12px; font-weight: 700;
+    letter-spacing: .14em; color: var(--brand); margin-bottom: 14px;
+  }
+  .section-title {
+    font-size: clamp(36px, 5vw, 64px); margin-bottom: 16px;
+    max-width: 22ch;
+  }
+  .section-sub {
+    font-size: 18px; color: var(--ink-3); max-width: 60ch; line-height: 1.5;
+  }
+  .section-head { text-align: center; margin: 0 auto 64px; max-width: 720px; }
+  .section-head .section-title, .section-head .section-sub { margin-left: auto; margin-right: auto; }
+
+  /* ── Logo strip ──────────────────────────────────────────────────── */
+  .logos {
+    background: #fff; padding: 56px 0;
+    border-top: 1px solid var(--paper-3);
+    border-bottom: 1px solid var(--paper-3);
+  }
+  .logos-eyebrow {
+    text-align: center; font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .12em;
+    color: var(--ink-4); margin-bottom: 28px;
+  }
+  .logos-row {
+    display: grid; grid-template-columns: repeat(6, 1fr);
+    gap: 32px; align-items: center;
+  }
+  .logo-item {
+    text-align: center;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700; font-size: 22px;
+    color: var(--ink-3); opacity: .75;
+    letter-spacing: -.01em;
+  }
+
+  /* ── Feature rows ────────────────────────────────────────────────── */
+  .feature-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 80px; align-items: center;
+    padding: 64px 0;
+  }
+  .feature-row.reversed .feature-content { order: 2; }
+  .feature-row.reversed .feature-visual { order: 1; }
+  .feature-content h3 {
+    font-size: clamp(32px, 4.5vw, 52px); margin-bottom: 16px;
+  }
+  .feature-content > p {
+    font-size: 18px; color: var(--ink-3); margin-bottom: 24px; line-height: 1.55;
+  }
+  .feature-bullets { list-style: none; }
+  .feature-bullets li {
+    display: flex; gap: 12px; padding: 10px 0; align-items: flex-start;
+    font-size: 15px; color: var(--ink-2);
+  }
+  .feature-bullets .check {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--brand); color: #fff;
+    display: grid; place-items: center; flex-shrink: 0;
+    font-size: 12px; font-weight: 800;
+  }
+  .feature-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--brand); font-weight: 600; text-decoration: none;
+    margin-top: 16px; font-size: 15px;
+  }
+  .feature-link:hover { gap: 10px; }
+  .feature-visual { position: relative; aspect-ratio: 5/4; }
+  .feature-blob {
+    position: absolute; inset: -6% -8% -2% -8%;
+    border-radius: var(--r-xl);
+    z-index: 0;
+  }
+  .feature-card {
+    position: relative; z-index: 1; background: #fff;
+    border-radius: 22px; box-shadow: var(--shadow-lg);
+    overflow: hidden; aspect-ratio: 5/4;
+    border: 1px solid rgba(13,14,20,.05);
+  }
+
+  /* ── Use case grid ───────────────────────────────────────────────── */
+  .use-cases {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .use-case {
+    background: #fff; border-radius: var(--r-lg);
+    padding: 20px 24px 26px; border: 1px solid var(--paper-3);
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .use-case:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+  }
+  .use-case-illo {
+    width: 100%; aspect-ratio: 1/1; border-radius: 18px;
+    display: flex; justify-content: center; align-items: flex-end;
+    margin-bottom: 16px; overflow: hidden;
+    position: relative;
+    background: var(--paper);
+    border: 1px solid var(--paper-3);
+  }
+  /* Character fills the full card height. width:auto keeps native
+     aspect; max-width:100% prevents wide SVGs (like the near-square
+     content-editor one) from spilling. The character is anchored to
+     the bottom so the figure "stands" on the card edge. */
+  .use-case-character {
+    height: 100%; width: auto;
+    max-width: 100%;
+    display: block;
+  }
+  .use-case h4 {
+    font-family: 'Bricolage Grotesque'; font-weight: 700;
+    font-size: 24px; margin-bottom: 8px; letter-spacing: -.01em;
+  }
+  .use-case p { color: var(--ink-3); font-size: 15px; line-height: 1.55; }
+
+  /* ── Pricing teaser ──────────────────────────────────────────────── */
+  .pricing {
+    background: var(--paper-2); padding: 100px 0;
+  }
+  .pricing-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 20px; margin-top: 48px;
+  }
+  .price-card {
+    background: #fff; border-radius: var(--r-lg);
+    padding: 32px; border: 1px solid var(--paper-3);
+    display: flex; flex-direction: column;
+  }
+  .price-card.featured {
+    background: var(--ink); color: #fff;
+    border: none; transform: scale(1.04);
+    box-shadow: var(--shadow-xl);
+    position: relative;
+  }
+  .price-card.featured::before {
+    content: 'MOST POPULAR';
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    background: var(--brand); color: #fff;
+    font-size: 11px; font-weight: 800; letter-spacing: .1em;
+    padding: 4px 12px; border-radius: 100px;
+  }
+  .price-tier {
+    font-size: 13px; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-3);
+    margin-bottom: 12px;
+  }
+  .price-card.featured .price-tier { color: rgba(255,255,255,.65); }
+  .price-amount {
+    font-family: 'Bricolage Grotesque'; font-weight: 800;
+    font-size: 56px; line-height: 1; margin-bottom: 4px;
+    letter-spacing: -.025em;
+  }
+  .price-period { font-size: 14px; color: var(--ink-3); margin-bottom: 24px; }
+  .price-card.featured .price-period { color: rgba(255,255,255,.65); }
+  .price-features { list-style: none; flex: 1; margin-bottom: 24px; }
+  .price-features li {
+    padding: 8px 0; font-size: 14px; color: var(--ink-2);
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .price-card.featured .price-features li { color: rgba(255,255,255,.85); }
+  .price-features li::before {
+    content: '✓'; color: var(--brand); font-weight: 700;
+    flex-shrink: 0;
+  }
+  .price-card.featured .price-features li::before { color: var(--brand-soft); }
+
+  /* ── Testimonials (workleap-style pastel cards) ──────────────────── */
+  .testimonials {
+    padding: 100px 0; overflow: hidden;
+  }
+  .testimonial-track {
+    display: flex; gap: 20px; overflow-x: auto;
+    padding: 8px 24px 24px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .testimonial-track::-webkit-scrollbar { display: none; }
+  .t-card {
+    flex: 0 0 380px; min-height: 320px;
+    border-radius: var(--r-lg); padding: 28px;
+    scroll-snap-align: start;
+    display: flex; flex-direction: column; justify-content: space-between;
+    position: relative; overflow: hidden;
+  }
+  .t-quote {
+    font-family: 'Bricolage Grotesque'; font-weight: 600;
+    font-size: 22px; line-height: 1.3;
+    color: var(--ink); letter-spacing: -.01em;
+  }
+  .t-attribution {
+    display: flex; gap: 12px; align-items: center; margin-top: 24px;
+  }
+  .t-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: rgba(255,255,255,0.85); flex-shrink: 0;
+    overflow: hidden;
+    display: grid; place-items: center;
+  }
+  .t-avatar svg { width: 100%; height: 100%; display: block; }
+  .t-name { font-weight: 600; font-size: 14px; }
+  .t-role { font-size: 13px; color: rgba(13,14,20,.6); margin-top: 1px; }
+
+  /* ── Stats band ──────────────────────────────────────────────────── */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 32px; padding: 64px 0;
+    border-top: 1px solid var(--paper-3);
+    border-bottom: 1px solid var(--paper-3);
+  }
+  .stat { text-align: left; }
+  .stat-num {
+    font-family: 'Bricolage Grotesque'; font-weight: 800;
+    font-size: clamp(40px, 5.5vw, 72px); line-height: 1;
+    margin-bottom: 8px; letter-spacing: -.025em;
+  }
+  .stat-num em { color: var(--brand); font-style: normal; }
+  .stat-label { color: var(--ink-3); font-size: 14px; max-width: 22ch; }
+
+  /* ── FAQ ─────────────────────────────────────────────────────────── */
+  .faq-grid {
+    display: grid; grid-template-columns: 1fr 1.6fr; gap: 64px;
+  }
+  .faq-list { display: flex; flex-direction: column; gap: 10px; }
+  .faq-item {
+    background: #fff; border-radius: var(--r-md);
+    border: 1px solid var(--paper-3);
+    padding: 18px 22px;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  .faq-item[open] { border-color: var(--ink); box-shadow: var(--shadow-md); }
+  .faq-item summary {
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; list-style: none;
+    font-weight: 600; font-size: 16px; color: var(--ink);
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-toggle {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--paper-2); color: var(--ink-2);
+    display: grid; place-items: center;
+    font-size: 18px; font-weight: 400;
+    transition: transform .2s ease, background .2s ease;
+  }
+  .faq-item[open] .faq-toggle {
+    background: var(--brand); color: #fff; transform: rotate(45deg);
+  }
+  .faq-a {
+    color: var(--ink-3); font-size: 15px; line-height: 1.6;
+    margin-top: 14px; max-width: 60ch;
+  }
+
+  /* ── Final CTA band ──────────────────────────────────────────────── */
+  /* Top + bottom padding gives the band visual separation from the
+     FAQ section above and the footer below — without it the band
+     reads as glued to its neighbours. */
+  .final-cta-wrap { padding: 80px 24px; }
+  .final-cta {
+    max-width: 1100px; margin: 0 auto;
+    background: var(--ink); color: #fff;
+    border-radius: 24px;
+    padding: 40px 48px;
+    position: relative; overflow: hidden;
+    display: grid; grid-template-columns: 1.5fr auto;
+    gap: 40px;
+    align-items: center;
+  }
+  .final-cta::before {
+    content: ''; position: absolute;
+    top: -30%; right: -8%;
+    width: 420px; height: 420px;
+    background: radial-gradient(circle, rgba(203,23,43,.45), transparent 65%);
+    pointer-events: none;
+  }
+  .final-cta::after {
+    content: ''; position: absolute;
+    bottom: -40%; left: -10%;
+    width: 380px; height: 380px;
+    background: radial-gradient(circle, rgba(2,61,145,.4), transparent 65%);
+    pointer-events: none;
+  }
+  .final-cta > * { position: relative; z-index: 1; }
+  .final-cta h2 {
+    font-size: clamp(26px, 3.4vw, 42px);
+    margin-bottom: 8px; max-width: 18ch;
+    line-height: 1.05;
+  }
+  .final-cta p {
+    font-size: 15px; color: rgba(255,255,255,.7);
+    max-width: 50ch; margin: 0 0 20px;
+    line-height: 1.5;
+  }
+  .final-cta-actions {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .final-cta-aside {
+    display: flex; flex-direction: column; gap: 12px;
+    align-items: flex-end;
+  }
+  .final-cta-emblem {
+    width: 64px; height: 64px;
+    background: var(--paper);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,.25);
+  }
+  .final-cta-emblem svg { width: 70%; height: 70%; }
+  .cta-team {
+    display: flex; gap: 0;
+  }
+  .cta-team-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--paper); flex-shrink: 0;
+    margin-left: -8px; overflow: hidden;
+    border: 2px solid var(--ink);
+  }
+  .cta-team-avatar:first-child { margin-left: 0; }
+  .cta-team-avatar svg { width: 100%; height: 100%; display: block; }
+  .cta-team-count {
+    background: var(--brand); color: #fff;
+    width: 36px; height: 36px; border-radius: 50%;
+    margin-left: -8px;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 10px;
+    border: 2px solid var(--ink);
+  }
+  .cta-team-label {
+    font-size: 12px;
+    color: rgba(255,255,255,.55);
+    text-align: right;
+    max-width: 18ch;
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  /* ── Footer ──────────────────────────────────────────────────────── */
+  .footer { background: var(--paper); padding: 64px 0 32px; }
+  .footer-grid {
+    display: grid; grid-template-columns: 2.4fr 1fr 1fr 1fr 1fr;
+    gap: 32px; margin-bottom: 48px;
+  }
+  .footer-brand svg { height: 52px; width: auto; margin-bottom: 20px; }
+  .footer-brand p { font-size: 14px; color: var(--ink-3); max-width: 280px; }
+  .footer h5 {
+    font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: var(--ink-2); margin-bottom: 16px;
+  }
+  .footer ul { list-style: none; }
+  .footer ul li { padding: 4px 0; }
+  .footer ul a {
+    color: var(--ink-3); text-decoration: none; font-size: 14px;
+  }
+  .footer ul a:hover { color: var(--brand); }
+  .footer-bottom {
+    border-top: 1px solid var(--paper-3); padding-top: 24px;
+    display: flex; justify-content: space-between;
+    color: var(--ink-3); font-size: 13px; flex-wrap: wrap; gap: 12px;
+  }
+
+  /* ── Animation system ────────────────────────────────────────────
+     Two patterns:
+       (a) Hero — pure CSS keyframes, fires on page load with a staggered
+           cascade (eyebrow → headline → subhead → CTAs → trust → visual).
+       (b) Everything else — IntersectionObserver toggles `.in-view` on
+           elements that have `.reveal*` or `.section-head` classes; CSS
+           transitions handle the actual motion. Reveals once and stays.
+     Reduced-motion users get instant rendering. */
+
+  /* (a) HERO ON LOAD ─────────────────────────────────────────────── */
+  @keyframes heroFadeUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes heroVisualIn {
+    from { opacity: 0; transform: translateY(48px) scale(0.96); filter: blur(8px); }
+    to   { opacity: 1; transform: none; filter: none; }
+  }
+  @keyframes haloPulse {
+    0%, 100% { opacity: 0.85; transform: scale(1); }
+    50%      { opacity: 1; transform: scale(1.04); }
+  }
+  .hero-eyebrow,
+  .hero h1,
+  .hero-sub,
+  .hero-ctas,
+  .hero-trust {
+    animation: heroFadeUp 1s cubic-bezier(0.19, 1, 0.22, 1) both;
+  }
+  .hero-eyebrow { animation-delay: 0.15s; }
+  .hero h1     { animation-delay: 0.30s; }
+  .hero-sub    { animation-delay: 0.55s; }
+  .hero-ctas   { animation-delay: 0.75s; }
+  .hero-trust  { animation-delay: 0.95s; }
+  .hero-visual {
+    animation: heroVisualIn 1.3s cubic-bezier(0.19, 1, 0.22, 1) both;
+    animation-delay: 0.45s;
+  }
+  .hero-halo { animation: haloPulse 6s ease-in-out infinite; }
+
+  /* Subtle pulse on the live-status dot inside the eyebrow */
+  .hero-eyebrow-dot { animation: pulse 2s ease-in-out infinite; }
+
+  /* (b) SCROLL REVEALS ───────────────────────────────────────────── */
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale,
+  .reveal-stagger > *,
+  .section-head > * {
+    opacity: 0;
+    transition:
+      opacity 0.85s cubic-bezier(0.19, 1, 0.22, 1),
+      transform 0.85s cubic-bezier(0.19, 1, 0.22, 1),
+      filter 0.85s cubic-bezier(0.19, 1, 0.22, 1);
+    will-change: opacity, transform;
+  }
+  .reveal,
+  .reveal-stagger > * { transform: translateY(28px); }
+  .reveal-left  { transform: translateX(-36px); }
+  .reveal-right { transform: translateX(36px); }
+  .reveal-scale { transform: scale(0.94); }
+  .section-head > * { transform: translateY(22px); }
+
+  /* Active state — when .in-view is added by the observer */
+  .reveal.in-view,
+  .reveal-left.in-view,
+  .reveal-right.in-view,
+  .reveal-scale.in-view,
+  .reveal-stagger.in-view > *,
+  .section-head.in-view > * {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  /* Stagger children of .reveal-stagger / .section-head */
+  .section-head.in-view > *:nth-child(1) { transition-delay: 0ms; }
+  .section-head.in-view > *:nth-child(2) { transition-delay: 110ms; }
+  .section-head.in-view > *:nth-child(3) { transition-delay: 230ms; }
+  .reveal-stagger.in-view > *:nth-child(1) { transition-delay: 0ms; }
+  .reveal-stagger.in-view > *:nth-child(2) { transition-delay: 90ms; }
+  .reveal-stagger.in-view > *:nth-child(3) { transition-delay: 180ms; }
+  .reveal-stagger.in-view > *:nth-child(4) { transition-delay: 270ms; }
+  .reveal-stagger.in-view > *:nth-child(5) { transition-delay: 360ms; }
+  .reveal-stagger.in-view > *:nth-child(6) { transition-delay: 450ms; }
+  .reveal-stagger.in-view > *:nth-child(7) { transition-delay: 540ms; }
+  .reveal-stagger.in-view > *:nth-child(8) { transition-delay: 630ms; }
+
+  /* Reduced motion: kill all animation, render instantly */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      transition-delay: 0ms !important;
+    }
+    .reveal, .reveal-left, .reveal-right, .reveal-scale,
+    .reveal-stagger > *, .section-head > *,
+    .hero-eyebrow, .hero h1, .hero-sub, .hero-ctas, .hero-trust, .hero-visual {
+      opacity: 1 !important;
+      transform: none !important;
+      filter: none !important;
+    }
+  }
+
+  /* ── Responsive ──────────────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    .hero-grid, .feature-row { grid-template-columns: 1fr; gap: 48px; padding: 32px 0; }
+    .feature-row.reversed .feature-content,
+    .feature-row.reversed .feature-visual { order: 0; }
+    .use-cases, .pricing-grid { grid-template-columns: 1fr; }
+    /* Mobile override removed — base 4/5 portrait already fits the
+       single-character SVGs at narrow widths. */
+    .logos-row { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    .footer-brand { grid-column: 1 / -1; }
+    .nav-links { display: none; }
+    .faq-grid { grid-template-columns: 1fr; gap: 32px; }
+    .price-card.featured { transform: none; }
+    .final-cta { padding: 64px 28px; }
+    .section { padding: 72px 0; }
+  }
+
+  /* ── Inline brand SVGs (so the file is self-contained) ───────────── */
+  .brand-mark { display: inline-block; line-height: 0; }
+
+  /* ── Emblem watermark ────────────────────────────────────────────
+     Subtle decorative emblem behind section content. Positioned via
+     modifier classes so each section can place it where it doesn't
+     fight the copy. Always pointer-events:none, very low opacity. */
+  .emblem-watermark {
+    position: absolute; pointer-events: none;
+    width: 520px; height: 520px;
+    opacity: 0.05;
+    z-index: 0;
+  }
+  .emblem-watermark svg { width: 100%; height: 100%; }
+  .emblem-watermark.tr { top: -120px; right: -100px; }
+  .emblem-watermark.bl { bottom: -120px; left: -120px; }
+  .emblem-watermark.br { bottom: -140px; right: -140px; }
+  .emblem-watermark.tl { top: -100px; left: -120px; }
+  .emblem-watermark.center {
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    opacity: 0.035; width: 800px; height: 800px;
+  }
+  /* Section needs to be a positioned container with overflow hidden */
+  .has-watermark { position: relative; overflow: hidden; }
+  .has-watermark > .container,
+  .has-watermark > .container-narrow { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+
+<!-- ── NAV ─────────────────────────────────────────────────────────── -->
+<div class="nav-shell">
+  <div class="nav">
+    <div class="nav-logo brand-mark">
+      <!-- Mero CMS wordmark (red+navy split) -->
+      <svg viewBox="0 0 300 105.27" xmlns="http://www.w3.org/2000/svg" aria-label="Mero CMS">
+        <path d="M148.16895,18.07131c0.46875,-0.01962 0.9375,-0.02797 1.40625,-0.02504c6.8042,0.02679 13.31543,2.77532 18.08057,7.6321c5.15479,5.28563 6.73828,11.18314 6.65186,18.35989c-2.21338,-0.47541 -4.85156,-1.29989 -7.17041,-1.84851c-0.09229,-1.97677 -0.16992,-3.12131 -0.65918,-5.03116c-4.06201,4.43481 -9.78223,6.43515 -15.62256,7.03282l-0.2666,0.00893c-7.49736,0.23251 -12.96094,-1.94792 -18.38364,-7.03619c-0.46992,1.93402 -0.62007,3.03712 -0.68086,5.02809c-2.3874,0.53193 -4.69702,1.31233 -7.07798,1.8324c-0.66577,-14.30035 9.60381,-24.99607 23.72256,-25.95334zM147.79688,27.42776c-0.9873,-0.48888 -1.79092,-0.93502 -2.7397,-1.48144c0.09624,0.98831 0.12407,1.67486 0.12437,2.66917c-0.60571,-0.09166 -1.53516,-0.35037 -1.97915,-0.10644c-0.08057,0.40909 0.08145,0.77659 0.21255,1.17455l-2.36807,0.09459l2.13853,2.27765l-2.91284,1.1154c0.87012,0.60792 1.74272,1.22712 2.61943,1.8242l-1.46924,1.29784c-4.01865,-1.76637 -6.1623,-3.53347 -7.57397,-7.8507c0.15747,1.85539 0.27744,3.29788 1.05952,5.03526c2.75669,6.12402 9.03062,7.97984 15.21768,7.95832c5.44043,-0.47717 10.81641,-2.37546 13.33008,-7.71395c0.84082,-1.78408 0.95215,-3.33625 1.12354,-5.25562c-1.13965,3.52834 -2.95459,5.70439 -6.30762,7.43679c-0.29443,0.15066 -0.59326,0.29225 -0.89648,0.42475l-1.73877,-1.38393c0.88037,-0.58449 1.71094,-1.13034 2.55322,-1.77354l-2.87109,-1.10808c0.71924,-0.73076 1.56738,-1.55143 2.23682,-2.3125l-2.39502,-0.10161l0.33545,-1.41878l-2.26758,0.47102c0.06885,-0.88743 0.15234,-1.80268 0.19922,-2.68894c-0.85107,0.48932 -1.74316,1.0236 -2.60156,1.48891c-0.39404,-0.77074 -1.16162,-2.37078 -1.58643,-3.04429z" fill="#cb172b"/>
+        <path d="M93.7519,30.13031c2.87754,-0.08551 6.02256,0.02665 8.92822,-0.00717c1.97227,-0.02299 5.3042,-0.10893 7.18242,0.10117c1.20029,0.12972 2.37598,0.42988 3.4916,0.89124c4.22871,1.79624 5.74204,6.16311 4.08105,10.47097c-0.89458,2.32012 -3.22646,3.46231 -5.43223,4.3228c2.06572,2.89509 4.90972,6.29488 7.14814,9.10666l-3.02563,0.0101l-3.4459,0.00674c-2.03511,-1.99653 -4.74067,-6.55843 -6.73989,-8.59948l-6.61934,0.0082l0.02812,8.58542l-5.58164,0.00849zM99.34819,41.93104c2.79258,0.12885 9.68716,0.50484 11.81528,-0.94278c1.82666,-1.91791 1.50952,-5.21843 -1.14272,-5.88155c-3.06431,-0.76605 -7.42031,-0.42651 -10.68149,-0.40587z" fill="#cb172b"/>
+        <path d="M235.50879,29.52356c1.74609,-0.11655 4.37695,-0.04378 6.18896,-0.05125l0.00879,25.58247l-5.70703,0.00351v-12.56092l-0.00879,-4.72252c-3.37207,4.18693 -6.90381,9.15088 -10.12646,13.50004c-0.57275,-0.54467 -2.56641,-3.25469 -3.11572,-3.98546l-7.06494,-9.5528c-0.04834,5.76676 -0.05273,11.53381 -0.01611,17.30072l-5.62354,0.00117l0.00146,-25.49403l1.54248,-0.03968c1.5249,-0.0369 3.05127,-0.03616 4.57617,0.00234c0.98438,1.16591 2.49463,3.45279 3.4541,4.8092l6.18311,8.6844c3.24316,-4.47566 6.38525,-9.06171 9.70752,-13.4772z" fill="#023d91"/>
+        <path d="M57.60894,30.12372l5.77515,0.00176l-0.04307,24.88699c-1.81362,0.02782 -3.67251,0.01083 -5.49023,0.01552c0.01802,-3.77213 0.0126,-7.54425 -0.01611,-11.31624c0.03706,-1.78628 -0.01099,-3.63757 -0.03486,-5.42927c-0.8395,1.234 -2.36968,3.0768 -3.31494,4.30245c-2.19976,2.83462 -4.36685,5.69458 -6.50054,8.57927c-0.9772,-1.05142 -2.76519,-3.58061 -3.67837,-4.79353c-2.09106,-2.76683 -4.19722,-5.52239 -6.31831,-8.26653c-0.18794,5.17699 -0.03486,11.66925 0.02358,16.92399l-5.53213,-0.00073c-0.11689,-8.25935 -0.00293,-16.62208 -0.03896,-24.90178l5.76108,0.00776c3.31934,4.26262 6.39038,8.69406 9.81343,12.8908c3.0145,-4.15969 6.42788,-8.89319 9.59429,-12.90046z" fill="#cb172b"/>
+        <path d="M132.95098,40.39528l3.56089,1.99185c0.00688,3.19803 0.52764,5.5893 2.8125,8.00459c6.09258,6.44027 19.06479,5.09895 22.27573,-3.66246c0.5127,-1.39945 0.5376,-2.93199 0.55371,-4.40318c1.20996,-0.62315 2.41553,-1.25259 3.61963,-1.88848c0.0498,1.09256 0.05127,2.30313 0.07471,3.40579c2.29248,0.38859 6.2124,1.67793 8.42285,2.42144c-3.11719,1.07074 -6.26807,2.03651 -9.44971,2.89524c2.1167,1.74733 4.81055,4.00698 6.76465,5.90834c-2.70703,0.00981 -7.22168,-0.85536 -10.15723,-1.09446c1.16016,2.53388 2.30566,5.34669 3.32959,7.9368c-1.34326,-0.65741 -2.79199,-1.46651 -4.12207,-2.17531l-5.06396,-2.7456c-0.06738,2.79963 -0.33691,6.13968 -0.55957,8.94678c-1.87061,-2.21997 -3.7793,-5.36763 -5.63086,-7.79346c-1.9292,2.44047 -3.57671,5.3931 -5.60654,7.89126c-0.29502,-2.79319 -0.43843,-6.16077 -0.57275,-8.98734c-2.93862,1.59945 -6.09243,3.35909 -9.07075,4.848c1.04575,-2.66039 2.13179,-5.30481 3.25737,-7.9324c-3.23394,0.38522 -7.07534,0.95302 -10.26357,1.11072l6.52544,-5.84773c-2.97129,-0.92989 -6.33809,-1.90971 -9.23145,-2.97313c2.64683,-0.95068 5.72109,-1.7611 8.45156,-2.44325c-0.00747,-1.21042 -0.00776,-2.20181 0.07983,-3.41399z" fill="#023d91"/>
+        <path d="M88.76865,30.08624l0.49116,0.06501c0.40503,0.42022 0.24595,3.76305 0.24097,4.53627c-5.27974,0.07101 -10.70977,0.00512 -16.00151,0.00381c-0.02695,1.84104 -0.00469,3.73669 -0.00615,5.58257l14.62559,0.02431l-0.02021,4.53569c-4.68472,0.12167 -9.87891,0.03939 -14.59189,0.02167l-0.02329,5.59223l11.00156,-0.00644l5.17485,0.00322l0.03208,4.59103l-21.86807,0.00146l-0.01377,-24.92609c6.87231,0.0142 14.10483,0.10864 20.95869,-0.02474z" fill="#cb172b"/>
+        <path d="M256.20557,28.76029c4.11914,-0.25403 7.77393,0.78128 11.34229,2.77547c-0.97559,1.3933 -1.96582,2.77693 -2.96777,4.15105c-2.12402,-1.13912 -4.14551,-2.04353 -6.61523,-2.09947c-1.45898,-0.03309 -3.88037,0.01772 -4.97021,1.06181c-0.4292,0.41084 -1.04443,1.45992 -0.95654,1.96388c0.54785,3.18104 8.11377,3.06538 10.7124,4.20874c1.46191,0.47717 2.6748,1.08041 3.7998,2.17092c2.60889,2.52964 2.40088,7.40106 -0.21973,9.87872c-2.92529,2.76581 -6.73682,2.93477 -10.54834,2.89509c-4.14258,-0.33764 -7.12354,-1.21936 -10.53662,-3.63376c0.88037,-1.32302 2.12256,-2.85922 3.1084,-4.14124c3.65332,2.56888 7.88818,3.73992 12.31201,2.51661c0.94482,-0.2615 2.18555,-1.73943 1.99805,-2.72071c-0.43652,-2.05276 -3.73682,-2.83814 -5.8418,-3.0746c-7.15723,-0.80441 -13.86328,-5.0767 -8.76416,-12.81349c1.36816,-2.07648 5.4624,-2.95029 8.14746,-3.13902z" fill="#023d91"/>
+        <path d="M194.59424,28.76293c4.49854,-0.07745 7.83398,0.99959 11.37891,3.75075c-1.15576,1.29022 -2.28223,2.60636 -3.37793,3.9471c-2.18555,-1.71454 -3.59619,-2.50021 -6.375,-2.82101c-12.15381,-1.40311 -14.31006,16.15911 -2.07422,17.30862c3.37939,0.31743 5.85059,-0.79006 8.39648,-2.96684c0.56689,0.26911 3.0249,2.93726 3.63721,3.56509c-5.75977,5.33981 -15.79834,5.74172 -21.79102,0.51919c-5.36426,-4.67478 -5.56641,-13.64558 -0.79102,-18.81129c2.96777,-3.21077 6.74707,-4.29996 10.99658,-4.49162z" fill="#023d91"/>
+      </svg>
+    </div>
+    <nav class="nav-links">
+      <a href="#features">Product</a>
+      <a href="#use-cases">Use cases</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#testimonials">Customers</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-actions">
+      <a href="#" class="btn btn-ghost">Sign in</a>
+      <a href="#" class="btn btn-primary">Start free</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── HERO ───────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <span class="hero-eyebrow">
+        <span class="hero-eyebrow-dot"></span>
+        v1.5 just shipped — visual editor in beta
+      </span>
+      <h1 class="display">
+        The CMS your team
+        <span class="serif-em em">actually</span>
+        wants to use.
+      </h1>
+      <p class="hero-sub">
+        Mero CMS is the motion-first content platform for teams that treat content as a product. Visual editor, AI Studio, eight-tier capability matrix — all from one admin you'd recommend to a friend.
+      </p>
+      <div class="hero-ctas">
+        <a href="#" class="btn btn-brand btn-lg">Start free →</a>
+        <a href="#" class="btn btn-light btn-lg">Book a demo</a>
+      </div>
+      <div class="hero-trust">
+        <span class="hero-trust-stars">★★★★★</span>
+        <span><strong>4.9 / 5</strong> · 600+ teams shipping with Mero CMS</span>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <!-- Brand halo: subtle red glow that lifts the mockup off the page -->
+      <div class="hero-halo"></div>
+      <!-- Emblem watermark behind the mockup — gives the visual brand
+           grounding instead of random colored shapes -->
+      <div class="hero-emblem-bg" aria-hidden="true">
+        <svg viewBox="0 0 247.79 300" xmlns="http://www.w3.org/2000/svg">
+          <path d="M117.31202,52.71257c2.15905,-0.19724 6.37977,-0.11768 8.61547,-0.0893c28.18985,0.53494 55.04855,12.0922 74.81913,32.19427c15.72162,16.22631 25.58557,37.22942 28.03446,59.68923c0.58011,5.66499 0.39572,12.65988 0.31906,18.40587c-1.12086,-0.39095 -2.43646,-0.65242 -3.6029,-0.96112c-8.84254,-2.34137 -17.94406,-5.21188 -26.90014,-7.00401c-0.14896,-8.23115 -0.70773,-13.59945 -2.73709,-21.55297c-0.22272,0.30746 -0.46015,0.60414 -0.71146,0.88902c-11.02852,12.64061 -28.17348,20.60449 -43.9962,25.50891c-6.86209,2.12693 -14.8212,3.11291 -21.98349,3.58881c-6.60104,0.77238 -17.98115,-0.23412 -24.58467,-1.39517c-17.12548,-3.0114 -35.32231,-11.10414 -48.24033,-22.86568c-1.69392,-1.54227 -4.83356,-4.30546 -6.06008,-6.07044c-0.15331,2.32831 -1.08439,5.81209 -1.51305,8.26015c-0.76802,4.49047 -1.15587,9.03771 -1.15939,13.59344c-4.9413,1.19689 -9.86561,2.4634 -14.77127,3.79869c-5.18163,1.43432 -9.92051,2.89931 -15.16055,4.08522c-0.11308,-0.71664 -0.14959,-1.39537 -0.18974,-2.1174c-1.47379,-26.81064 7.81734,-53.10021 25.81009,-73.03115c18.30767,-20.36064 46.748,-33.44586 74.01215,-34.92638zM116.59537,92.3511c-2.63308,-1.23211 -9.28218,-4.78653 -11.70414,-6.55152c0.7614,4.37901 0.40152,7.52134 0.71001,11.67162c-2.82369,-0.48191 -6.74523,-0.86188 -9.34061,-1.63508c0.41436,1.4741 1.18674,4.53626 1.73142,5.87383c-2.76257,0.32175 -7.36616,0.58964 -10.17535,0.6261c2.24296,2.31526 7.34316,7.27956 9.09427,9.59565c-2.90035,1.29945 -9.5018,3.90704 -12.53764,4.72894c3.15352,1.67155 7.73971,5.57258 11.44599,7.73287c-1.42417,1.23211 -4.83522,4.39931 -6.12203,5.30325c-11.3422,-3.11623 -22.1221,-12.2683 -27.87804,-22.42459c-0.81588,-1.44572 -1.54019,-2.94116 -2.16816,-4.47783c-0.28032,-0.68847 -1.42251,-4.298 -1.65891,-4.51637c-0.53909,0.51091 0.01927,4.96015 0.14109,5.977c1.26443,10.53273 5.8962,20.37555 13.20559,28.06367c12.44793,13.07901 31.39765,19.06948 49.11651,19.45256c1.34586,0.02445 2.69213,0.03646 4.0384,0.03646c10.66865,-0.3893 19.87334,-1.97797 29.9625,-6.27576c16.6442,-7.0904 30.33419,-21.10587 32.42403,-39.68494c0.31326,-2.78453 0.52873,-5.6076 0.76885,-8.39896l-0.09178,0.18895c-0.68619,1.4393 -1.04896,3.0232 -1.58577,4.52445c-4.21471,11.78349 -16.60193,23.30511 -28.27231,27.58695c-0.16844,0.06278 -0.3375,0.12348 -0.50739,0.18232c-2.04385,-1.40283 -5.2471,-3.95884 -7.1364,-5.6047c2.76982,-2.05732 5.68591,-3.91222 8.46381,-5.95856c0.84054,-0.61906 1.67528,-1.24537 2.60532,-1.72541c-2.63453,-0.63336 -9.98184,-3.53349 -12.5422,-4.65932l6.1154,-6.2105c1.09061,-1.11029 2.50525,-2.70331 3.69012,-3.59565c-3.79144,0.00497 -6.72017,-0.58011 -10.57459,-0.20159c0.39282,-1.67776 1.12251,-5.17728 1.73702,-6.65325c-2.31485,0.95035 -7.14738,1.98377 -9.73322,2.26989c0.1732,-3.46802 0.41312,-8.54834 1.01768,-11.90449c-1.56816,1.49565 -9.21941,6.09593 -11.24151,6.79786c-1.16913,-1.72997 -6.3518,-12.61968 -7.07776,-12.86499c-0.59171,2.13004 -4.69579,10.23191 -5.92023,12.73115z" fill="#cb172b"/>
+          <path d="M53.72818,147.59751c0.86664,0.17818 13.98439,7.6442 14.92604,8.2875c0.28467,2.71906 0.07003,5.67742 0.37396,8.45988c4.84765,44.35815 67.22258,55.42169 95.72631,26.43481c10.79544,-10.97818 12.74151,-20.51623 12.70753,-35.10456c5.12983,-2.66333 10.26982,-5.56305 15.38474,-8.16091c0.12203,3.89151 0.64019,10.87376 0.29337,14.50069c4.80974,0.73343 31.0125,7.97196 35.12093,10.36077c-2.48204,1.10552 -8.14641,2.80421 -10.94751,3.71872c-9.4558,3.08557 -18.99365,5.91568 -28.60214,8.48785c3.03646,1.98398 26.28791,22.00815 27.90601,24.33833l-0.09738,0.32942c-2.59599,1.45235 -40.99019,-4.98004 -41.99026,-4.15919c0.07686,0.35822 2.78101,6.41333 3.20221,7.41609c3.17528,7.57251 6.58094,15.09945 9.46989,22.79834c0.28425,0.75622 0.4962,1.28867 0.1616,2.00967c-0.0576,0.02072 -0.11395,0.04351 -0.17258,0.06008c-1.56195,0.44337 -12.74565,-6.18025 -15.05159,-7.42541c-5.05193,-2.85704 -10.60649,-5.47169 -15.64993,-8.49033c-2.1893,-1.30939 -4.78384,-2.34116 -6.89068,-3.84738c-0.29917,7.54144 -0.74523,15.00829 -1.29095,22.53108c-0.37541,5.17749 -0.50905,10.12707 -1.19378,15.30041c-2.01236,-2.04489 -5.00159,-6.47445 -6.76512,-8.87983c-5.73771,-7.8232 -11.02438,-16.39019 -17.06001,-23.96892c-6.73508,8.9482 -15.37148,22.99931 -22.60193,32.09669c-0.24116,0.30249 -0.60767,0.20097 -0.93356,0.15124c-0.67624,-0.95097 -0.87327,-7.53315 -0.98225,-9.13052l-0.96402,-14.9047c-0.27659,-4.10221 -0.67023,-8.9047 -0.62134,-12.97376c-2.51354,1.57251 -5.76713,3.25898 -8.40186,4.6989c-4.98895,2.77624 -10.01996,5.47583 -15.09137,8.09669c-2.22845,1.16851 -11.8357,6.82666 -13.65,6.84116c-0.16326,-0.08702 -0.47921,-0.18439 -0.51671,-0.375c-0.17465,-0.88467 11.5297,-29.19613 13.02721,-32.15946c-7.34337,0.75456 -14.7663,1.79979 -22.03923,2.5759c-3.67583,0.39365 -17.08405,2.42403 -20.1924,1.6989l-0.07935,-0.41436c0.2018,-0.41436 0.44047,-0.77279 0.79081,-1.08149c6.96112,-6.1038 13.80166,-12.35097 20.69523,-18.53267c1.6268,-1.45877 3.35076,-3.14648 5.12507,-4.40159c-3.83246,-0.84903 -36.69102,-11.12901 -38.16878,-12.36112l0.00779,-0.33315c1.2266,-1.38087 31.20423,-9.68909 34.73834,-10.16436c-0.21547,-2.10186 -0.20449,-12.49496 0.29772,-14.32438z" fill="#023e92"/>
+        </svg>
+      </div>
+      <!-- Dashboard sits BEHIND the character — recreated as HTML/CSS
+           so it renders the actual Mero CMS admin layout (sidebar, KPI
+           cards, panels) with crisp text, not a flat image. Slightly
+           tilted so it feels like a screen the character is presenting. -->
+      <div class="hero-dashboard" aria-hidden="true">
+        <div class="hd-chrome">
+          <span class="hd-dot" style="background:#ff5f57"></span>
+          <span class="hd-dot" style="background:#febc2e"></span>
+          <span class="hd-dot" style="background:#28c840"></span>
+          <span class="hd-url">admin.merocms.com / dashboard</span>
+        </div>
+        <div class="hd-body">
+          <aside class="hd-side">
+            <div class="hd-brand">
+              <span class="hd-brand-mark">M</span>
+              <span><span class="hd-brand-mero">MERO</span> <span class="hd-brand-cms">CMS</span></span>
+            </div>
+            <div class="hd-menu-label">MENU</div>
+            <div class="hd-menu-item active"><span class="pip"></span> Dashboard</div>
+            <div class="hd-menu-item"><span class="pip"></span> Site Pages</div>
+            <div class="hd-menu-item"><span class="pip"></span> Content</div>
+            <div class="hd-menu-item"><span class="pip"></span> Blog</div>
+            <div class="hd-menu-item"><span class="pip"></span> Media</div>
+            <div class="hd-menu-item"><span class="pip"></span> Plugins</div>
+            <div class="hd-menu-item"><span class="pip"></span> Users</div>
+            <div class="hd-menu-item"><span class="pip"></span> SEO</div>
+            <div class="hd-license">
+              <small>LICENSE</small>
+              <b>ENTERPRISE</b>
+              <span class="v">✓ VERIFIED</span>
+            </div>
+          </aside>
+          <main class="hd-main">
+            <div class="hd-topbar">
+              <div class="hd-search">🔍 Search…</div>
+              <div class="hd-actions">
+                <span style="width:14px;height:14px;border-radius:50%;background:#fff;border:1px solid #ebe8df;display:grid;place-items:center;font-size:8px">🔔</span>
+                <span style="width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,#2557e8,#8344e8);color:#fff;display:grid;place-items:center;font-size:7px;font-weight:700">BL</span>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+              <div>
+                <div class="hd-greeting">GOOD AFTERNOON · APRIL 26, 2026</div>
+                <div class="hd-title">Dashboard Overview</div>
+                <div class="hd-subtitle">Here's what's happening with your CMS today.</div>
+              </div>
+              <div class="hd-actions">
+                <span class="hd-btn hd-btn-light">📊 Analytics</span>
+                <span class="hd-btn hd-btn-brand">+ New Post</span>
+              </div>
+            </div>
+            <div class="hd-stats">
+              <div class="hd-stat">
+                <div class="hd-stat-l">
+                  <span class="hd-stat-eyebrow">TOTAL BLOGS</span>
+                  <span class="hd-stat-num">0</span>
+                  <span class="hd-stat-meta">Published</span>
+                </div>
+                <span class="hd-stat-icon b">📄</span>
+              </div>
+              <div class="hd-stat">
+                <div class="hd-stat-l">
+                  <span class="hd-stat-eyebrow">ACTIVE USERS</span>
+                  <span class="hd-stat-num">1</span>
+                  <span class="hd-stat-meta">Registered</span>
+                </div>
+                <span class="hd-stat-icon p">👥</span>
+              </div>
+              <div class="hd-stat">
+                <div class="hd-stat-l">
+                  <span class="hd-stat-eyebrow">MEDIA FILES</span>
+                  <span class="hd-stat-num">0</span>
+                  <span class="hd-stat-meta">In library</span>
+                </div>
+                <span class="hd-stat-icon s">🗂</span>
+              </div>
+              <div class="hd-stat">
+                <div class="hd-stat-l">
+                  <span class="hd-stat-eyebrow">PAGE VIEWS</span>
+                  <span class="hd-stat-num">0</span>
+                  <span class="hd-stat-meta">Today</span>
+                </div>
+                <span class="hd-stat-icon g">📈</span>
+              </div>
+            </div>
+            <div class="hd-panels">
+              <div class="hd-panel">
+                <h6>Quick Actions</h6>
+                <small>Common tasks at a glance</small>
+                <div class="hd-quick">
+                  <div>+ Create Content <span style="opacity:.4">→</span></div>
+                  <div>📁 Media Library <span style="opacity:.4">→</span></div>
+                  <div>📄 Site Pages <span style="opacity:.4">→</span></div>
+                </div>
+              </div>
+              <div class="hd-panel">
+                <h6>Security Status</h6>
+                <small>System protection overview</small>
+                <div style="margin-top:6px;">
+                  <div class="hd-status-row">
+                    <span><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#2bc28e;margin-right:4px"></span>System Health</span>
+                    <span class="hd-status-pill" style="background:#dcf6e8;color:#1c7d4e">OPTIMAL</span>
+                  </div>
+                  <div class="hd-status-row">
+                    <span><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#f5773b;margin-right:4px"></span>Last Backup</span>
+                    <span style="color:#bf462c;font-weight:700;font-size:6px;letter-spacing:0.04em">14 DAYS AGO</span>
+                  </div>
+                  <div class="hd-status-row">
+                    <span><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#2557e8;margin-right:4px"></span>Active Sessions</span>
+                    <span style="color:var(--navy);font-weight:700;font-size:6px;letter-spacing:0.04em">1 SESSION</span>
+                  </div>
+                </div>
+              </div>
+              <div class="hd-panel">
+                <h6>Active Plan</h6>
+                <small style="color:var(--brand);font-weight:700;letter-spacing:0.06em">ENTERPRISE</small>
+                <div style="display:flex;justify-content:space-between;font-size:7px;margin-top:6px;color:var(--ink-3)">
+                  <span>STORAGE</span><span>0 / 200 GB</span>
+                </div>
+                <div class="hd-plan-storage"><span></span></div>
+                <div class="hd-plan-tags">
+                  <span class="hd-plan-tag">⚪ WHITE-LABEL</span>
+                  <span class="hd-plan-tag">⚡ API ACCESS</span>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+
+      <!-- Character in front, overlapping the dashboard's lower-left so
+           the composition reads as "person + product." -->
+      <div class="hero-mockup">
+        <img src="character-hero.svg" alt="" class="hero-character" draggable="false">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── LOGO STRIP ─────────────────────────────────────────────────── -->
+<section class="logos has-watermark">
+  <div class="emblem-watermark center">
+    <svg viewBox="0 0 247.79 300" xmlns="http://www.w3.org/2000/svg">
+      <path d="M117.31202,52.71257c2.15905,-0.19724 6.37977,-0.11768 8.61547,-0.0893c28.18985,0.53494 55.04855,12.0922 74.81913,32.19427c15.72162,16.22631 25.58557,37.22942 28.03446,59.68923c0.58011,5.66499 0.39572,12.65988 0.31906,18.40587c-1.12086,-0.39095 -2.43646,-0.65242 -3.6029,-0.96112c-8.84254,-2.34137 -17.94406,-5.21188 -26.90014,-7.00401c-0.14896,-8.23115 -0.70773,-13.59945 -2.73709,-21.55297c-0.22272,0.30746 -0.46015,0.60414 -0.71146,0.88902c-11.02852,12.64061 -28.17348,20.60449 -43.9962,25.50891c-6.86209,2.12693 -14.8212,3.11291 -21.98349,3.58881c-6.60104,0.77238 -17.98115,-0.23412 -24.58467,-1.39517c-17.12548,-3.0114 -35.32231,-11.10414 -48.24033,-22.86568c-1.69392,-1.54227 -4.83356,-4.30546 -6.06008,-6.07044c-0.15331,2.32831 -1.08439,5.81209 -1.51305,8.26015c-0.76802,4.49047 -1.15587,9.03771 -1.15939,13.59344c-4.9413,1.19689 -9.86561,2.4634 -14.77127,3.79869c-5.18163,1.43432 -9.92051,2.89931 -15.16055,4.08522c-0.11308,-0.71664 -0.14959,-1.39537 -0.18974,-2.1174c-1.47379,-26.81064 7.81734,-53.10021 25.81009,-73.03115c18.30767,-20.36064 46.748,-33.44586 74.01215,-34.92638zM116.59537,92.3511c-2.63308,-1.23211 -9.28218,-4.78653 -11.70414,-6.55152c0.7614,4.37901 0.40152,7.52134 0.71001,11.67162c-2.82369,-0.48191 -6.74523,-0.86188 -9.34061,-1.63508c0.41436,1.4741 1.18674,4.53626 1.73142,5.87383c-2.76257,0.32175 -7.36616,0.58964 -10.17535,0.6261c2.24296,2.31526 7.34316,7.27956 9.09427,9.59565c-2.90035,1.29945 -9.5018,3.90704 -12.53764,4.72894c3.15352,1.67155 7.73971,5.57258 11.44599,7.73287c-1.42417,1.23211 -4.83522,4.39931 -6.12203,5.30325c-11.3422,-3.11623 -22.1221,-12.2683 -27.87804,-22.42459c-0.81588,-1.44572 -1.54019,-2.94116 -2.16816,-4.47783c-0.28032,-0.68847 -1.42251,-4.298 -1.65891,-4.51637c-0.53909,0.51091 0.01927,4.96015 0.14109,5.977c1.26443,10.53273 5.8962,20.37555 13.20559,28.06367c12.44793,13.07901 31.39765,19.06948 49.11651,19.45256c1.34586,0.02445 2.69213,0.03646 4.0384,0.03646c10.66865,-0.3893 19.87334,-1.97797 29.9625,-6.27576c16.6442,-7.0904 30.33419,-21.10587 32.42403,-39.68494c0.31326,-2.78453 0.52873,-5.6076 0.76885,-8.39896l-0.09178,0.18895c-0.68619,1.4393 -1.04896,3.0232 -1.58577,4.52445c-4.21471,11.78349 -16.60193,23.30511 -28.27231,27.58695c-0.16844,0.06278 -0.3375,0.12348 -0.50739,0.18232c-2.04385,-1.40283 -5.2471,-3.95884 -7.1364,-5.6047c2.76982,-2.05732 5.68591,-3.91222 8.46381,-5.95856c0.84054,-0.61906 1.67528,-1.24537 2.60532,-1.72541c-2.63453,-0.63336 -9.98184,-3.53349 -12.5422,-4.65932l6.1154,-6.2105c1.09061,-1.11029 2.50525,-2.70331 3.69012,-3.59565c-3.79144,0.00497 -6.72017,-0.58011 -10.57459,-0.20159c0.39282,-1.67776 1.12251,-5.17728 1.73702,-6.65325c-2.31485,0.95035 -7.14738,1.98377 -9.73322,2.26989c0.1732,-3.46802 0.41312,-8.54834 1.01768,-11.90449c-1.56816,1.49565 -9.21941,6.09593 -11.24151,6.79786c-1.16913,-1.72997 -6.3518,-12.61968 -7.07776,-12.86499c-0.59171,2.13004 -4.69579,10.23191 -5.92023,12.73115z" fill="#cb172b"/>
+      <path d="M53.72818,147.59751c0.86664,0.17818 13.98439,7.6442 14.92604,8.2875c0.28467,2.71906 0.07003,5.67742 0.37396,8.45988c4.84765,44.35815 67.22258,55.42169 95.72631,26.43481c10.79544,-10.97818 12.74151,-20.51623 12.70753,-35.10456c5.12983,-2.66333 10.26982,-5.56305 15.38474,-8.16091c0.12203,3.89151 0.64019,10.87376 0.29337,14.50069c4.80974,0.73343 31.0125,7.97196 35.12093,10.36077c-2.48204,1.10552 -8.14641,2.80421 -10.94751,3.71872c-9.4558,3.08557 -18.99365,5.91568 -28.60214,8.48785c3.03646,1.98398 26.28791,22.00815 27.90601,24.33833l-0.09738,0.32942c-2.59599,1.45235 -40.99019,-4.98004 -41.99026,-4.15919c0.07686,0.35822 2.78101,6.41333 3.20221,7.41609c3.17528,7.57251 6.58094,15.09945 9.46989,22.79834c0.28425,0.75622 0.4962,1.28867 0.1616,2.00967c-0.0576,0.02072 -0.11395,0.04351 -0.17258,0.06008c-1.56195,0.44337 -12.74565,-6.18025 -15.05159,-7.42541c-5.05193,-2.85704 -10.60649,-5.47169 -15.64993,-8.49033c-2.1893,-1.30939 -4.78384,-2.34116 -6.89068,-3.84738c-0.29917,7.54144 -0.74523,15.00829 -1.29095,22.53108c-0.37541,5.17749 -0.50905,10.12707 -1.19378,15.30041c-2.01236,-2.04489 -5.00159,-6.47445 -6.76512,-8.87983c-5.73771,-7.8232 -11.02438,-16.39019 -17.06001,-23.96892c-6.73508,8.9482 -15.37148,22.99931 -22.60193,32.09669c-0.24116,0.30249 -0.60767,0.20097 -0.93356,0.15124c-0.67624,-0.95097 -0.87327,-7.53315 -0.98225,-9.13052l-0.96402,-14.9047c-0.27659,-4.10221 -0.67023,-8.9047 -0.62134,-12.97376c-2.51354,1.57251 -5.76713,3.25898 -8.40186,4.6989c-4.98895,2.77624 -10.01996,5.47583 -15.09137,8.09669c-2.22845,1.16851 -11.8357,6.82666 -13.65,6.84116c-0.16326,-0.08702 -0.47921,-0.18439 -0.51671,-0.375c-0.17465,-0.88467 11.5297,-29.19613 13.02721,-32.15946c-7.34337,0.75456 -14.7663,1.79979 -22.03923,2.5759c-3.67583,0.39365 -17.08405,2.42403 -20.1924,1.6989l-0.07935,-0.41436c0.2018,-0.41436 0.44047,-0.77279 0.79081,-1.08149c6.96112,-6.1038 13.80166,-12.35097 20.69523,-18.53267c1.6268,-1.45877 3.35076,-3.14648 5.12507,-4.40159c-3.83246,-0.84903 -36.69102,-11.12901 -38.16878,-12.36112l0.00779,-0.33315c1.2266,-1.38087 31.20423,-9.68909 34.73834,-10.16436c-0.21547,-2.10186 -0.20449,-12.49496 0.29772,-14.32438z" fill="#023e92"/>
+    </svg>
+  </div>
+  <div class="container">
+    <div class="logos-eyebrow">Trusted by teams shipping content with motion</div>
+    <div class="logos-row">
+      <div class="logo-item">Blendwit</div>
+      <div class="logo-item">Nimble</div>
+      <div class="logo-item">Toolfolio</div>
+      <div class="logo-item">Northwind</div>
+      <div class="logo-item">Lenis</div>
+      <div class="logo-item">Jitter</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURE 1: Visual editor ──────────────────────────────────── -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-eyebrow">The product</div>
+      <h2 class="display section-title">Built for the people who actually edit the site.</h2>
+      <p class="section-sub">Three core systems, all from a single admin. Each one designed so the marketer doesn't need a developer to ship.</p>
+    </div>
+
+    <div class="feature-row reveal-stagger">
+      <div class="feature-content">
+        <div class="section-eyebrow">Visual editor</div>
+        <h3 class="display">Click. Edit. Publish. <span class="serif-em" style="color:var(--brand)">No PR required.</span></h3>
+        <p>Hover over any block in your published site, click, and edit the copy in place. The change goes live in 90&nbsp;ms with optimistic preview. No rebuild, no developer, no Slack thread asking who can change a headline.</p>
+        <ul class="feature-bullets">
+          <li><span class="check">✓</span> 90ms publish-to-live for copy edits</li>
+          <li><span class="check">✓</span> Section variants swappable from the canvas</li>
+          <li><span class="check">✓</span> Audit log every change, attributed by editor</li>
+        </ul>
+        <a href="#" class="feature-link">See how it works →</a>
+      </div>
+      <div class="feature-visual">
+        <div class="feature-blob" style="background: var(--pastel-coral)"></div>
+        <div class="feature-card">
+          <div class="mock-chrome">
+            <span class="mock-dot" style="background:#ff5f57"></span>
+            <span class="mock-dot" style="background:#febc2e"></span>
+            <span class="mock-dot" style="background:#28c840"></span>
+            <span class="mock-url">yoursite.com</span>
+          </div>
+          <div style="padding: 32px; height: calc(100% - 32px); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px; position: relative;">
+            <div style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 36px; line-height: 1; letter-spacing: -.02em; color: var(--ink); text-align: center; max-width: 12ch; outline: 2px dashed var(--brand); outline-offset: 8px; padding: 4px;">Where motion meets meaning.</div>
+            <div style="position: absolute; top: 90px; right: 60px; background: var(--ink); color: white; font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 100px; box-shadow: var(--shadow-md); display: flex; gap: 8px; align-items: center;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--pastel-pist)"></span>
+              Edit headline
+            </div>
+            <p style="color: var(--ink-3); font-size: 14px; max-width: 30ch; text-align: center; margin-top: 8px;">A CMS that respects your designer's typography decisions.</p>
+            <button style="background: var(--brand); color: white; padding: 8px 16px; border-radius: 100px; font-weight: 600; font-size: 13px; border: none;">Save & publish</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FEATURE 2: AI Studio ──────────────────────────── -->
+    <div class="feature-row reversed reveal-stagger">
+      <div class="feature-content">
+        <div class="section-eyebrow">AI Studio</div>
+        <h3 class="display">A draft for every blank page. <span class="serif-em" style="color:var(--brand)">Never staring.</span></h3>
+        <p>Built-in presets for blog drafts, meta descriptions, alt text, and translations. Rate-limited per-tier, never trained on your content, every output editable inline before it touches production.</p>
+        <ul class="feature-bullets">
+          <li><span class="check">✓</span> 12 presets, scoped per content type</li>
+          <li><span class="check">✓</span> Token usage visible per editor</li>
+          <li><span class="check">✓</span> Outputs are drafts, never auto-published</li>
+        </ul>
+        <a href="#" class="feature-link">Explore AI Studio →</a>
+      </div>
+      <div class="feature-visual">
+        <div class="feature-blob" style="background: var(--pastel-lav)"></div>
+        <div class="feature-card">
+          <!-- Same Mero CMS dashboard pattern as the hero, with the
+               AI Studio menu item active and the main pane showing the
+               generation interface. -->
+          <div class="hd-chrome">
+            <span class="hd-dot" style="background:#ff5f57"></span>
+            <span class="hd-dot" style="background:#febc2e"></span>
+            <span class="hd-dot" style="background:#28c840"></span>
+            <span class="hd-url">admin.merocms.com / ai-studio</span>
+          </div>
+          <div class="hd-body">
+            <aside class="hd-side">
+              <div class="hd-brand">
+                <span class="hd-brand-mark">M</span>
+                <span><span class="hd-brand-mero">MERO</span> <span class="hd-brand-cms">CMS</span></span>
+              </div>
+              <div class="hd-menu-label">MENU</div>
+              <div class="hd-menu-item"><span class="pip"></span> Dashboard</div>
+              <div class="hd-menu-item"><span class="pip"></span> Site Pages</div>
+              <div class="hd-menu-item"><span class="pip"></span> Content</div>
+              <div class="hd-menu-item"><span class="pip"></span> Blog</div>
+              <div class="hd-menu-item"><span class="pip"></span> Media</div>
+              <div class="hd-menu-item"><span class="pip"></span> Plugins</div>
+              <div class="hd-menu-item active"><span class="pip"></span> AI Studio</div>
+              <div class="hd-menu-item"><span class="pip"></span> Settings</div>
+              <div class="hd-license">
+                <small>LICENSE</small>
+                <b>ENTERPRISE</b>
+                <span class="v">✓ VERIFIED</span>
+              </div>
+            </aside>
+            <main class="hd-main">
+              <div class="hd-greeting">AI STUDIO · 12 PRESETS</div>
+              <div class="hd-title">Generate</div>
+              <div class="hd-subtitle">Drafts that match your brand voice in seconds.</div>
+
+              <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;">
+                <span class="hd-btn hd-btn-brand">Blog outline</span>
+                <span class="hd-btn hd-btn-light">Meta description</span>
+                <span class="hd-btn hd-btn-light">Alt text</span>
+                <span class="hd-btn hd-btn-light">Translate</span>
+              </div>
+
+              <div class="hd-panel" style="padding:12px;">
+                <div style="font-size:8px;font-weight:700;letter-spacing:0.1em;color:var(--ink-4);margin-bottom:6px">PROMPT</div>
+                <div style="font-size:11px;line-height:1.4;color:var(--ink);margin-bottom:10px">Outline a post about why our customers ship faster with Mero CMS.</div>
+                <div style="display:flex;gap:5px;align-items:center;font-size:9px;color:var(--ink-3)">
+                  <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--brand);animation:pulse 1.4s infinite"></span>
+                  Generating outline · 78%
+                </div>
+                <div style="height:5px;border-radius:100px;background:rgba(13,14,20,.06);margin-top:6px;overflow:hidden">
+                  <div style="width:78%;height:100%;background:linear-gradient(90deg,var(--brand),var(--navy))"></div>
+                </div>
+              </div>
+
+              <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;font-size:9px;color:var(--ink-3);font-family:'JetBrains Mono',monospace">
+                <span>78% · 12 tokens left</span>
+                <span style="background:linear-gradient(135deg,var(--brand),var(--navy));color:white;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:12px">✦</span>
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FEATURE 3: 8-tier matrix ─────────────────────── -->
+    <div class="feature-row reveal-stagger">
+      <div class="feature-content">
+        <div class="section-eyebrow">Capability matrix</div>
+        <h3 class="display">Twelve features. Eight tiers. <span class="serif-em" style="color:var(--brand)">Zero confusion.</span></h3>
+        <p>Every feature gates through a single capability matrix in code. Upgrade your customer's tier and the right features turn on — no migrations, no reinstall, no support ticket.</p>
+        <ul class="feature-bullets">
+          <li><span class="check">✓</span> One source of truth for pricing logic</li>
+          <li><span class="check">✓</span> Tier swap is a license update, never a redeploy</li>
+          <li><span class="check">✓</span> Downgrade-safe: features hide, content stays</li>
+        </ul>
+        <a href="#" class="feature-link">See the full matrix →</a>
+      </div>
+      <div class="feature-visual">
+        <div class="feature-blob" style="background: var(--pastel-pist)"></div>
+        <div class="feature-card">
+          <!-- Same Mero CMS dashboard pattern with Settings active and
+               the main pane showing the capability matrix table. -->
+          <div class="hd-chrome">
+            <span class="hd-dot" style="background:#ff5f57"></span>
+            <span class="hd-dot" style="background:#febc2e"></span>
+            <span class="hd-dot" style="background:#28c840"></span>
+            <span class="hd-url">admin.merocms.com / settings / capabilities</span>
+          </div>
+          <div class="hd-body">
+            <aside class="hd-side">
+              <div class="hd-brand">
+                <span class="hd-brand-mark">M</span>
+                <span><span class="hd-brand-mero">MERO</span> <span class="hd-brand-cms">CMS</span></span>
+              </div>
+              <div class="hd-menu-label">MENU</div>
+              <div class="hd-menu-item"><span class="pip"></span> Dashboard</div>
+              <div class="hd-menu-item"><span class="pip"></span> Site Pages</div>
+              <div class="hd-menu-item"><span class="pip"></span> Content</div>
+              <div class="hd-menu-item"><span class="pip"></span> Blog</div>
+              <div class="hd-menu-item"><span class="pip"></span> Media</div>
+              <div class="hd-menu-item"><span class="pip"></span> Plugins</div>
+              <div class="hd-menu-item"><span class="pip"></span> AI Studio</div>
+              <div class="hd-menu-item active"><span class="pip"></span> Settings</div>
+              <div class="hd-license">
+                <small>LICENSE</small>
+                <b>ENTERPRISE</b>
+                <span class="v">✓ VERIFIED</span>
+              </div>
+            </aside>
+            <main class="hd-main">
+              <div class="hd-greeting">SETTINGS · CAPABILITY MATRIX</div>
+              <div class="hd-title">8-tier matrix</div>
+              <div class="hd-subtitle">Twelve features. Eight tiers. One source of truth.</div>
+
+              <div style="display: grid; grid-template-columns: 1.4fr repeat(4, 1fr); gap: 8px; font-size: 8px; color: var(--ink-4); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding-bottom: 8px; border-bottom: 1px solid var(--paper-3);">
+              <span>Capability</span><span>Free</span><span>Studio</span><span>Pro</span><span>Ent</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1.4fr repeat(4, 1fr); gap: 8px; font-size: 12px; align-items: center; padding: 6px 0;">
+              <span style="font-weight: 600;">Visual editor</span>
+              <span style="color: var(--ink-4);">—</span>
+              <span style="color: #2a8e3f;">●</span>
+              <span style="color: #2a8e3f;">●</span>
+              <span style="color: #2a8e3f;">●</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1.4fr repeat(4, 1fr); gap: 8px; font-size: 12px; align-items: center; padding: 6px 0;">
+              <span style="font-weight: 600;">AI Studio</span>
+              <span style="color: var(--ink-4);">—</span>
+              <span style="color: var(--ink-4);">—</span>
+              <span style="color: #2a8e3f;">●</span>
+              <span style="color: #2a8e3f;">●</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1.4fr repeat(4, 1fr); gap: 8px; font-size: 12px; align-items: center; padding: 6px 0;">
+              <span style="font-weight: 600;">Webhooks (HMAC)</span>
+              <span style="color: var(--ink-4);">—</span>
+              <span style="color: #2a8e3f;">●</span>
+              <span style="color: #2a8e3f;">●</span>
+              <span style="color: #2a8e3f;">●</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1.4fr repeat(4, 1fr); gap: 8px; font-size: 12px; align-items: center; padding: 6px 0;">
+              <span style="font-weight: 600;">Custom collections</span>
+              <span style="color: var(--ink-4);">—</span>
+              <span style="color: var(--ink-4);">—</span>
+              <span style="color: #2a8e3f;">●</span>
+              <span style="color: #2a8e3f;">●</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1.4fr repeat(4, 1fr); gap: 8px; font-size: 12px; align-items: center; padding: 6px 0;">
+              <span style="font-weight: 600;">White-label admin</span>
+              <span style="color: var(--ink-4);">—</span>
+              <span style="color: var(--ink-4);">—</span>
+              <span style="color: var(--ink-4);">—</span>
+              <span style="color: #2a8e3f;">●</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1.4fr repeat(4, 1fr); gap: 8px; font-size: 12px; align-items: center; padding: 6px 0;">
+              <span style="font-weight: 600;">SLA & priority support</span>
+              <span style="color: var(--ink-4);">—</span>
+              <span style="color: var(--ink-4);">—</span>
+              <span style="color: var(--ink-4);">—</span>
+              <span style="color: #2a8e3f;">●</span>
+            </div>
+            </main>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── USE CASES ──────────────────────────────────────────────────── -->
+<section class="section has-watermark" id="use-cases" style="background: var(--paper);">
+  <div class="emblem-watermark tr">
+    <svg viewBox="0 0 247.79 300" xmlns="http://www.w3.org/2000/svg">
+      <path d="M117.31202,52.71257c2.15905,-0.19724 6.37977,-0.11768 8.61547,-0.0893c28.18985,0.53494 55.04855,12.0922 74.81913,32.19427c15.72162,16.22631 25.58557,37.22942 28.03446,59.68923c0.58011,5.66499 0.39572,12.65988 0.31906,18.40587c-1.12086,-0.39095 -2.43646,-0.65242 -3.6029,-0.96112c-8.84254,-2.34137 -17.94406,-5.21188 -26.90014,-7.00401c-0.14896,-8.23115 -0.70773,-13.59945 -2.73709,-21.55297c-0.22272,0.30746 -0.46015,0.60414 -0.71146,0.88902c-11.02852,12.64061 -28.17348,20.60449 -43.9962,25.50891c-6.86209,2.12693 -14.8212,3.11291 -21.98349,3.58881c-6.60104,0.77238 -17.98115,-0.23412 -24.58467,-1.39517c-17.12548,-3.0114 -35.32231,-11.10414 -48.24033,-22.86568c-1.69392,-1.54227 -4.83356,-4.30546 -6.06008,-6.07044c-0.15331,2.32831 -1.08439,5.81209 -1.51305,8.26015c-0.76802,4.49047 -1.15587,9.03771 -1.15939,13.59344c-4.9413,1.19689 -9.86561,2.4634 -14.77127,3.79869c-5.18163,1.43432 -9.92051,2.89931 -15.16055,4.08522c-0.11308,-0.71664 -0.14959,-1.39537 -0.18974,-2.1174c-1.47379,-26.81064 7.81734,-53.10021 25.81009,-73.03115c18.30767,-20.36064 46.748,-33.44586 74.01215,-34.92638zM116.59537,92.3511c-2.63308,-1.23211 -9.28218,-4.78653 -11.70414,-6.55152c0.7614,4.37901 0.40152,7.52134 0.71001,11.67162c-2.82369,-0.48191 -6.74523,-0.86188 -9.34061,-1.63508c0.41436,1.4741 1.18674,4.53626 1.73142,5.87383c-2.76257,0.32175 -7.36616,0.58964 -10.17535,0.6261c2.24296,2.31526 7.34316,7.27956 9.09427,9.59565c-2.90035,1.29945 -9.5018,3.90704 -12.53764,4.72894c3.15352,1.67155 7.73971,5.57258 11.44599,7.73287c-1.42417,1.23211 -4.83522,4.39931 -6.12203,5.30325c-11.3422,-3.11623 -22.1221,-12.2683 -27.87804,-22.42459c-0.81588,-1.44572 -1.54019,-2.94116 -2.16816,-4.47783c-0.28032,-0.68847 -1.42251,-4.298 -1.65891,-4.51637c-0.53909,0.51091 0.01927,4.96015 0.14109,5.977c1.26443,10.53273 5.8962,20.37555 13.20559,28.06367c12.44793,13.07901 31.39765,19.06948 49.11651,19.45256c1.34586,0.02445 2.69213,0.03646 4.0384,0.03646c10.66865,-0.3893 19.87334,-1.97797 29.9625,-6.27576c16.6442,-7.0904 30.33419,-21.10587 32.42403,-39.68494c0.31326,-2.78453 0.52873,-5.6076 0.76885,-8.39896l-0.09178,0.18895c-0.68619,1.4393 -1.04896,3.0232 -1.58577,4.52445c-4.21471,11.78349 -16.60193,23.30511 -28.27231,27.58695c-0.16844,0.06278 -0.3375,0.12348 -0.50739,0.18232c-2.04385,-1.40283 -5.2471,-3.95884 -7.1364,-5.6047c2.76982,-2.05732 5.68591,-3.91222 8.46381,-5.95856c0.84054,-0.61906 1.67528,-1.24537 2.60532,-1.72541c-2.63453,-0.63336 -9.98184,-3.53349 -12.5422,-4.65932l6.1154,-6.2105c1.09061,-1.11029 2.50525,-2.70331 3.69012,-3.59565c-3.79144,0.00497 -6.72017,-0.58011 -10.57459,-0.20159c0.39282,-1.67776 1.12251,-5.17728 1.73702,-6.65325c-2.31485,0.95035 -7.14738,1.98377 -9.73322,2.26989c0.1732,-3.46802 0.41312,-8.54834 1.01768,-11.90449c-1.56816,1.49565 -9.21941,6.09593 -11.24151,6.79786c-1.16913,-1.72997 -6.3518,-12.61968 -7.07776,-12.86499c-0.59171,2.13004 -4.69579,10.23191 -5.92023,12.73115z" fill="#cb172b"/>
+      <path d="M53.72818,147.59751c0.86664,0.17818 13.98439,7.6442 14.92604,8.2875c0.28467,2.71906 0.07003,5.67742 0.37396,8.45988c4.84765,44.35815 67.22258,55.42169 95.72631,26.43481c10.79544,-10.97818 12.74151,-20.51623 12.70753,-35.10456c5.12983,-2.66333 10.26982,-5.56305 15.38474,-8.16091c0.12203,3.89151 0.64019,10.87376 0.29337,14.50069c4.80974,0.73343 31.0125,7.97196 35.12093,10.36077c-2.48204,1.10552 -8.14641,2.80421 -10.94751,3.71872c-9.4558,3.08557 -18.99365,5.91568 -28.60214,8.48785c3.03646,1.98398 26.28791,22.00815 27.90601,24.33833l-0.09738,0.32942c-2.59599,1.45235 -40.99019,-4.98004 -41.99026,-4.15919c0.07686,0.35822 2.78101,6.41333 3.20221,7.41609c3.17528,7.57251 6.58094,15.09945 9.46989,22.79834c0.28425,0.75622 0.4962,1.28867 0.1616,2.00967c-0.0576,0.02072 -0.11395,0.04351 -0.17258,0.06008c-1.56195,0.44337 -12.74565,-6.18025 -15.05159,-7.42541c-5.05193,-2.85704 -10.60649,-5.47169 -15.64993,-8.49033c-2.1893,-1.30939 -4.78384,-2.34116 -6.89068,-3.84738c-0.29917,7.54144 -0.74523,15.00829 -1.29095,22.53108c-0.37541,5.17749 -0.50905,10.12707 -1.19378,15.30041c-2.01236,-2.04489 -5.00159,-6.47445 -6.76512,-8.87983c-5.73771,-7.8232 -11.02438,-16.39019 -17.06001,-23.96892c-6.73508,8.9482 -15.37148,22.99931 -22.60193,32.09669c-0.24116,0.30249 -0.60767,0.20097 -0.93356,0.15124c-0.67624,-0.95097 -0.87327,-7.53315 -0.98225,-9.13052l-0.96402,-14.9047c-0.27659,-4.10221 -0.67023,-8.9047 -0.62134,-12.97376c-2.51354,1.57251 -5.76713,3.25898 -8.40186,4.6989c-4.98895,2.77624 -10.01996,5.47583 -15.09137,8.09669c-2.22845,1.16851 -11.8357,6.82666 -13.65,6.84116c-0.16326,-0.08702 -0.47921,-0.18439 -0.51671,-0.375c-0.17465,-0.88467 11.5297,-29.19613 13.02721,-32.15946c-7.34337,0.75456 -14.7663,1.79979 -22.03923,2.5759c-3.67583,0.39365 -17.08405,2.42403 -20.1924,1.6989l-0.07935,-0.41436c0.2018,-0.41436 0.44047,-0.77279 0.79081,-1.08149c6.96112,-6.1038 13.80166,-12.35097 20.69523,-18.53267c1.6268,-1.45877 3.35076,-3.14648 5.12507,-4.40159c-3.83246,-0.84903 -36.69102,-11.12901 -38.16878,-12.36112l0.00779,-0.33315c1.2266,-1.38087 31.20423,-9.68909 34.73834,-10.16436c-0.21547,-2.10186 -0.20449,-12.49496 0.29772,-14.32438z" fill="#023e92"/>
+    </svg>
+  </div>
+  <div class="container">
+    <div class="section-head">
+      <div class="section-eyebrow">Built for every role</div>
+      <h2 class="display section-title">Three teams. <span class="serif-em" style="color:var(--brand)">One CMS.</span></h2>
+      <p class="section-sub">Whether you're shipping copy, designing variants, or wiring up webhooks — Mero CMS adapts to your role without forcing you into someone else's workflow.</p>
+    </div>
+
+    <div class="use-cases reveal-stagger">
+      <div class="use-case">
+        <div class="use-case-illo">
+          <!-- Marketing — character-marketing-v2.svg cropped via outer
+               viewBox to hide the 30-unit top/bottom whitespace inside
+               the source 0..300 vertical space (effective y range
+               30..270 = 240 units). Full image is rendered by the
+               inner <image>; only the cropped region is visible. -->
+          <svg viewBox="0 30 136.66 240" xmlns="http://www.w3.org/2000/svg"
+               class="use-case-character" preserveAspectRatio="xMidYMax meet"
+               aria-hidden="true">
+            <image href="character-marketing-v2.svg" x="0" y="0" width="136.66" height="300"/>
+          </svg>
+        </div>
+        <h4>For marketing teams</h4>
+        <p>Edit headlines, swap section variants, schedule launches, and check publish history — all without bothering engineering.</p>
+      </div>
+      <div class="use-case">
+        <div class="use-case-illo">
+          <!-- Content creator — character-marketing.svg, viewBox-cropped
+               to hide top/bottom whitespace (effective y range 30..270). -->
+          <svg viewBox="0 30 281.83 240" xmlns="http://www.w3.org/2000/svg"
+               class="use-case-character" preserveAspectRatio="xMidYMax meet"
+               aria-hidden="true">
+            <image href="character-marketing.svg" x="0" y="0" width="281.83" height="300"/>
+          </svg>
+        </div>
+        <h4>For content editors</h4>
+        <p>Drafts, scheduled posts, AI-assisted outlines, and a media library that doesn't require dragging into 4 different folders.</p>
+      </div>
+      <div class="use-case">
+        <div class="use-case-illo">
+          <!-- Developer — character-developer.svg, viewBox-cropped to
+               hide top/bottom whitespace (effective y range 30..270). -->
+          <svg viewBox="0 30 142 240" xmlns="http://www.w3.org/2000/svg"
+               class="use-case-character" preserveAspectRatio="xMidYMax meet"
+               aria-hidden="true">
+            <image href="character-developer.svg" x="0" y="0" width="142" height="300"/>
+          </svg>
+        </div>
+        <h4>For developers</h4>
+        <p>REST + webhooks, theme manifests in <code>theme.json</code>, capability gates in code. Read the docs once, never read them again.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── STATS ─────────────────────────────────────────────────────── -->
+<section style="padding: 0; background: var(--paper);">
+  <div class="container">
+    <div class="stats reveal-stagger">
+      <div class="stat">
+        <div class="stat-num display"><em>600+</em></div>
+        <div class="stat-label">Teams shipping content with Mero CMS</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num display"><em>90<span style="font-size:.5em">ms</span></em></div>
+        <div class="stat-label">Publish-to-live for visual edits</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num display"><em>12</em></div>
+        <div class="stat-label">Capabilities, gated per tier</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num display"><em>4.9<span style="font-size:.5em">/5</span></em></div>
+        <div class="stat-label">Average customer rating across reviews</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRICING TEASER ────────────────────────────────────────────── -->
+<section class="pricing has-watermark" id="pricing">
+  <div class="emblem-watermark bl">
+    <svg viewBox="0 0 247.79 300" xmlns="http://www.w3.org/2000/svg">
+      <path d="M117.31202,52.71257c2.15905,-0.19724 6.37977,-0.11768 8.61547,-0.0893c28.18985,0.53494 55.04855,12.0922 74.81913,32.19427c15.72162,16.22631 25.58557,37.22942 28.03446,59.68923c0.58011,5.66499 0.39572,12.65988 0.31906,18.40587c-1.12086,-0.39095 -2.43646,-0.65242 -3.6029,-0.96112c-8.84254,-2.34137 -17.94406,-5.21188 -26.90014,-7.00401c-0.14896,-8.23115 -0.70773,-13.59945 -2.73709,-21.55297c-0.22272,0.30746 -0.46015,0.60414 -0.71146,0.88902c-11.02852,12.64061 -28.17348,20.60449 -43.9962,25.50891c-6.86209,2.12693 -14.8212,3.11291 -21.98349,3.58881c-6.60104,0.77238 -17.98115,-0.23412 -24.58467,-1.39517c-17.12548,-3.0114 -35.32231,-11.10414 -48.24033,-22.86568c-1.69392,-1.54227 -4.83356,-4.30546 -6.06008,-6.07044c-0.15331,2.32831 -1.08439,5.81209 -1.51305,8.26015c-0.76802,4.49047 -1.15587,9.03771 -1.15939,13.59344c-4.9413,1.19689 -9.86561,2.4634 -14.77127,3.79869c-5.18163,1.43432 -9.92051,2.89931 -15.16055,4.08522c-0.11308,-0.71664 -0.14959,-1.39537 -0.18974,-2.1174c-1.47379,-26.81064 7.81734,-53.10021 25.81009,-73.03115c18.30767,-20.36064 46.748,-33.44586 74.01215,-34.92638zM116.59537,92.3511c-2.63308,-1.23211 -9.28218,-4.78653 -11.70414,-6.55152c0.7614,4.37901 0.40152,7.52134 0.71001,11.67162c-2.82369,-0.48191 -6.74523,-0.86188 -9.34061,-1.63508c0.41436,1.4741 1.18674,4.53626 1.73142,5.87383c-2.76257,0.32175 -7.36616,0.58964 -10.17535,0.6261c2.24296,2.31526 7.34316,7.27956 9.09427,9.59565c-2.90035,1.29945 -9.5018,3.90704 -12.53764,4.72894c3.15352,1.67155 7.73971,5.57258 11.44599,7.73287c-1.42417,1.23211 -4.83522,4.39931 -6.12203,5.30325c-11.3422,-3.11623 -22.1221,-12.2683 -27.87804,-22.42459c-0.81588,-1.44572 -1.54019,-2.94116 -2.16816,-4.47783c-0.28032,-0.68847 -1.42251,-4.298 -1.65891,-4.51637c-0.53909,0.51091 0.01927,4.96015 0.14109,5.977c1.26443,10.53273 5.8962,20.37555 13.20559,28.06367c12.44793,13.07901 31.39765,19.06948 49.11651,19.45256c1.34586,0.02445 2.69213,0.03646 4.0384,0.03646c10.66865,-0.3893 19.87334,-1.97797 29.9625,-6.27576c16.6442,-7.0904 30.33419,-21.10587 32.42403,-39.68494c0.31326,-2.78453 0.52873,-5.6076 0.76885,-8.39896l-0.09178,0.18895c-0.68619,1.4393 -1.04896,3.0232 -1.58577,4.52445c-4.21471,11.78349 -16.60193,23.30511 -28.27231,27.58695c-0.16844,0.06278 -0.3375,0.12348 -0.50739,0.18232c-2.04385,-1.40283 -5.2471,-3.95884 -7.1364,-5.6047c2.76982,-2.05732 5.68591,-3.91222 8.46381,-5.95856c0.84054,-0.61906 1.67528,-1.24537 2.60532,-1.72541c-2.63453,-0.63336 -9.98184,-3.53349 -12.5422,-4.65932l6.1154,-6.2105c1.09061,-1.11029 2.50525,-2.70331 3.69012,-3.59565c-3.79144,0.00497 -6.72017,-0.58011 -10.57459,-0.20159c0.39282,-1.67776 1.12251,-5.17728 1.73702,-6.65325c-2.31485,0.95035 -7.14738,1.98377 -9.73322,2.26989c0.1732,-3.46802 0.41312,-8.54834 1.01768,-11.90449c-1.56816,1.49565 -9.21941,6.09593 -11.24151,6.79786c-1.16913,-1.72997 -6.3518,-12.61968 -7.07776,-12.86499c-0.59171,2.13004 -4.69579,10.23191 -5.92023,12.73115z" fill="#cb172b"/>
+      <path d="M53.72818,147.59751c0.86664,0.17818 13.98439,7.6442 14.92604,8.2875c0.28467,2.71906 0.07003,5.67742 0.37396,8.45988c4.84765,44.35815 67.22258,55.42169 95.72631,26.43481c10.79544,-10.97818 12.74151,-20.51623 12.70753,-35.10456c5.12983,-2.66333 10.26982,-5.56305 15.38474,-8.16091c0.12203,3.89151 0.64019,10.87376 0.29337,14.50069c4.80974,0.73343 31.0125,7.97196 35.12093,10.36077c-2.48204,1.10552 -8.14641,2.80421 -10.94751,3.71872c-9.4558,3.08557 -18.99365,5.91568 -28.60214,8.48785c3.03646,1.98398 26.28791,22.00815 27.90601,24.33833l-0.09738,0.32942c-2.59599,1.45235 -40.99019,-4.98004 -41.99026,-4.15919c0.07686,0.35822 2.78101,6.41333 3.20221,7.41609c3.17528,7.57251 6.58094,15.09945 9.46989,22.79834c0.28425,0.75622 0.4962,1.28867 0.1616,2.00967c-0.0576,0.02072 -0.11395,0.04351 -0.17258,0.06008c-1.56195,0.44337 -12.74565,-6.18025 -15.05159,-7.42541c-5.05193,-2.85704 -10.60649,-5.47169 -15.64993,-8.49033c-2.1893,-1.30939 -4.78384,-2.34116 -6.89068,-3.84738c-0.29917,7.54144 -0.74523,15.00829 -1.29095,22.53108c-0.37541,5.17749 -0.50905,10.12707 -1.19378,15.30041c-2.01236,-2.04489 -5.00159,-6.47445 -6.76512,-8.87983c-5.73771,-7.8232 -11.02438,-16.39019 -17.06001,-23.96892c-6.73508,8.9482 -15.37148,22.99931 -22.60193,32.09669c-0.24116,0.30249 -0.60767,0.20097 -0.93356,0.15124c-0.67624,-0.95097 -0.87327,-7.53315 -0.98225,-9.13052l-0.96402,-14.9047c-0.27659,-4.10221 -0.67023,-8.9047 -0.62134,-12.97376c-2.51354,1.57251 -5.76713,3.25898 -8.40186,4.6989c-4.98895,2.77624 -10.01996,5.47583 -15.09137,8.09669c-2.22845,1.16851 -11.8357,6.82666 -13.65,6.84116c-0.16326,-0.08702 -0.47921,-0.18439 -0.51671,-0.375c-0.17465,-0.88467 11.5297,-29.19613 13.02721,-32.15946c-7.34337,0.75456 -14.7663,1.79979 -22.03923,2.5759c-3.67583,0.39365 -17.08405,2.42403 -20.1924,1.6989l-0.07935,-0.41436c0.2018,-0.41436 0.44047,-0.77279 0.79081,-1.08149c6.96112,-6.1038 13.80166,-12.35097 20.69523,-18.53267c1.6268,-1.45877 3.35076,-3.14648 5.12507,-4.40159c-3.83246,-0.84903 -36.69102,-11.12901 -38.16878,-12.36112l0.00779,-0.33315c1.2266,-1.38087 31.20423,-9.68909 34.73834,-10.16436c-0.21547,-2.10186 -0.20449,-12.49496 0.29772,-14.32438z" fill="#023e92"/>
+    </svg>
+  </div>
+  <div class="container">
+    <div class="section-head">
+      <div class="section-eyebrow">Pricing</div>
+      <h2 class="display section-title">Pay for the tier. <span class="serif-em" style="color:var(--brand)">Own the stack.</span></h2>
+      <p class="section-sub">One-time license, lifetime updates for the major version, transparent capability gating — no per-seat creep.</p>
+    </div>
+
+    <div class="pricing-grid reveal-stagger">
+      <div class="price-card">
+        <div class="price-tier">Starter</div>
+        <div class="price-amount">$0</div>
+        <div class="price-period">Free, forever</div>
+        <ul class="price-features">
+          <li>Single site</li>
+          <li>Blog + scheduled publishing</li>
+          <li>Theme manifests</li>
+          <li>1 editor seat</li>
+          <li>Community support</li>
+        </ul>
+        <a href="#" class="btn btn-light btn-lg" style="width:100%">Start free</a>
+      </div>
+      <div class="price-card featured">
+        <div class="price-tier">Studio</div>
+        <div class="price-amount">$49<span style="font-size:.4em; font-weight:600; opacity:.7">/mo</span></div>
+        <div class="price-period">For motion-first marketing teams</div>
+        <ul class="price-features">
+          <li>Everything in Starter</li>
+          <li>Visual editor</li>
+          <li>Webhooks (HMAC-signed)</li>
+          <li>Forms + submissions inbox</li>
+          <li>5 editor seats</li>
+        </ul>
+        <a href="#" class="btn btn-brand btn-lg" style="width:100%">Choose Studio</a>
+      </div>
+      <div class="price-card">
+        <div class="price-tier">Enterprise</div>
+        <div class="price-amount">Custom</div>
+        <div class="price-period">For teams managing 100+ editors</div>
+        <ul class="price-features">
+          <li>Everything in Studio</li>
+          <li>AI Studio + custom presets</li>
+          <li>White-label admin</li>
+          <li>SSO + audit log export</li>
+          <li>SLA + dedicated support</li>
+        </ul>
+        <a href="#" class="btn btn-light btn-lg" style="width:100%">Talk to sales</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TESTIMONIALS (workleap-style) ─────────────────────────────── -->
+<section class="testimonials" id="testimonials">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-eyebrow">Voices</div>
+      <h2 class="display section-title">Teams that picked Mero CMS <span class="serif-em" style="color:var(--brand)">and stayed.</span></h2>
+      <p class="section-sub">Real quotes from people who edit, ship, and maintain sites built on Mero CMS every week.</p>
+    </div>
+  </div>
+
+  <div class="testimonial-track reveal-stagger">
+    <div class="t-card" style="background: var(--pastel-pist);">
+      <p class="t-quote">"We replaced three tools with Mero CMS. Marketing edits live, devs never touch the admin, the audit log keeps the lawyers happy."</p>
+      <div class="t-attribution">
+        <div class="t-avatar"><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#dbf3b9"/><ellipse cx="24" cy="28" rx="13" ry="14" fill="#f5cdb3"/><path d="M9 18 Q 12 6 24 6 Q 36 6 39 18 Q 41 22 38 24 Q 35 18 24 18 Q 13 18 10 24 Q 7 22 9 18 Z" fill="#0d0e14"/><circle cx="11" cy="14" r="4" fill="#0d0e14"/><circle cx="24" cy="8" r="4" fill="#0d0e14"/><circle cx="37" cy="14" r="4" fill="#0d0e14"/><circle cx="20" cy="28" r="1.3" fill="#0d0e14"/><circle cx="28" cy="28" r="1.3" fill="#0d0e14"/><path d="M21 33 Q 24 35 27 33" stroke="#0d0e14" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg></div>
+        <div>
+          <div class="t-name">Elise Wendel</div>
+          <div class="t-role">Head of Marketing · Northwind</div>
+        </div>
+      </div>
+    </div>
+    <div class="t-card" style="background: var(--pastel-sky);">
+      <p class="t-quote">"The visual editor is the first one I've shown a marketer where they didn't immediately ask for help. That's the bar."</p>
+      <div class="t-attribution">
+        <div class="t-avatar"><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#c6daff"/><ellipse cx="24" cy="26" rx="13" ry="14" fill="#f5cdb3"/><path d="M14 18 Q 16 12 24 12 Q 32 12 34 18 L 33 22 Q 30 18 24 18 Q 18 18 15 22 Z" fill="#0d0e14"/><path d="M14 32 Q 14 38 24 40 Q 34 38 34 32 L 32 30 Q 28 32 24 32 Q 20 32 16 30 Z" fill="#0d0e14"/><circle cx="20" cy="26" r="1.3" fill="#0d0e14"/><circle cx="28" cy="26" r="1.3" fill="#0d0e14"/></svg></div>
+        <div>
+          <div class="t-name">Raj Joshi</div>
+          <div class="t-role">Staff Engineer · Toolfolio</div>
+        </div>
+      </div>
+    </div>
+    <div class="t-card" style="background: var(--pastel-coral);">
+      <p class="t-quote">"AI Studio drafts our meta descriptions in a tone that matches our brand. We've stopped writing them from scratch."</p>
+      <div class="t-attribution">
+        <div class="t-avatar"><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#ffc9b8"/><ellipse cx="24" cy="26" rx="13" ry="14" fill="#f5cdb3"/><path d="M9 16 Q 12 4 24 4 Q 36 4 39 16 L 38 32 Q 36 28 33 26 L 33 16 Q 30 12 24 12 Q 18 12 15 16 L 15 26 Q 12 28 10 32 Z" fill="#0d0e14"/><circle cx="20" cy="26" r="1.3" fill="#0d0e14"/><circle cx="28" cy="26" r="1.3" fill="#0d0e14"/><path d="M21 31 Q 24 33 27 31" stroke="#0d0e14" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg></div>
+        <div>
+          <div class="t-name">Mira Calder</div>
+          <div class="t-role">Content Director · Lenis</div>
+        </div>
+      </div>
+    </div>
+    <div class="t-card" style="background: var(--pastel-butter);">
+      <p class="t-quote">"Eight tiers sounded like overkill. Then we needed exactly tier 6 and didn't have to re-architect anything to get there."</p>
+      <div class="t-attribution">
+        <div class="t-avatar"><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#ffe6b0"/><ellipse cx="24" cy="28" rx="13" ry="14" fill="#f5cdb3"/><path d="M10 20 L 38 20 Q 41 20 41 18 Q 38 8 24 8 Q 10 8 7 18 Q 7 20 10 20 Z" fill="#cb172b"/><rect x="6" y="19" width="36" height="3" rx="1.5" fill="#0d0e14"/><circle cx="20" cy="28" r="1.3" fill="#0d0e14"/><circle cx="28" cy="28" r="1.3" fill="#0d0e14"/><path d="M21 33 Q 24 35 27 33" stroke="#0d0e14" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg></div>
+        <div>
+          <div class="t-name">Daniel Kovac</div>
+          <div class="t-role">VP Engineering · Jitter</div>
+        </div>
+      </div>
+    </div>
+    <div class="t-card" style="background: var(--pastel-lav);">
+      <p class="t-quote">"The webhook system is HMAC-signed and rate-limited out of the box. That's two days of plumbing we didn't write."</p>
+      <div class="t-attribution">
+        <div class="t-avatar"><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#e1ddff"/><ellipse cx="24" cy="26" rx="13" ry="14" fill="#f5cdb3"/><path d="M11 20 Q 14 8 24 8 Q 34 8 37 20 Q 38 24 35 24 Q 32 18 24 18 Q 16 18 13 24 Q 10 24 11 20 Z" fill="#0d0e14"/><circle cx="18" cy="25" r="4" fill="none" stroke="#0d0e14" stroke-width="1.6"/><circle cx="30" cy="25" r="4" fill="none" stroke="#0d0e14" stroke-width="1.6"/><line x1="22" y1="25" x2="26" y2="25" stroke="#0d0e14" stroke-width="1.6"/><path d="M21 32 Q 24 34 27 32" stroke="#0d0e14" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg></div>
+        <div>
+          <div class="t-name">Sasha Park</div>
+          <div class="t-role">Platform Lead · Blendwit</div>
+        </div>
+      </div>
+    </div>
+    <div class="t-card" style="background: var(--pastel-pink);">
+      <p class="t-quote">"Onboarding a new editor takes 20 minutes. The audit log handles the rest of the trust conversation for us."</p>
+      <div class="t-attribution">
+        <div class="t-avatar"><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#ffd9ea"/><ellipse cx="24" cy="26" rx="13" ry="14" fill="#f5cdb3"/><path d="M10 16 Q 13 4 24 4 Q 35 4 38 16 L 38 38 Q 36 32 35 28 L 35 18 L 24 14 L 13 18 L 13 28 Q 12 32 10 38 Z" fill="#0d0e14"/><rect x="14" y="14" width="20" height="6" rx="1" fill="#0d0e14"/><circle cx="20" cy="26" r="1.3" fill="#0d0e14"/><circle cx="28" cy="26" r="1.3" fill="#0d0e14"/><path d="M21 32 Q 24 34 27 32" stroke="#0d0e14" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg></div>
+        <div>
+          <div class="t-name">Nadia Rezvani</div>
+          <div class="t-role">Operations · Nimble</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ──────────────────────────────────────────────────────── -->
+<section class="section has-watermark" id="faq">
+  <div class="emblem-watermark br">
+    <svg viewBox="0 0 247.79 300" xmlns="http://www.w3.org/2000/svg">
+      <path d="M117.31202,52.71257c2.15905,-0.19724 6.37977,-0.11768 8.61547,-0.0893c28.18985,0.53494 55.04855,12.0922 74.81913,32.19427c15.72162,16.22631 25.58557,37.22942 28.03446,59.68923c0.58011,5.66499 0.39572,12.65988 0.31906,18.40587c-1.12086,-0.39095 -2.43646,-0.65242 -3.6029,-0.96112c-8.84254,-2.34137 -17.94406,-5.21188 -26.90014,-7.00401c-0.14896,-8.23115 -0.70773,-13.59945 -2.73709,-21.55297c-0.22272,0.30746 -0.46015,0.60414 -0.71146,0.88902c-11.02852,12.64061 -28.17348,20.60449 -43.9962,25.50891c-6.86209,2.12693 -14.8212,3.11291 -21.98349,3.58881c-6.60104,0.77238 -17.98115,-0.23412 -24.58467,-1.39517c-17.12548,-3.0114 -35.32231,-11.10414 -48.24033,-22.86568c-1.69392,-1.54227 -4.83356,-4.30546 -6.06008,-6.07044c-0.15331,2.32831 -1.08439,5.81209 -1.51305,8.26015c-0.76802,4.49047 -1.15587,9.03771 -1.15939,13.59344c-4.9413,1.19689 -9.86561,2.4634 -14.77127,3.79869c-5.18163,1.43432 -9.92051,2.89931 -15.16055,4.08522c-0.11308,-0.71664 -0.14959,-1.39537 -0.18974,-2.1174c-1.47379,-26.81064 7.81734,-53.10021 25.81009,-73.03115c18.30767,-20.36064 46.748,-33.44586 74.01215,-34.92638zM116.59537,92.3511c-2.63308,-1.23211 -9.28218,-4.78653 -11.70414,-6.55152c0.7614,4.37901 0.40152,7.52134 0.71001,11.67162c-2.82369,-0.48191 -6.74523,-0.86188 -9.34061,-1.63508c0.41436,1.4741 1.18674,4.53626 1.73142,5.87383c-2.76257,0.32175 -7.36616,0.58964 -10.17535,0.6261c2.24296,2.31526 7.34316,7.27956 9.09427,9.59565c-2.90035,1.29945 -9.5018,3.90704 -12.53764,4.72894c3.15352,1.67155 7.73971,5.57258 11.44599,7.73287c-1.42417,1.23211 -4.83522,4.39931 -6.12203,5.30325c-11.3422,-3.11623 -22.1221,-12.2683 -27.87804,-22.42459c-0.81588,-1.44572 -1.54019,-2.94116 -2.16816,-4.47783c-0.28032,-0.68847 -1.42251,-4.298 -1.65891,-4.51637c-0.53909,0.51091 0.01927,4.96015 0.14109,5.977c1.26443,10.53273 5.8962,20.37555 13.20559,28.06367c12.44793,13.07901 31.39765,19.06948 49.11651,19.45256c1.34586,0.02445 2.69213,0.03646 4.0384,0.03646c10.66865,-0.3893 19.87334,-1.97797 29.9625,-6.27576c16.6442,-7.0904 30.33419,-21.10587 32.42403,-39.68494c0.31326,-2.78453 0.52873,-5.6076 0.76885,-8.39896l-0.09178,0.18895c-0.68619,1.4393 -1.04896,3.0232 -1.58577,4.52445c-4.21471,11.78349 -16.60193,23.30511 -28.27231,27.58695c-0.16844,0.06278 -0.3375,0.12348 -0.50739,0.18232c-2.04385,-1.40283 -5.2471,-3.95884 -7.1364,-5.6047c2.76982,-2.05732 5.68591,-3.91222 8.46381,-5.95856c0.84054,-0.61906 1.67528,-1.24537 2.60532,-1.72541c-2.63453,-0.63336 -9.98184,-3.53349 -12.5422,-4.65932l6.1154,-6.2105c1.09061,-1.11029 2.50525,-2.70331 3.69012,-3.59565c-3.79144,0.00497 -6.72017,-0.58011 -10.57459,-0.20159c0.39282,-1.67776 1.12251,-5.17728 1.73702,-6.65325c-2.31485,0.95035 -7.14738,1.98377 -9.73322,2.26989c0.1732,-3.46802 0.41312,-8.54834 1.01768,-11.90449c-1.56816,1.49565 -9.21941,6.09593 -11.24151,6.79786c-1.16913,-1.72997 -6.3518,-12.61968 -7.07776,-12.86499c-0.59171,2.13004 -4.69579,10.23191 -5.92023,12.73115z" fill="#cb172b"/>
+      <path d="M53.72818,147.59751c0.86664,0.17818 13.98439,7.6442 14.92604,8.2875c0.28467,2.71906 0.07003,5.67742 0.37396,8.45988c4.84765,44.35815 67.22258,55.42169 95.72631,26.43481c10.79544,-10.97818 12.74151,-20.51623 12.70753,-35.10456c5.12983,-2.66333 10.26982,-5.56305 15.38474,-8.16091c0.12203,3.89151 0.64019,10.87376 0.29337,14.50069c4.80974,0.73343 31.0125,7.97196 35.12093,10.36077c-2.48204,1.10552 -8.14641,2.80421 -10.94751,3.71872c-9.4558,3.08557 -18.99365,5.91568 -28.60214,8.48785c3.03646,1.98398 26.28791,22.00815 27.90601,24.33833l-0.09738,0.32942c-2.59599,1.45235 -40.99019,-4.98004 -41.99026,-4.15919c0.07686,0.35822 2.78101,6.41333 3.20221,7.41609c3.17528,7.57251 6.58094,15.09945 9.46989,22.79834c0.28425,0.75622 0.4962,1.28867 0.1616,2.00967c-0.0576,0.02072 -0.11395,0.04351 -0.17258,0.06008c-1.56195,0.44337 -12.74565,-6.18025 -15.05159,-7.42541c-5.05193,-2.85704 -10.60649,-5.47169 -15.64993,-8.49033c-2.1893,-1.30939 -4.78384,-2.34116 -6.89068,-3.84738c-0.29917,7.54144 -0.74523,15.00829 -1.29095,22.53108c-0.37541,5.17749 -0.50905,10.12707 -1.19378,15.30041c-2.01236,-2.04489 -5.00159,-6.47445 -6.76512,-8.87983c-5.73771,-7.8232 -11.02438,-16.39019 -17.06001,-23.96892c-6.73508,8.9482 -15.37148,22.99931 -22.60193,32.09669c-0.24116,0.30249 -0.60767,0.20097 -0.93356,0.15124c-0.67624,-0.95097 -0.87327,-7.53315 -0.98225,-9.13052l-0.96402,-14.9047c-0.27659,-4.10221 -0.67023,-8.9047 -0.62134,-12.97376c-2.51354,1.57251 -5.76713,3.25898 -8.40186,4.6989c-4.98895,2.77624 -10.01996,5.47583 -15.09137,8.09669c-2.22845,1.16851 -11.8357,6.82666 -13.65,6.84116c-0.16326,-0.08702 -0.47921,-0.18439 -0.51671,-0.375c-0.17465,-0.88467 11.5297,-29.19613 13.02721,-32.15946c-7.34337,0.75456 -14.7663,1.79979 -22.03923,2.5759c-3.67583,0.39365 -17.08405,2.42403 -20.1924,1.6989l-0.07935,-0.41436c0.2018,-0.41436 0.44047,-0.77279 0.79081,-1.08149c6.96112,-6.1038 13.80166,-12.35097 20.69523,-18.53267c1.6268,-1.45877 3.35076,-3.14648 5.12507,-4.40159c-3.83246,-0.84903 -36.69102,-11.12901 -38.16878,-12.36112l0.00779,-0.33315c1.2266,-1.38087 31.20423,-9.68909 34.73834,-10.16436c-0.21547,-2.10186 -0.20449,-12.49496 0.29772,-14.32438z" fill="#023e92"/>
+    </svg>
+  </div>
+  <div class="container">
+    <div class="faq-grid">
+      <div>
+        <div class="section-eyebrow">Questions</div>
+        <h2 class="display section-title" style="font-size: clamp(32px, 4.5vw, 52px);">Everything you'd ask before buying.</h2>
+        <p class="section-sub">Can't find the answer? <a href="#" style="color:var(--brand); font-weight:600;">Talk to a human →</a></p>
+      </div>
+      <div class="faq-list reveal-stagger">
+        <details class="faq-item" open>
+          <summary>Is Mero CMS a subscription? <span class="faq-toggle"></span></summary>
+          <div class="faq-a">No. Mero CMS is a one-time license per production deployment. You own the running code. Lifetime updates for the current major version, plus 12 months of support included.</div>
+        </details>
+        <details class="faq-item">
+          <summary>Can we build our own theme? <span class="faq-toggle"></span></summary>
+          <div class="faq-a">Yes. Every theme is a Next.js project that declares sections and variants in <code>theme.json</code>. The admin adapts automatically — no extra CMS work to add new sections.</div>
+        </details>
+        <details class="faq-item">
+          <summary>Does it work with our existing stack? <span class="faq-toggle"></span></summary>
+          <div class="faq-a">Mero CMS is a headless-ish Node + Postgres backend with REST endpoints. Themes are Next.js apps consuming those endpoints. API keys let mobile, native, or any other frontend pull the same content.</div>
+        </details>
+        <details class="faq-item">
+          <summary>What about performance? <span class="faq-toggle"></span></summary>
+          <div class="faq-a">The theme is statically generated with ISR. The backend ships with helmet, rate limits, HMAC-signed webhooks, and a 2 MB JSON body cap. Private media goes through signed URLs.</div>
+        </details>
+        <details class="faq-item">
+          <summary>How does upgrading tiers work? <span class="faq-toggle"></span></summary>
+          <div class="faq-a">It's a license swap, not a reinstall. Capabilities gate via the matrix in code, so the right features turn on the moment your tier updates. Downgrades are supported — features hide, content stays.</div>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FINAL CTA ──────────────────────────────────────────────────
+     Compact two-column band: left holds the heading, subhead and the
+     two CTAs; right column stacks an emblem badge, a small team-avatar
+     row, and the trust line. Much tighter than the original 96px-padded
+     centered slab — reads as a callout card instead of a full section. -->
+<div class="final-cta-wrap">
+  <div class="final-cta reveal-scale">
+    <div class="final-cta-content">
+      <h2 class="display">Where motion meets meaning.</h2>
+      <p>Spin up a free workspace in 90 seconds. No card, no email wall, no demo gate.</p>
+      <div class="final-cta-actions">
+        <a href="#" class="btn btn-brand">Start free →</a>
+        <a href="#" class="btn btn-light" style="background:rgba(255,255,255,.1); color:#fff; border:1px solid rgba(255,255,255,.18);">Talk to sales</a>
+      </div>
+    </div>
+    <div class="final-cta-aside" aria-hidden="true">
+      <div class="final-cta-emblem">
+        <svg viewBox="0 0 247.79 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M117.31202,52.71257c2.15905,-0.19724 6.37977,-0.11768 8.61547,-0.0893c28.18985,0.53494 55.04855,12.0922 74.81913,32.19427c15.72162,16.22631 25.58557,37.22942 28.03446,59.68923c0.58011,5.66499 0.39572,12.65988 0.31906,18.40587c-1.12086,-0.39095 -2.43646,-0.65242 -3.6029,-0.96112c-8.84254,-2.34137 -17.94406,-5.21188 -26.90014,-7.00401c-0.14896,-8.23115 -0.70773,-13.59945 -2.73709,-21.55297c-0.22272,0.30746 -0.46015,0.60414 -0.71146,0.88902c-11.02852,12.64061 -28.17348,20.60449 -43.9962,25.50891c-6.86209,2.12693 -14.8212,3.11291 -21.98349,3.58881c-6.60104,0.77238 -17.98115,-0.23412 -24.58467,-1.39517c-17.12548,-3.0114 -35.32231,-11.10414 -48.24033,-22.86568c-1.69392,-1.54227 -4.83356,-4.30546 -6.06008,-6.07044c-0.15331,2.32831 -1.08439,5.81209 -1.51305,8.26015c-0.76802,4.49047 -1.15587,9.03771 -1.15939,13.59344c-4.9413,1.19689 -9.86561,2.4634 -14.77127,3.79869c-5.18163,1.43432 -9.92051,2.89931 -15.16055,4.08522c-0.11308,-0.71664 -0.14959,-1.39537 -0.18974,-2.1174c-1.47379,-26.81064 7.81734,-53.10021 25.81009,-73.03115c18.30767,-20.36064 46.748,-33.44586 74.01215,-34.92638zM116.59537,92.3511c-2.63308,-1.23211 -9.28218,-4.78653 -11.70414,-6.55152c0.7614,4.37901 0.40152,7.52134 0.71001,11.67162c-2.82369,-0.48191 -6.74523,-0.86188 -9.34061,-1.63508c0.41436,1.4741 1.18674,4.53626 1.73142,5.87383c-2.76257,0.32175 -7.36616,0.58964 -10.17535,0.6261c2.24296,2.31526 7.34316,7.27956 9.09427,9.59565c-2.90035,1.29945 -9.5018,3.90704 -12.53764,4.72894c3.15352,1.67155 7.73971,5.57258 11.44599,7.73287c-1.42417,1.23211 -4.83522,4.39931 -6.12203,5.30325c-11.3422,-3.11623 -22.1221,-12.2683 -27.87804,-22.42459c-0.81588,-1.44572 -1.54019,-2.94116 -2.16816,-4.47783c-0.28032,-0.68847 -1.42251,-4.298 -1.65891,-4.51637c-0.53909,0.51091 0.01927,4.96015 0.14109,5.977c1.26443,10.53273 5.8962,20.37555 13.20559,28.06367c12.44793,13.07901 31.39765,19.06948 49.11651,19.45256c1.34586,0.02445 2.69213,0.03646 4.0384,0.03646c10.66865,-0.3893 19.87334,-1.97797 29.9625,-6.27576c16.6442,-7.0904 30.33419,-21.10587 32.42403,-39.68494c0.31326,-2.78453 0.52873,-5.6076 0.76885,-8.39896l-0.09178,0.18895c-0.68619,1.4393 -1.04896,3.0232 -1.58577,4.52445c-4.21471,11.78349 -16.60193,23.30511 -28.27231,27.58695c-0.16844,0.06278 -0.3375,0.12348 -0.50739,0.18232c-2.04385,-1.40283 -5.2471,-3.95884 -7.1364,-5.6047c2.76982,-2.05732 5.68591,-3.91222 8.46381,-5.95856c0.84054,-0.61906 1.67528,-1.24537 2.60532,-1.72541c-2.63453,-0.63336 -9.98184,-3.53349 -12.5422,-4.65932l6.1154,-6.2105c1.09061,-1.11029 2.50525,-2.70331 3.69012,-3.59565c-3.79144,0.00497 -6.72017,-0.58011 -10.57459,-0.20159c0.39282,-1.67776 1.12251,-5.17728 1.73702,-6.65325c-2.31485,0.95035 -7.14738,1.98377 -9.73322,2.26989c0.1732,-3.46802 0.41312,-8.54834 1.01768,-11.90449c-1.56816,1.49565 -9.21941,6.09593 -11.24151,6.79786c-1.16913,-1.72997 -6.3518,-12.61968 -7.07776,-12.86499c-0.59171,2.13004 -4.69579,10.23191 -5.92023,12.73115z" fill="#cb172b"/>
+          <path d="M53.72818,147.59751c0.86664,0.17818 13.98439,7.6442 14.92604,8.2875c0.28467,2.71906 0.07003,5.67742 0.37396,8.45988c4.84765,44.35815 67.22258,55.42169 95.72631,26.43481c10.79544,-10.97818 12.74151,-20.51623 12.70753,-35.10456c5.12983,-2.66333 10.26982,-5.56305 15.38474,-8.16091c0.12203,3.89151 0.64019,10.87376 0.29337,14.50069c4.80974,0.73343 31.0125,7.97196 35.12093,10.36077c-2.48204,1.10552 -8.14641,2.80421 -10.94751,3.71872c-9.4558,3.08557 -18.99365,5.91568 -28.60214,8.48785c3.03646,1.98398 26.28791,22.00815 27.90601,24.33833l-0.09738,0.32942c-2.59599,1.45235 -40.99019,-4.98004 -41.99026,-4.15919c0.07686,0.35822 2.78101,6.41333 3.20221,7.41609c3.17528,7.57251 6.58094,15.09945 9.46989,22.79834c0.28425,0.75622 0.4962,1.28867 0.1616,2.00967c-0.0576,0.02072 -0.11395,0.04351 -0.17258,0.06008c-1.56195,0.44337 -12.74565,-6.18025 -15.05159,-7.42541c-5.05193,-2.85704 -10.60649,-5.47169 -15.64993,-8.49033c-2.1893,-1.30939 -4.78384,-2.34116 -6.89068,-3.84738c-0.29917,7.54144 -0.74523,15.00829 -1.29095,22.53108c-0.37541,5.17749 -0.50905,10.12707 -1.19378,15.30041c-2.01236,-2.04489 -5.00159,-6.47445 -6.76512,-8.87983c-5.73771,-7.8232 -11.02438,-16.39019 -17.06001,-23.96892c-6.73508,8.9482 -15.37148,22.99931 -22.60193,32.09669c-0.24116,0.30249 -0.60767,0.20097 -0.93356,0.15124c-0.67624,-0.95097 -0.87327,-7.53315 -0.98225,-9.13052l-0.96402,-14.9047c-0.27659,-4.10221 -0.67023,-8.9047 -0.62134,-12.97376c-2.51354,1.57251 -5.76713,3.25898 -8.40186,4.6989c-4.98895,2.77624 -10.01996,5.47583 -15.09137,8.09669c-2.22845,1.16851 -11.8357,6.82666 -13.65,6.84116c-0.16326,-0.08702 -0.47921,-0.18439 -0.51671,-0.375c-0.17465,-0.88467 11.5297,-29.19613 13.02721,-32.15946c-7.34337,0.75456 -14.7663,1.79979 -22.03923,2.5759c-3.67583,0.39365 -17.08405,2.42403 -20.1924,1.6989l-0.07935,-0.41436c0.2018,-0.41436 0.44047,-0.77279 0.79081,-1.08149c6.96112,-6.1038 13.80166,-12.35097 20.69523,-18.53267c1.6268,-1.45877 3.35076,-3.14648 5.12507,-4.40159c-3.83246,-0.84903 -36.69102,-11.12901 -38.16878,-12.36112l0.00779,-0.33315c1.2266,-1.38087 31.20423,-9.68909 34.73834,-10.16436c-0.21547,-2.10186 -0.20449,-12.49496 0.29772,-14.32438z" fill="#023e92"/>
+        </svg>
+      </div>
+      <div class="cta-team">
+        <div class="cta-team-avatar"><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#dbf3b9"/><ellipse cx="24" cy="28" rx="13" ry="14" fill="#f5cdb3"/><path d="M9 18 Q 12 6 24 6 Q 36 6 39 18 Q 41 22 38 24 Q 35 18 24 18 Q 13 18 10 24 Q 7 22 9 18 Z" fill="#0d0e14"/><circle cx="11" cy="14" r="4" fill="#0d0e14"/><circle cx="24" cy="8" r="4" fill="#0d0e14"/><circle cx="37" cy="14" r="4" fill="#0d0e14"/><circle cx="20" cy="28" r="1.3" fill="#0d0e14"/><circle cx="28" cy="28" r="1.3" fill="#0d0e14"/></svg></div>
+        <div class="cta-team-avatar"><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#c6daff"/><ellipse cx="24" cy="26" rx="13" ry="14" fill="#f5cdb3"/><path d="M14 18 Q 16 12 24 12 Q 32 12 34 18 L 33 22 Q 30 18 24 18 Q 18 18 15 22 Z" fill="#0d0e14"/><path d="M14 32 Q 14 38 24 40 Q 34 38 34 32 L 32 30 Q 28 32 24 32 Q 20 32 16 30 Z" fill="#0d0e14"/><circle cx="20" cy="26" r="1.3" fill="#0d0e14"/><circle cx="28" cy="26" r="1.3" fill="#0d0e14"/></svg></div>
+        <div class="cta-team-avatar"><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#ffc9b8"/><ellipse cx="24" cy="26" rx="13" ry="14" fill="#f5cdb3"/><path d="M9 16 Q 12 4 24 4 Q 36 4 39 16 L 38 32 Q 36 28 33 26 L 33 16 Q 30 12 24 12 Q 18 12 15 16 L 15 26 Q 12 28 10 32 Z" fill="#0d0e14"/><circle cx="20" cy="26" r="1.3" fill="#0d0e14"/><circle cx="28" cy="26" r="1.3" fill="#0d0e14"/></svg></div>
+        <div class="cta-team-avatar"><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#ffe6b0"/><ellipse cx="24" cy="28" rx="13" ry="14" fill="#f5cdb3"/><path d="M10 20 L 38 20 Q 41 20 41 18 Q 38 8 24 8 Q 10 8 7 18 Q 7 20 10 20 Z" fill="#cb172b"/><rect x="6" y="19" width="36" height="3" rx="1.5" fill="#0d0e14"/><circle cx="20" cy="28" r="1.3" fill="#0d0e14"/><circle cx="28" cy="28" r="1.3" fill="#0d0e14"/></svg></div>
+        <div class="cta-team-count">+600</div>
+      </div>
+      <p class="cta-team-label">Joined by 600+ teams already shipping with Mero CMS.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── FOOTER ───────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <svg viewBox="0 0 300 105.27" xmlns="http://www.w3.org/2000/svg" aria-label="Mero CMS">
+          <path d="M148.16895,18.07131c0.46875,-0.01962 0.9375,-0.02797 1.40625,-0.02504c6.8042,0.02679 13.31543,2.77532 18.08057,7.6321c5.15479,5.28563 6.73828,11.18314 6.65186,18.35989c-2.21338,-0.47541 -4.85156,-1.29989 -7.17041,-1.84851c-0.09229,-1.97677 -0.16992,-3.12131 -0.65918,-5.03116c-4.06201,4.43481 -9.78223,6.43515 -15.62256,7.03282l-0.2666,0.00893c-7.49736,0.23251 -12.96094,-1.94792 -18.38364,-7.03619c-0.46992,1.93402 -0.62007,3.03712 -0.68086,5.02809c-2.3874,0.53193 -4.69702,1.31233 -7.07798,1.8324c-0.66577,-14.30035 9.60381,-24.99607 23.72256,-25.95334zM147.79688,27.42776c-0.9873,-0.48888 -1.79092,-0.93502 -2.7397,-1.48144c0.09624,0.98831 0.12407,1.67486 0.12437,2.66917c-0.60571,-0.09166 -1.53516,-0.35037 -1.97915,-0.10644c-0.08057,0.40909 0.08145,0.77659 0.21255,1.17455l-2.36807,0.09459l2.13853,2.27765l-2.91284,1.1154c0.87012,0.60792 1.74272,1.22712 2.61943,1.8242l-1.46924,1.29784c-4.01865,-1.76637 -6.1623,-3.53347 -7.57397,-7.8507c0.15747,1.85539 0.27744,3.29788 1.05952,5.03526c2.75669,6.12402 9.03062,7.97984 15.21768,7.95832c5.44043,-0.47717 10.81641,-2.37546 13.33008,-7.71395c0.84082,-1.78408 0.95215,-3.33625 1.12354,-5.25562c-1.13965,3.52834 -2.95459,5.70439 -6.30762,7.43679c-0.29443,0.15066 -0.59326,0.29225 -0.89648,0.42475l-1.73877,-1.38393c0.88037,-0.58449 1.71094,-1.13034 2.55322,-1.77354l-2.87109,-1.10808c0.71924,-0.73076 1.56738,-1.55143 2.23682,-2.3125l-2.39502,-0.10161l0.33545,-1.41878l-2.26758,0.47102c0.06885,-0.88743 0.15234,-1.80268 0.19922,-2.68894c-0.85107,0.48932 -1.74316,1.0236 -2.60156,1.48891c-0.39404,-0.77074 -1.16162,-2.37078 -1.58643,-3.04429z" fill="#cb172b"/>
+          <path d="M93.7519,30.13031c2.87754,-0.08551 6.02256,0.02665 8.92822,-0.00717c1.97227,-0.02299 5.3042,-0.10893 7.18242,0.10117c1.20029,0.12972 2.37598,0.42988 3.4916,0.89124c4.22871,1.79624 5.74204,6.16311 4.08105,10.47097c-0.89458,2.32012 -3.22646,3.46231 -5.43223,4.3228c2.06572,2.89509 4.90972,6.29488 7.14814,9.10666l-3.02563,0.0101l-3.4459,0.00674c-2.03511,-1.99653 -4.74067,-6.55843 -6.73989,-8.59948l-6.61934,0.0082l0.02812,8.58542l-5.58164,0.00849zM99.34819,41.93104c2.79258,0.12885 9.68716,0.50484 11.81528,-0.94278c1.82666,-1.91791 1.50952,-5.21843 -1.14272,-5.88155c-3.06431,-0.76605 -7.42031,-0.42651 -10.68149,-0.40587z" fill="#cb172b"/>
+          <path d="M235.50879,29.52356c1.74609,-0.11655 4.37695,-0.04378 6.18896,-0.05125l0.00879,25.58247l-5.70703,0.00351v-12.56092l-0.00879,-4.72252c-3.37207,4.18693 -6.90381,9.15088 -10.12646,13.50004c-0.57275,-0.54467 -2.56641,-3.25469 -3.11572,-3.98546l-7.06494,-9.5528c-0.04834,5.76676 -0.05273,11.53381 -0.01611,17.30072l-5.62354,0.00117l0.00146,-25.49403l1.54248,-0.03968c1.5249,-0.0369 3.05127,-0.03616 4.57617,0.00234c0.98438,1.16591 2.49463,3.45279 3.4541,4.8092l6.18311,8.6844c3.24316,-4.47566 6.38525,-9.06171 9.70752,-13.4772z" fill="#023d91"/>
+          <path d="M57.60894,30.12372l5.77515,0.00176l-0.04307,24.88699c-1.81362,0.02782 -3.67251,0.01083 -5.49023,0.01552c0.01802,-3.77213 0.0126,-7.54425 -0.01611,-11.31624c0.03706,-1.78628 -0.01099,-3.63757 -0.03486,-5.42927c-0.8395,1.234 -2.36968,3.0768 -3.31494,4.30245c-2.19976,2.83462 -4.36685,5.69458 -6.50054,8.57927c-0.9772,-1.05142 -2.76519,-3.58061 -3.67837,-4.79353c-2.09106,-2.76683 -4.19722,-5.52239 -6.31831,-8.26653c-0.18794,5.17699 -0.03486,11.66925 0.02358,16.92399l-5.53213,-0.00073c-0.11689,-8.25935 -0.00293,-16.62208 -0.03896,-24.90178l5.76108,0.00776c3.31934,4.26262 6.39038,8.69406 9.81343,12.8908c3.0145,-4.15969 6.42788,-8.89319 9.59429,-12.90046z" fill="#cb172b"/>
+          <path d="M132.95098,40.39528l3.56089,1.99185c0.00688,3.19803 0.52764,5.5893 2.8125,8.00459c6.09258,6.44027 19.06479,5.09895 22.27573,-3.66246c0.5127,-1.39945 0.5376,-2.93199 0.55371,-4.40318c1.20996,-0.62315 2.41553,-1.25259 3.61963,-1.88848c0.0498,1.09256 0.05127,2.30313 0.07471,3.40579c2.29248,0.38859 6.2124,1.67793 8.42285,2.42144c-3.11719,1.07074 -6.26807,2.03651 -9.44971,2.89524c2.1167,1.74733 4.81055,4.00698 6.76465,5.90834c-2.70703,0.00981 -7.22168,-0.85536 -10.15723,-1.09446c1.16016,2.53388 2.30566,5.34669 3.32959,7.9368c-1.34326,-0.65741 -2.79199,-1.46651 -4.12207,-2.17531l-5.06396,-2.7456c-0.06738,2.79963 -0.33691,6.13968 -0.55957,8.94678c-1.87061,-2.21997 -3.7793,-5.36763 -5.63086,-7.79346c-1.9292,2.44047 -3.57671,5.3931 -5.60654,7.89126c-0.29502,-2.79319 -0.43843,-6.16077 -0.57275,-8.98734c-2.93862,1.59945 -6.09243,3.35909 -9.07075,4.848c1.04575,-2.66039 2.13179,-5.30481 3.25737,-7.9324c-3.23394,0.38522 -7.07534,0.95302 -10.26357,1.11072l6.52544,-5.84773c-2.97129,-0.92989 -6.33809,-1.90971 -9.23145,-2.97313c2.64683,-0.95068 5.72109,-1.7611 8.45156,-2.44325c-0.00747,-1.21042 -0.00776,-2.20181 0.07983,-3.41399z" fill="#023d91"/>
+          <path d="M88.76865,30.08624l0.49116,0.06501c0.40503,0.42022 0.24595,3.76305 0.24097,4.53627c-5.27974,0.07101 -10.70977,0.00512 -16.00151,0.00381c-0.02695,1.84104 -0.00469,3.73669 -0.00615,5.58257l14.62559,0.02431l-0.02021,4.53569c-4.68472,0.12167 -9.87891,0.03939 -14.59189,0.02167l-0.02329,5.59223l11.00156,-0.00644l5.17485,0.00322l0.03208,4.59103l-21.86807,0.00146l-0.01377,-24.92609c6.87231,0.0142 14.10483,0.10864 20.95869,-0.02474z" fill="#cb172b"/>
+          <path d="M256.20557,28.76029c4.11914,-0.25403 7.77393,0.78128 11.34229,2.77547c-0.97559,1.3933 -1.96582,2.77693 -2.96777,4.15105c-2.12402,-1.13912 -4.14551,-2.04353 -6.61523,-2.09947c-1.45898,-0.03309 -3.88037,0.01772 -4.97021,1.06181c-0.4292,0.41084 -1.04443,1.45992 -0.95654,1.96388c0.54785,3.18104 8.11377,3.06538 10.7124,4.20874c1.46191,0.47717 2.6748,1.08041 3.7998,2.17092c2.60889,2.52964 2.40088,7.40106 -0.21973,9.87872c-2.92529,2.76581 -6.73682,2.93477 -10.54834,2.89509c-4.14258,-0.33764 -7.12354,-1.21936 -10.53662,-3.63376c0.88037,-1.32302 2.12256,-2.85922 3.1084,-4.14124c3.65332,2.56888 7.88818,3.73992 12.31201,2.51661c0.94482,-0.2615 2.18555,-1.73943 1.99805,-2.72071c-0.43652,-2.05276 -3.73682,-2.83814 -5.8418,-3.0746c-7.15723,-0.80441 -13.86328,-5.0767 -8.76416,-12.81349c1.36816,-2.07648 5.4624,-2.95029 8.14746,-3.13902z" fill="#023d91"/>
+          <path d="M194.59424,28.76293c4.49854,-0.07745 7.83398,0.99959 11.37891,3.75075c-1.15576,1.29022 -2.28223,2.60636 -3.37793,3.9471c-2.18555,-1.71454 -3.59619,-2.50021 -6.375,-2.82101c-12.15381,-1.40311 -14.31006,16.15911 -2.07422,17.30862c3.37939,0.31743 5.85059,-0.79006 8.39648,-2.96684c0.56689,0.26911 3.0249,2.93726 3.63721,3.56509c-5.75977,5.33981 -15.79834,5.74172 -21.79102,0.51919c-5.36426,-4.67478 -5.56641,-13.64558 -0.79102,-18.81129c2.96777,-3.21077 6.74707,-4.29996 10.99658,-4.49162z" fill="#023d91"/>
+        </svg>
+        <p>The motion-first CMS for teams that treat content as a product. Made by people who edit the site themselves.</p>
+      </div>
+      <div>
+        <h5>Product</h5>
+        <ul>
+          <li><a href="#">Features</a></li>
+          <li><a href="#">Pricing</a></li>
+          <li><a href="#">Changelog</a></li>
+          <li><a href="#">Roadmap</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Resources</h5>
+        <ul>
+          <li><a href="#">Docs</a></li>
+          <li><a href="#">API reference</a></li>
+          <li><a href="#">Theme gallery</a></li>
+          <li><a href="#">Blog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Customers</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Legal</h5>
+        <ul>
+          <li><a href="#">Terms</a></li>
+          <li><a href="#">Privacy</a></li>
+          <li><a href="#">Security</a></li>
+          <li><a href="#">DPA</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Mero CMS · Built by Blendwit</span>
+      <span>Made with care · v1.5</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Scroll-reveal observer.
+  // Watches every element with .reveal* or .section-head and adds .in-view
+  // when at least 15% of it enters the viewport. Reveal-once: we unobserve
+  // after firing so the element doesn't re-animate on scroll back.
+  (function () {
+    if (!('IntersectionObserver' in window)) {
+      // Old browsers — show everything immediately.
+      document.querySelectorAll(
+        '.reveal, .reveal-left, .reveal-right, .reveal-scale, .reveal-stagger, .section-head'
+      ).forEach(function (el) { el.classList.add('in-view'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          io.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.15,
+      rootMargin: '0px 0px -80px 0px'
+    });
+    document.querySelectorAll(
+      '.reveal, .reveal-left, .reveal-right, .reveal-scale, .reveal-stagger, .section-head'
+    ).forEach(function (el) { io.observe(el); });
+  })();
+</script>
+</body>
+</html>

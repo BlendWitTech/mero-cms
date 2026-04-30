@@ -3,11 +3,11 @@ model Testimonial {
   clientName    String
   clientRole    String?
   clientCompany String?
-  clientPhoto   String?
-  content       String   @db.Text
-  rating        Float    @default(5)
-  theme         String?
-  attributes    Json?
+  clientAvatar  String?
+  content       String
+  rating        Int?     @default(5)
+  isActive      Boolean  @default(true)
+  order         Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

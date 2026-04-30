@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" role="img" aria-label="Blendwit">
+    <!-- Placeholder Blendwit wordmark — multi-stroke brush look in
+         brand colours. Replace with the actual asset (your image 1)
+         at this same path. The blendwit-tech design's nav & footer
+         resolve this file via /blendwit/wordmark.svg. -->
+    <text x="0" y="58" font-family="Bricolage Grotesque, Georgia, serif" font-style="italic" font-weight="800" font-size="60" fill="#fbb01b">b</text>
+    <text x="35" y="58" font-family="Bricolage Grotesque, Georgia, serif" font-style="italic" font-weight="800" font-size="60" fill="#cb172b">l</text>
+    <text x="55" y="58" font-family="Bricolage Grotesque, Georgia, serif" font-style="italic" font-weight="800" font-size="60" fill="#2eaa4f">e</text>
+    <text x="92" y="58" font-family="Bricolage Grotesque, Georgia, serif" font-style="italic" font-weight="800" font-size="60" fill="#4f9cf9">n</text>
+    <text x="135" y="58" font-family="Bricolage Grotesque, Georgia, serif" font-style="italic" font-weight="800" font-size="60" fill="#cb172b">d</text>
+    <text x="175" y="58" font-family="Bricolage Grotesque, Georgia, serif" font-style="italic" font-weight="800" font-size="60" fill="#fbb01b">w</text>
+    <text x="232" y="58" font-family="Bricolage Grotesque, Georgia, serif" font-style="italic" font-weight="800" font-size="60" fill="#2eaa4f">i</text>
+    <text x="252" y="58" font-family="Bricolage Grotesque, Georgia, serif" font-style="italic" font-weight="800" font-size="60" fill="#4f9cf9">t</text>
+</svg>

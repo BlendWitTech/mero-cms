@@ -7,6 +7,7 @@ import { UserPermissions, checkPermission } from '@/lib/permissions';
 interface PermissionsContextType {
     permissions: UserPermissions | null;
     userRole: string | null;
+    license: any | null;
     isLoading: boolean;
     hasPermission: (required: string | string[]) => boolean;
     refreshPermissions: () => Promise<void>;
@@ -15,6 +16,7 @@ interface PermissionsContextType {
 const PermissionsContext = createContext<PermissionsContextType>({
     permissions: null,
     userRole: null,
+    license: null,
     isLoading: true,
     hasPermission: () => false,
     refreshPermissions: async () => { }
@@ -23,6 +25,7 @@ const PermissionsContext = createContext<PermissionsContextType>({
 export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
     const [permissions, setPermissions] = useState<UserPermissions | null>(null);
     const [userRole, setUserRole] = useState<string | null>(null);
+    const [license, setLicense] = useState<any | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchPermissions = async () => {
@@ -30,10 +33,12 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
             const profile = await apiRequest('/auth/profile');
             setPermissions(profile.role?.permissions || {});
             setUserRole(profile.role?.name || null);
+            setLicense(profile.license || null);
         } catch (error) {
             console.error('Failed to fetch permissions:', error);
             setPermissions({});
             setUserRole(null);
+            setLicense(null);
         } finally {
             setIsLoading(false);
         }
@@ -52,6 +57,7 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
             value={{
                 permissions,
                 userRole,
+                license,
                 isLoading,
                 hasPermission,
                 refreshPermissions: fetchPermissions

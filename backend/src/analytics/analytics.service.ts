@@ -235,6 +235,53 @@ export class AnalyticsService {
         return parseFloat((((newVal - oldVal) / oldVal) * 100).toFixed(1));
     }
 
+    async getTrend(days = 7): Promise<{ date: string; pageViews: number; visitors: number; sessions: number }[]> {
+        try {
+            const config = await this.getConfig();
+            if (!config?.serviceAccountEmail || !config?.privateKey || !config?.ga4PropertyId) {
+                return this.getMockTrend(days);
+            }
+
+            const privateKey = this.formatPrivateKey(config.privateKey);
+            const analyticsDataClient = new BetaAnalyticsDataClient({
+                credentials: {
+                    client_email: config.serviceAccountEmail,
+                    private_key: privateKey,
+                },
+            });
+
+            const [response] = await analyticsDataClient.runReport({
+                property: `properties/${config.ga4PropertyId}`,
+                dateRanges: [{ startDate: `${days - 1}daysAgo`, endDate: 'today' }],
+                dimensions: [{ name: 'date' }],
+                metrics: [
+                    { name: 'screenPageViews' },
+                    { name: 'activeUsers' },
+                    { name: 'sessions' },
+                ],
+                orderBys: [{ dimension: { dimensionName: 'date' } }],
+            });
+
+            return (response.rows || []).map(row => ({
+                date: row.dimensionValues?.[0]?.value || '',
+                pageViews: parseInt(row.metricValues?.[0]?.value || '0'),
+                visitors: parseInt(row.metricValues?.[1]?.value || '0'),
+                sessions: parseInt(row.metricValues?.[2]?.value || '0'),
+            }));
+        } catch (error) {
+            console.error('Failed to fetch GA4 trend data:', error);
+            return this.getMockTrend(days);
+        }
+    }
+
+    private getMockTrend(days: number): { date: string; pageViews: number; visitors: number; sessions: number }[] {
+        return Array.from({ length: days }, (_, i) => {
+            const d = new Date(Date.now() - (days - 1 - i) * 86400000);
+            const dateStr = d.toISOString().split('T')[0].replace(/-/g, '');
+            return { date: dateStr, pageViews: 0, visitors: 0, sessions: 0 };
+        });
+    }
+
     private getMockMetrics() {
         return {
             summary: {
@@ -251,5 +298,28 @@ export class AnalyticsService {
             locations: [],
             realTimeVisitors: 0,
         };
+    }
+
+    /**
+     * Top pages by view count, used by the dashboard's top-pages
+     * panel. Reads `getDashboardMetrics().topPages` if available so
+     * we share whatever GA4/in-app source the dashboard already has;
+     * normalises to { title, slug, views } and slices to `limit`.
+     *
+     * Returns [] when the underlying tracker isn't configured —
+     * the controller surfaces that as an empty state.
+     */
+    async getTopPages(limit: number): Promise<Array<{ title: string; slug: string; views: number }>> {
+        try {
+            const metrics: any = await this.getDashboardMetrics();
+            const raw: any[] = Array.isArray(metrics?.topPages) ? metrics.topPages : [];
+            return raw.slice(0, limit).map((row) => ({
+                title: row.title || row.pageTitle || row.path || row.slug || '(untitled)',
+                slug:  row.slug  || row.path      || '',
+                views: Number(row.views ?? row.pageViews ?? row.count ?? 0),
+            }));
+        } catch {
+            return [];
+        }
     }
 }

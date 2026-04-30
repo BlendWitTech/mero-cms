@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
 export class CommentsService {
@@ -9,6 +10,9 @@ export class CommentsService {
     constructor(
         private prisma: PrismaService,
         private mailService: MailService,
+        // SettingsService.getSiteUrl() — comment moderation emails
+        // embed an absolute review link to /dashboard/comments.
+        private settings: SettingsService,
     ) { }
 
     async create(data: any) {
@@ -52,7 +56,7 @@ export class CommentsService {
             ? `New reply on "${postTitle}" — ${siteTitle}`
             : `New comment on "${postTitle}" — ${siteTitle}`;
 
-        const reviewUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/comments`;
+        const reviewUrl = `${await this.settings.getSiteUrl()}/dashboard/comments`;
         const innerHtml = `
             <h2 style="margin:0 0 8px;font-size:22px;font-weight:900;color:#1E1E1E;">
                 ${isReply ? '↩ New Reply' : '💬 New Comment'}

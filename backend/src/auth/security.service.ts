@@ -10,7 +10,7 @@ export class SecurityService {
 
     async generateQrCode(email: string, secret: string) {
         const totp = new OTPAuth.TOTP({
-            issuer: 'Blendwit CMS',
+            issuer: 'Mero CMS',
             label: email,
             algorithm: 'SHA1',
             digits: 6,
@@ -24,7 +24,7 @@ export class SecurityService {
 
     verifyToken(token: string, secret: string) {
         const totp = new OTPAuth.TOTP({
-            issuer: 'Blendwit CMS',
+            issuer: 'Mero CMS',
             algorithm: 'SHA1',
             digits: 6,
             period: 30,

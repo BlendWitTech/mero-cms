@@ -4,9 +4,15 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Permission } from '../auth/permissions.enum';
+import { RequireTier } from '../auth/require-tier.decorator';
+import { Tier } from '../auth/tier.enum';
+import { PackageEnforcementGuard } from '../packages/package-enforcement.guard';
+import { RequireLimit, PackageLimit } from '../packages/require-limit.decorator';
 
+@RequireTier(Tier.Premium)
 @Controller('audit-logs')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, PackageEnforcementGuard)
+@RequireLimit(PackageLimit.AUDIT_LOG)
 export class AuditLogController {
     constructor(private readonly auditLogService: AuditLogService) { }
 

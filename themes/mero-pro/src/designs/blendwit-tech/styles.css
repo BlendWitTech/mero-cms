@@ -1,0 +1,159 @@
+/**
+ * Vivid — Positivus-aesthetic design tokens.
+ *
+ * Scoped under [data-design="blendwit-tech"] so it can coexist with marketing
+ * and blendwit-tech in the same bundle without bleeding styles. The
+ * Positivus mould: black canvas, lime-green accent, hard-edged cards
+ * with chunky shadows, bold sans typography, the occasional asterisk
+ * "star" decoration. No gradients. No subtle textures.
+ *
+ * The signature move is the alternating card row — green / black /
+ * white — used on services, pricing, and testimonials. Each card has
+ * a flat 1-px black border + a 4-px solid offset shadow for the
+ * "stamped" feel.
+ */
+[data-design="blendwit-tech"] {
+    /* Surfaces */
+    --vv-paper:        #ffffff;
+    --vv-ink:          #191a23;     /* near-black, slightly warm */
+    --vv-ink-deep:     #000000;
+    --vv-grey-tint:    #f3f3f3;
+    --vv-grey-mid:     #e0e0e0;
+
+    /* Accents */
+    --vv-lime:         #b9ff66;     /* the Positivus signature */
+    --vv-lime-deep:    #98e043;
+    --vv-purple:       #a5a3ff;     /* secondary playful accent (rare) */
+
+    /* Ink */
+    --vv-ink-on-dark:  #ffffff;
+    --vv-ink-on-lime:  #191a23;
+
+    /* Geometry — Positivus uses HARD edges and chunky offset shadows */
+    --vv-radius:       45px;        /* pill on buttons */
+    --vv-radius-card:  45px;        /* yes, the cards are this rounded */
+    --vv-radius-tile:  14px;        /* smaller tiles */
+    --vv-shadow-card:  0 5px 0 0 var(--vv-ink);  /* signature offset */
+    --vv-border:       1px solid var(--vv-ink);
+
+    /* Typography */
+    --vv-font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    --vv-font-body:    'Space Grotesk', 'Inter', system-ui, sans-serif;
+
+    /* Spacing rhythm */
+    --vv-section-py:   clamp(80px, 10vw, 140px);
+    --vv-container:    1240px;
+}
+
+[data-design="blendwit-tech"] {
+    background: var(--vv-paper);
+    color: var(--vv-ink);
+    font-family: var(--vv-font-body);
+}
+
+[data-design="blendwit-tech"] .vv-container {
+    max-width: var(--vv-container);
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+[data-design="blendwit-tech"] .vv-section {
+    padding: var(--vv-section-py) 0;
+}
+
+[data-design="blendwit-tech"] .vv-headline {
+    font-family: var(--vv-font-display);
+    font-weight: 600;
+    color: var(--vv-ink);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+}
+
+/* The Positivus "highlighted phrase" — a chunky lime block-fill behind
+   the text, no gradient softness. Used on hero + section heads. */
+[data-design="blendwit-tech"] .vv-mark {
+    background: var(--vv-lime);
+    color: var(--vv-ink);
+    padding: 0 8px;
+}
+
+[data-design="blendwit-tech"] .vv-section-tag {
+    display: inline-block;
+    background: var(--vv-lime);
+    color: var(--vv-ink);
+    padding: 2px 10px;
+    font-weight: 600;
+    font-size: 32px;
+    line-height: 1.2;
+    border-radius: 6px;
+}
+
+[data-design="blendwit-tech"] .vv-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: var(--vv-font-body);
+    font-weight: 500;
+    font-size: 18px;
+    padding: 18px 32px;
+    border-radius: var(--vv-radius);
+    text-decoration: none;
+    border: var(--vv-border);
+    transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+}
+
+[data-design="blendwit-tech"] .vv-btn-primary {
+    background: var(--vv-ink);
+    color: var(--vv-ink-on-dark);
+}
+[data-design="blendwit-tech"] .vv-btn-primary:hover {
+    background: var(--vv-lime);
+    color: var(--vv-ink);
+    transform: translateY(-2px);
+}
+
+[data-design="blendwit-tech"] .vv-btn-ghost {
+    background: var(--vv-paper);
+    color: var(--vv-ink);
+}
+[data-design="blendwit-tech"] .vv-btn-ghost:hover {
+    background: var(--vv-lime);
+}
+
+[data-design="blendwit-tech"] .vv-card {
+    background: var(--vv-paper);
+    border: var(--vv-border);
+    border-radius: var(--vv-radius-card);
+    box-shadow: var(--vv-shadow-card);
+    padding: 50px;
+}
+
+/* Card colour variants — alternated across rows for the Positivus
+   "service grid" rhythm. */
+[data-design="blendwit-tech"] .vv-card-lime  { background: var(--vv-lime);  color: var(--vv-ink); }
+[data-design="blendwit-tech"] .vv-card-grey  { background: var(--vv-grey-tint); }
+[data-design="blendwit-tech"] .vv-card-dark  { background: var(--vv-ink);   color: var(--vv-ink-on-dark); }
+
+/* Surfaces — vivid leans almost entirely on white with the dark band
+   reserved for testimonials / final CTA. */
+[data-design="blendwit-tech"] .vv-surface-dark {
+    background: var(--vv-ink);
+    color: var(--vv-ink-on-dark);
+}
+[data-design="blendwit-tech"] .vv-surface-dark .vv-headline { color: var(--vv-ink-on-dark); }
+
+[data-design="blendwit-tech"] .vv-surface-lime {
+    background: var(--vv-lime);
+}
+
+/* Decorative star/asterisk — sprinkled across hero + dark sections.
+   Pure CSS so we don't ship an SVG just for ambience. */
+[data-design="blendwit-tech"] .vv-star {
+    display: inline-block;
+    width: 60px;
+    height: 60px;
+    background: var(--vv-lime);
+    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 0v9l6.5-6.5L15 9l8.5-1L15 11l8.5 3L15 13l3.5 6.5L12 13v11l-3-9-6.5 6.5L9 13l-8.5 1L9 11 .5 8 9 9 5.5 2.5 12 9z'/></svg>") center/contain no-repeat;
+            mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 0v9l6.5-6.5L15 9l8.5-1L15 11l8.5 3L15 13l3.5 6.5L12 13v11l-3-9-6.5 6.5L9 13l-8.5 1L9 11 .5 8 9 9 5.5 2.5 12 9z'/></svg>") center/contain no-repeat;
+}

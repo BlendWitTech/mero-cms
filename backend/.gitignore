@@ -2,4 +2,11 @@ node_modules
 # Keep environment variables out of version control
 .env
 
+# Auto-generated on first boot — contains JWT + webhook secrets.
+# Never commit; each install gets its own.
+secrets.json
+
+# Setup wizard config (DB connection, install metadata).
+setup.json
+
 /generated/prisma

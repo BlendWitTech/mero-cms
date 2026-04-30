@@ -6,7 +6,7 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-console.log('\n--- Blendwit CMS Start Manager ---');
+console.log('\n--- Mero CMS Start Manager ---');
 console.log('1. Development (Hot-Reload)');
 console.log('2. Live Preview (Production Build)');
 console.log('3. Test Mode');

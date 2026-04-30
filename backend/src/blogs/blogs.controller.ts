@@ -61,6 +61,21 @@ export class BlogsController {
         return this.blogsService.findAll(status, category, tag);
     }
 
+    /**
+     * Posts published per ISO week for the last `weeks` weeks. Used by
+     * the dashboard's content velocity chart. Zero-filled so the bar
+     * chart shows quiet weeks instead of skipping them.
+     *
+     * Declared BEFORE the `:slug` route to keep specific paths above
+     * parameterized ones.
+     */
+    @Get('analytics/by-week')
+    @RequirePermissions(Permission.CONTENT_VIEW)
+    async postsByWeek(@Query('weeks') weeksParam?: string) {
+        const weeks = Math.min(Math.max(Number(weeksParam) || 12, 1), 52);
+        return this.blogsService.countByWeek(weeks);
+    }
+
     @Get(':slug')
     @RequirePermissions(Permission.CONTENT_VIEW)
     findOne(@Param('slug') slug: string) {

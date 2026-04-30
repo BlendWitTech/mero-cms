@@ -8,52 +8,40 @@ import { RequireModule } from '../setup/require-module.decorator';
 
 @RequireModule('testimonials')
 @Controller('testimonials')
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class TestimonialsController {
     constructor(private readonly testimonialsService: TestimonialsService) { }
 
     @Post()
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @RequirePermissions(Permission.CONTENT_CREATE)
-    create(@Body() createTestimonialDto: any) {
-        return this.testimonialsService.create(createTestimonialDto);
+    @RequirePermissions(Permission.CONTENT_EDIT)
+    create(@Body() data: any) {
+        return this.testimonialsService.create(data);
     }
 
     @Get()
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @RequirePermissions(Permission.CONTENT_VIEW)
-    findAll() {
-        return this.testimonialsService.findAll();
+    findAll(@Query('theme') theme?: string, @Query('isActive') isActive?: string) {
+        return this.testimonialsService.findAll({ 
+            theme, 
+            isActive: isActive !== undefined ? isActive === 'true' : undefined 
+        });
     }
 
     @Get(':id')
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @RequirePermissions(Permission.CONTENT_VIEW)
     findOne(@Param('id') id: string) {
-        return this.testimonialsService.findOne(id);
+        return this.testimonialsService.findById(id);
     }
 
     @Patch(':id')
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @RequirePermissions(Permission.CONTENT_EDIT)
-    update(@Param('id') id: string, @Body() updateTestimonialDto: any) {
-        return this.testimonialsService.update(id, updateTestimonialDto);
+    update(@Param('id') id: string, @Body() data: any) {
+        return this.testimonialsService.update(id, data);
     }
 
     @Delete(':id')
-    @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @RequirePermissions(Permission.CONTENT_DELETE)
+    @RequirePermissions(Permission.CONTENT_EDIT)
     remove(@Param('id') id: string) {
         return this.testimonialsService.remove(id);
-    }
-
-    // Public routes
-    @Get('public/list')
-    getPublic() {
-        return this.testimonialsService.findAll();
-    }
-
-    @Get('public/featured')
-    getFeatured(@Query('limit') limit?: string) {
-        return this.testimonialsService.findFeatured(limit ? parseInt(limit) : 5);
     }
 }

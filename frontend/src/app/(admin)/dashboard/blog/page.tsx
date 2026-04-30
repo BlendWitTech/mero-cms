@@ -18,6 +18,7 @@ import {
     ExclamationCircleIcon,
     CheckIcon,
     DocumentDuplicateIcon,
+    SparklesIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -27,9 +28,14 @@ import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
 import AlertDialog from '@/components/ui/AlertDialog';
 import { useNotification } from '@/context/NotificationContext';
 import { useForm } from '@/context/FormContext';
-import { apiRequest } from '@/lib/api';
+import { apiRequest, getApiBaseUrl } from '@/lib/api';
+
+const API_URL = getApiBaseUrl();
 import PermissionGuard from '@/components/auth/PermissionGuard';
 import { useSettings } from '@/context/SettingsContext';
+import PageHeader from '@/components/ui/PageHeader';
+import EmptyState from '@/components/ui/EmptyState';
+import FilterBar from '@/components/ui/FilterBar';
 
 function BlogPageContent() {
     const searchParams = useSearchParams();
@@ -152,6 +158,14 @@ function BlogPageContent() {
     };
 
     const populateForm = (post: any) => {
+        // Prefer `publishAt` (the future "scheduled for" field) when the post
+        // is still scheduled; otherwise show `publishedAt` (the actual publish
+        // timestamp). The single datetime input in the UI maps to whichever
+        // is relevant for the current status.
+        const dateValue =
+            post.status === 'SCHEDULED' && post.publishAt
+                ? post.publishAt
+                : post.publishedAt || '';
         const data = {
             title: post.title,
             slug: post.slug,
@@ -161,7 +175,7 @@ function BlogPageContent() {
             status: post.status,
             categories: post.categories?.map((c: any) => c.id) || [],
             tags: post.tags?.map((t: any) => t.name) || [],
-            publishedAt: post.publishedAt || '',
+            publishedAt: dateValue,
             seo: { title: post.seo?.title || '', description: post.seo?.description || '', keywords: post.seo?.keywords || [], ogImage: post.seo?.ogImage || '', ogImages: post.seo?.ogImages || [] }
         };
         setFormData(data);
@@ -212,11 +226,19 @@ function BlogPageContent() {
         const method = currentPostId ? 'PATCH' : 'POST';
 
         try {
-            // Sanitize payload
-            const payload = {
+            // Sanitize payload. The datetime-local input feeds a single string
+            // in `formData.publishedAt`; send it as `publishAt` (the future
+            // "scheduled for" field) when status === 'SCHEDULED', otherwise
+            // send it as `publishedAt` (the actual "published at" field) so
+            // the back-end content scheduler knows which semantic to apply.
+            const pickedAt = formData.publishedAt
+                ? new Date(formData.publishedAt).toISOString()
+                : undefined;
+            const payload: any = {
                 ...formData,
-                publishedAt: formData.publishedAt ? new Date(formData.publishedAt).toISOString() : undefined,
-                seo: (!formData.seo.title && !formData.seo.description && !formData.seo.ogImage && !formData.seo.keywords?.length) ? undefined : formData.seo
+                publishAt: formData.status === 'SCHEDULED' ? pickedAt : null,
+                publishedAt: formData.status !== 'SCHEDULED' ? pickedAt : undefined,
+                seo: (!formData.seo.title && !formData.seo.description && !formData.seo.ogImage && !formData.seo.keywords?.length) ? undefined : formData.seo,
             };
 
             await apiRequest(url, {
@@ -324,6 +346,35 @@ function BlogPageContent() {
         }
     };
 
+    const generateSeo = async () => {
+        try {
+            const res: any = await apiRequest('/ai/generate', {
+                method: 'POST',
+                body: { 
+                    prompt: 'Generate an SEO title (max 60 chars) and meta description (max 160 chars) for this article.', 
+                    context: `Title: ${formData.title}\nContent: ${formData.content.slice(0, 1000)}` 
+                }
+            });
+            
+            // For mock demo purposes, if it starts with "AI Suggestion" or similar, we'll use it
+            const text = res.text || '';
+            const lines = text.split('\n').filter((l: string) => l.trim());
+            const newTitle = lines[0]?.replace(/^Title:|^SUMMARY:|^AI Suggestion:/i, '').trim() || formData.title;
+            const newDesc = lines[1] || text.slice(0, 160);
+            
+            setFormData((prev: any) => ({
+                ...prev,
+                seo: {
+                    ...prev.seo,
+                    title: newTitle.slice(0, 60),
+                    description: newDesc.slice(0, 160)
+                }
+            }));
+            showToast('SEO metadata generated!', 'success');
+        } catch (error) {
+            showToast('AI SEO generation failed', 'error');
+        }
+    };
 
     if (view === 'editor') {
         return (
@@ -352,13 +403,13 @@ function BlogPageContent() {
                 />
 
                 {isReadOnly && (
-                    <div className="mx-2 bg-amber-50 border border-amber-200 rounded-2xl p-6 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-                        <div className="bg-amber-100 p-3 rounded-xl">
-                            <ExclamationCircleIcon className="h-6 w-6 text-amber-600" />
+                    <div className="mx-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/30 rounded-2xl p-6 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                        <div className="bg-amber-100 dark:bg-amber-900/40 p-3 rounded-xl">
+                            <ExclamationCircleIcon className="h-6 w-6 text-amber-600 dark:text-amber-500" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-amber-900 tracking-tight">Incompatible Theme Post</h3>
-                            <p className="text-xs font-semibold text-amber-700 mt-0.5">
+                            <h3 className="text-sm font-bold text-amber-900 dark:text-amber-400 tracking-tight">Incompatible Theme Post</h3>
+                            <p className="text-xs font-semibold text-amber-700 dark:text-amber-600/80 mt-0.5">
                                 This article belongs to the <span className="underline decoration-2 underline-offset-2 capitalize">{contentTheme || 'another'}</span> theme. 
                                 It is in read-only mode to prevent layout issues on your active site.
                             </p>
@@ -367,9 +418,9 @@ function BlogPageContent() {
                 )}
 
                 {/* Editor Header */}
-                <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm sticky top-0 z-10">
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-white/[0.06] shadow-sm sticky top-0 z-10">
                     <div className="flex items-center gap-4">
-                        <button onClick={handleBackClick} className="p-2 hover:bg-slate-50 rounded-xl text-slate-500 transition-colors">
+                        <button onClick={handleBackClick} className="p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl text-slate-500 dark:text-slate-400 transition-colors">
                             <ArrowLeftIcon className="h-5 w-5" />
                         </button>
                         <div>
@@ -385,7 +436,7 @@ function BlogPageContent() {
                                 const newStatus = e.target.value;
                                 setFormData({ ...formData, status: newStatus });
                             }}
-                            className={`border-none text-xs font-bold py-2.5 px-4 rounded-xl focus:ring-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${formData.status === 'SCHEDULED' ? 'bg-violet-50 text-violet-700' : 'bg-slate-50 text-slate-600'}`}
+                            className={`border-none text-xs font-bold py-2.5 px-4 rounded-xl focus:ring-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${formData.status === 'SCHEDULED' ? 'bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
                         >
                             <option value="DRAFT">Draft</option>
                             <option value="PUBLISHED">Published</option>
@@ -395,7 +446,7 @@ function BlogPageContent() {
                         <button 
                             onClick={() => handleSave()} 
                             disabled={isSaving || isReadOnly}
-                            className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="btn-primary"
                         >
                             <CloudArrowUpIcon className="h-4 w-4" />
                             {isSaving ? 'Saving...' : (isReadOnly ? 'Read Only' : 'Save Changes')}
@@ -407,7 +458,7 @@ function BlogPageContent() {
                     {/* Main Content */}
                     <div className="xl:col-span-2 space-y-6">
                         {/* Premium Title & Slug Area */}
-                        <div className="bg-white rounded-2xl p-10 border border-slate-200 shadow-xl shadow-slate-200 space-y-8 relative overflow-hidden group">
+                        <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-10 border border-slate-100 dark:border-white/[0.06] shadow-xl shadow-slate-200 dark:shadow-none space-y-8 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/30 rounded-full blur-3xl -z-10 group-hover:bg-blue-100/30 transition-colors duration-1000"></div>
 
                             <div className="space-y-3">
@@ -418,13 +469,13 @@ function BlogPageContent() {
                                     value={formData.title}
                                     disabled={isReadOnly}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value, slug: e.target.value.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') })}
-                                    className="w-full text-4xl lg:text-5xl font-bold text-slate-900 placeholder:text-slate-200 border-none focus:ring-0 p-0 font-display bg-transparent transition-all decoration-blue-600/30 hover:decoration-blue-600/50 disabled:opacity-50"
+                                    className="w-full text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white placeholder:text-slate-200 dark:placeholder:text-slate-700 border-none focus:ring-0 p-0 font-display bg-transparent transition-all decoration-blue-600/30 hover:decoration-blue-600/50 disabled:opacity-50"
                                 />
                             </div>
 
-                            <div className="pt-6 border-t border-slate-100 flex items-center gap-4">
+                            <div className="pt-6 border-t border-slate-100 dark:border-white/[0.06] flex items-center gap-4">
                                 <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                                <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 group/slug hover:border-blue-200 transition-all">
+                                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 px-4 py-2 rounded-xl border border-slate-100 dark:border-white/[0.06] group/slug hover:border-blue-200 dark:hover:border-blue-500/50 transition-all">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Live Permalink</span>
                                     <span className="text-slate-300 font-mono text-xs">/blog/</span>
                                     <input
@@ -446,7 +497,7 @@ function BlogPageContent() {
                     {/* Sidebar Metadata */}
                     <div className="space-y-6">
                         {/* Cover Image */}
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                        <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-100 dark:border-white/[0.06] shadow-sm space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Cover Image</h3>
                                 {formData.coverImage && !isReadOnly && (
@@ -455,7 +506,7 @@ function BlogPageContent() {
                             </div>
                              <div
                                 onClick={() => !isReadOnly && setIsMediaOpen(true)}
-                                className={`aspect-video bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 ${!isReadOnly ? 'hover:bg-slate-100/50 hover:border-blue-400 hover:text-blue-500 cursor-pointer' : 'cursor-not-allowed opacity-50'} transition-all group overflow-hidden relative`}
+                                className={`aspect-video bg-slate-50 dark:bg-slate-950 rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/10 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 ${!isReadOnly ? 'hover:bg-slate-100/50 dark:hover:bg-slate-900/50 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-500 cursor-pointer' : 'cursor-not-allowed opacity-50'} transition-all group overflow-hidden relative`}
                             >
                                 {formData.coverImage ? (
                                     <img src={formData.coverImage} className="w-full h-full object-cover" />
@@ -478,7 +529,7 @@ function BlogPageContent() {
                         />
 
                         {/* Categories */}
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                        <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-100 dark:border-white/[0.06] shadow-sm space-y-4">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Categories</h3>
                             <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
                                 {categories.map(cat => (
@@ -488,9 +539,9 @@ function BlogPageContent() {
                                             disabled={isReadOnly}
                                             checked={formData.categories.includes(cat.id)}
                                             onChange={() => handleCategoryToggle(cat.id)}
-                                            className="rounded-md border-slate-300 text-blue-600 focus:ring-blue-600 disabled:opacity-50"
+                                            className="rounded-md border-slate-300 dark:border-white/10 dark:bg-slate-900 text-blue-600 focus:ring-blue-600 disabled:opacity-50"
                                         />
-                                        <span className="text-xs font-bold text-slate-700">{cat.name}</span>
+                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{cat.name}</span>
                                     </label>
                                 ))}
                                 {categories.length === 0 && <p className="text-xs text-slate-400 italic">No categories found.</p>}
@@ -498,7 +549,7 @@ function BlogPageContent() {
                         </div>
 
                         {/* Tags */}
-                        <div className="bg-white rounded-2xl rounded-b-none p-6 border border-slate-200 shadow-sm space-y-4 relative">
+                        <div className="bg-white dark:bg-slate-900/60 rounded-2xl rounded-b-none p-6 border border-slate-100 dark:border-white/[0.06] shadow-sm space-y-4 relative">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Tags</h3>
                             <div className="flex flex-wrap gap-2 mb-3">
                                 {formData.tags.map((tag: string) => (
@@ -511,7 +562,7 @@ function BlogPageContent() {
                             <div className="relative">
                                  <input
                                     type="text"
-                                    className="w-full bg-slate-50 border-none rounded-xl text-xs font-bold px-4 py-3 focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
+                                    className="w-full bg-slate-50 dark:bg-slate-950 border-none rounded-xl text-xs font-bold px-4 py-3 focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50 text-slate-900 dark:text-white"
                                     placeholder={isReadOnly ? "Read-only tags" : "Search or add tag..."}
                                     disabled={isReadOnly}
                                     value={tagSearch}
@@ -533,7 +584,7 @@ function BlogPageContent() {
                                     onFocus={() => setShowTagSuggestions(true)}
                                 />
                                 {showTagSuggestions && (
-                                    <div className="absolute z-20 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 max-h-48 overflow-y-auto custom-scrollbar p-2">
+                                    <div className="absolute z-20 w-full mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-white/[0.06] max-h-48 overflow-y-auto custom-scrollbar p-2">
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest p-2">Suggestions</p>
                                         {tags
                                             .filter(t => t.name.toLowerCase().includes(tagSearch.toLowerCase()) && !formData.tags.includes(t.name))
@@ -545,7 +596,7 @@ function BlogPageContent() {
                                                         setTagSearch('');
                                                         setShowTagSuggestions(false);
                                                     }}
-                                                    className="w-full text-left px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-600 rounded-xl transition-all"
+                                                    className="w-full text-left px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl transition-all"
                                                 >
                                                     {tag.name}
                                                 </button>
@@ -571,8 +622,17 @@ function BlogPageContent() {
                         </div>
 
                         {/* SEO Metadata */}
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">SEO Metadata</h3>
+                        <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-100 dark:border-white/[0.06] shadow-sm space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">SEO Metadata</h3>
+                                <button 
+                                    onClick={generateSeo}
+                                    className="btn-ghost px-3 py-1 text-blue-600 dark:text-blue-400"
+                                >
+                                    <SparklesIcon className="h-3 w-3" />
+                                    AI Generate
+                                </button>
+                            </div>
                             <div className="space-y-3">
                                 <div>
                                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Meta Title</label>
@@ -581,7 +641,7 @@ function BlogPageContent() {
                                         value={formData.seo.title}
                                         disabled={isReadOnly}
                                         onChange={(e) => setFormData({ ...formData, seo: { ...formData.seo, title: e.target.value } })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
+                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
                                         placeholder="Title for search engines"
                                     />
                                     <p className="text-[10px] text-slate-400 mt-1 text-right">{formData.seo.title.length}/60</p>
@@ -593,7 +653,7 @@ function BlogPageContent() {
                                         disabled={isReadOnly}
                                         onChange={(e) => setFormData({ ...formData, seo: { ...formData.seo, description: e.target.value } })}
                                         rows={3}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 resize-none disabled:opacity-50"
+                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/10 resize-none disabled:opacity-50"
                                         placeholder="Brief description for search results"
                                     />
                                     <p className="text-[10px] text-slate-400 mt-1 text-right">{formData.seo.description.length}/160</p>
@@ -612,7 +672,7 @@ function BlogPageContent() {
                                         type="text"
                                         disabled={isReadOnly}
                                         placeholder="Type keyword and press Enter…"
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
+                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
                                         onKeyDown={(e) => {
                                             if ((e.key === 'Enter' || e.key === ',') && (e.target as HTMLInputElement).value.trim()) {
                                                 e.preventDefault();
@@ -630,7 +690,7 @@ function BlogPageContent() {
                                         value={formData.seo.ogImage || ''}
                                         disabled={isReadOnly}
                                         onChange={(e) => setFormData({ ...formData, seo: { ...formData.seo, ogImage: e.target.value } })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
+                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
                                         placeholder="https://…/og-image.jpg (for social sharing)"
                                     />
                                 </div>
@@ -638,8 +698,8 @@ function BlogPageContent() {
                         </div>
 
                         {/* Scheduling */}
-                        <div className={`rounded-2xl p-6 border shadow-sm space-y-4 transition-colors ${formData.status === 'SCHEDULED' ? 'bg-violet-50 border-violet-200' : 'bg-white border-slate-200'}`}>
-                            <h3 className={`text-xs font-black uppercase tracking-widest ${formData.status === 'SCHEDULED' ? 'text-violet-500' : 'text-slate-400'}`}>Publishing</h3>
+                        <div className={`rounded-2xl p-6 border shadow-sm space-y-4 transition-colors ${formData.status === 'SCHEDULED' ? 'bg-violet-50 dark:bg-violet-900/30 border-violet-200 dark:border-violet-500/30' : 'bg-white dark:bg-slate-900/60 border-slate-100 dark:border-white/[0.06]'}`}>
+                            <h3 className={`text-xs font-black uppercase tracking-widest ${formData.status === 'SCHEDULED' ? 'text-violet-500 dark:text-violet-400' : 'text-slate-400'}`}>Publishing</h3>
                             <div>
                                 <label className={`text-[10px] font-bold uppercase tracking-widest ml-1 ${formData.status === 'SCHEDULED' ? 'text-violet-600' : 'text-slate-400'}`}>
                                     {formData.status === 'SCHEDULED' ? 'Scheduled Date *' : 'Publish Date'}
@@ -659,7 +719,7 @@ function BlogPageContent() {
                                                 status: isFuture ? 'SCHEDULED' : formData.status === 'SCHEDULED' ? 'DRAFT' : formData.status,
                                             });
                                         }}
-                                        className={`w-full pl-9 pr-4 py-2 border rounded-xl text-xs font-bold focus:outline-none focus:ring-2 disabled:opacity-50 transition-colors ${formData.status === 'SCHEDULED' ? 'bg-white border-violet-300 focus:ring-violet-300/30 text-violet-800' : 'bg-slate-50 border-slate-200 focus:ring-blue-600/10'}`}
+                                        className={`w-full pl-9 pr-4 py-2 border rounded-xl text-xs font-bold focus:outline-none focus:ring-2 disabled:opacity-50 transition-colors ${formData.status === 'SCHEDULED' ? 'bg-white dark:bg-slate-950 border-violet-300 dark:border-violet-500/50 focus:ring-violet-300/30 text-violet-800 dark:text-violet-300' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-white/10 focus:ring-blue-600/10 text-slate-900 dark:text-white'}`}
                                     />
                                 </div>
                                 <p className={`text-[10px] mt-2 ml-1 ${formData.status === 'SCHEDULED' ? 'text-violet-500 font-semibold' : 'text-slate-400'}`}>
@@ -678,7 +738,7 @@ function BlogPageContent() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             <AlertDialog
                 isOpen={deleteConfirmation.isOpen}
                 title="Delete Post"
@@ -699,23 +759,19 @@ function BlogPageContent() {
                 onConfirm={handleBulkDelete}
                 onCancel={() => setBulkDeleteConfirm(false)}
             />
-            {/* Page Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-2">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight font-display">
-                        Content <span className="text-blue-600 font-bold">Engine</span>
-                    </h1>
-                    <p className="mt-1 text-xs text-slate-500 font-semibold tracking-tight">Create, edit and manage your blog posts and articles.</p>
-                </div>
-                <div className="flex items-center gap-3">
+            <PageHeader 
+                title="Content" 
+                accent="Engine" 
+                subtitle="Create, edit and manage your blog posts and articles"
+                actions={
                     <PermissionGuard permission="content_create">
-                        <button onClick={handleCreate} className="inline-flex items-center gap-x-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-all active:scale-95 leading-none">
+                        <button onClick={handleCreate} className="btn-primary">
                             <PlusIcon className="h-4 w-4" strokeWidth={3} />
                             New Post
                         </button>
                     </PermissionGuard>
-                </div>
-            </div>
+                }
+            />
 
             {/* Bulk action toolbar */}
             {selectedIds.size > 0 && (
@@ -724,31 +780,31 @@ function BlogPageContent() {
                     <div className="flex items-center gap-2 ml-auto">
                         <button
                             onClick={() => handleBulkStatus('PUBLISHED')}
-                            className="px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
+                            className="btn-outline px-3 py-1.5 text-xs text-emerald-700 bg-emerald-50 border-emerald-200"
                         >
                             Publish
                         </button>
                         <button
                             onClick={() => handleBulkStatus('DRAFT')}
-                            className="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors"
+                            className="btn-outline px-3 py-1.5 text-xs text-amber-700 bg-amber-50 border-amber-200"
                         >
                             Set Draft
                         </button>
                         <button
                             onClick={() => handleBulkStatus('ARCHIVED')}
-                            className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors"
+                            className="btn-outline px-3 py-1.5 text-xs"
                         >
                             Archive
                         </button>
                         <button
                             onClick={() => setBulkDeleteConfirm(true)}
-                            className="px-3 py-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors"
+                            className="btn-destructive px-3 py-1.5 text-xs"
                         >
                             Delete
                         </button>
                         <button
                             onClick={() => setSelectedIds(new Set())}
-                            className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors"
+                            className="btn-ghost px-3 py-1.5 text-xs"
                         >
                             Cancel
                         </button>
@@ -756,54 +812,41 @@ function BlogPageContent() {
                 </div>
             )}
 
-            {/* Posts List */}
-            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row items-center gap-4 bg-slate-50/10">
-                    <div className="relative flex-1 group">
-                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="Search posts by title or slug..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all"
-                        />
-                    </div>
-                    <div className="flex items-center gap-3 w-full md:w-auto">
-                        <div className="relative flex-1 md:w-48 group">
-                            <FunnelIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-all" />
-                            <select
-                                value={categoryFilter}
-                                onChange={(e) => setCategoryFilter(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all appearance-none cursor-pointer"
-                            >
-                                <option value="">All Categories</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="relative flex-1 md:w-40 group">
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all appearance-none cursor-pointer"
-                            >
-                                <option value="">All Status</option>
-                                <option value="PUBLISHED">Published</option>
-                                <option value="DRAFT">Draft</option>
-                                <option value="SCHEDULED">Scheduled</option>
-                                <option value="ARCHIVED">Archived</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
+            <FilterBar 
+                search={{
+                    value: searchQuery,
+                    onChange: setSearchQuery,
+                    placeholder: "Search posts by title or slug..."
+                }}
+                filters={[
+                    {
+                        label: "All Categories",
+                        value: categoryFilter,
+                        onChange: setCategoryFilter,
+                        options: categories.map(cat => ({ label: cat.name, value: cat.id }))
+                    },
+                    {
+                        label: "All Statuses",
+                        value: statusFilter,
+                        onChange: setStatusFilter,
+                        options: [
+                            { label: 'Published', value: 'PUBLISHED' },
+                            { label: 'Draft', value: 'DRAFT' },
+                            { label: 'Scheduled', value: 'SCHEDULED' },
+                            { label: 'Archived', value: 'ARCHIVED' }
+                        ]
+                    }
+                ]}
+            />
+
+            {/* Unified Content Card */}
+            <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-900/5 border border-slate-100 dark:border-white/[0.06] overflow-hidden transition-all duration-500">
 
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[700px] text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50/30">
-                                <th className="pl-5 py-4 w-10">
+                            <tr className="border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.02]">
+                                <th className="pl-10 py-5 w-10">
                                     {canManageContent && (() => {
                                         const visibleIds = posts
                                             .filter(post => {
@@ -817,32 +860,40 @@ function BlogPageContent() {
                                         return (
                                             <button
                                                 onClick={() => toggleSelectAll(visibleIds)}
-                                                className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${allSelected ? 'bg-blue-600 border-blue-600' : 'border-slate-300 hover:border-blue-400'}`}
+                                                className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${allSelected ? 'bg-blue-600 border-blue-600' : 'border-slate-300 dark:border-white/20 hover:border-blue-400 dark:hover:border-blue-500 bg-white dark:bg-slate-950'}`}
                                             >
                                                 {allSelected && <CheckIcon className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
                                             </button>
                                         );
                                     })()}
                                 </th>
-                                <th className="pl-3 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Article</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Author</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date</th>
-                                <th className="pr-8 py-4 text-right"></th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Article</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Status</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Author</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Date</th>
+                                <th className="pr-10 py-5 text-right"></th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                             {isLoading ? (
                                 [1, 2, 3].map(i => (
-                                    <tr key={i} className="animate-pulse">
-                                        <td colSpan={5} className="px-8 py-8"><div className="h-12 bg-slate-50 rounded-2xl" /></td>
+                                    <tr key={i} >
+                                        <td colSpan={5} className="px-8 py-8"><div className="content-skeleton h-12" /></td>
                                     </tr>
                                 ))
                             ) : posts.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-8 py-20 text-center">
-                                        <DocumentTextIcon className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-                                        <p className="text-sm font-bold text-slate-500">No posts found. Create your first one!</p>
+                                    <td colSpan={6} className="px-8 py-20">
+                                        <EmptyState 
+                                            naked
+                                            icon={DocumentTextIcon}
+                                            title="No Blog Posts Yet"
+                                            description="Start writing stories and sharing updates with your audience by creating your first post."
+                                            action={{
+                                                label: "Create your first post",
+                                                onClick: () => window.location.href = '/dashboard/blog/new'
+                                            }}
+                                        />
                                     </td>
                                 </tr>
                             ) : (
@@ -855,62 +906,64 @@ function BlogPageContent() {
                                         return matchesSearch && matchesCategory && matchesStatus;
                                     })
                                     .map((post) => (
-                                        <tr key={post.id} className={`group hover:bg-slate-50/50 transition-colors ${selectedIds.has(post.id) ? 'bg-blue-50/40' : ''}`}>
-                                            <td className="pl-5 py-5 w-10">
-                                                {canManageContent && (
-                                                    <button
-                                                        onClick={() => toggleSelect(post.id)}
-                                                        className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${selectedIds.has(post.id) ? 'bg-blue-600 border-blue-600' : 'border-slate-300 hover:border-blue-400'}`}
-                                                    >
-                                                        {selectedIds.has(post.id) && <CheckIcon className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
-                                                    </button>
-                                                )}
+                                        <tr key={post.id} className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
+                                            <td className="pl-10 py-6">
+                                                <button
+                                                    onClick={() => toggleSelect(post.id)}
+                                                    className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${selectedIds.has(post.id) ? 'bg-blue-600 border-blue-600' : 'border-slate-300 dark:border-white/20 hover:border-blue-400 dark:hover:border-blue-500 bg-white dark:bg-slate-950'}`}
+                                                >
+                                                    {selectedIds.has(post.id) && <CheckIcon className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
+                                                </button>
                                             </td>
-                                            <td className="pl-3 py-5">
+                                            <td className="px-6 py-6">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="h-12 w-12 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0 relative">
-                                                        {post.coverImage ? (
-                                                            <img src={post.coverImage} alt="" className="h-full w-full object-cover" />
+                                                    <div className="h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0 border border-slate-100 dark:border-white/5">
+                                                        {post.featuredImage ? (
+                                                            <img src={post.featuredImage.startsWith('/') ? `${API_URL}${post.featuredImage}` : post.featuredImage} alt="" className="h-full w-full object-cover" />
                                                         ) : (
-                                                            <div className="h-full w-full flex items-center justify-center text-slate-300">
-                                                                <DocumentTextIcon className="h-6 w-6" />
+                                                            <div className="h-full w-full flex items-center justify-center text-slate-300 dark:text-slate-600">
+                                                                <PhotoIcon className="h-6 w-6" />
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div>
-                                                        <p className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{post.title}</p>
-                                                        <p className="text-[10px] font-semibold text-slate-500 mt-1">/blog/{post.slug}</p>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[200px] uppercase tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{post.title}</span>
+                                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-widest truncate max-w-[200px]">/{post.slug}</span>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-5">
-                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ring-1 ring-inset ${post.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-600 ring-emerald-600/20' :
-                                                    post.status === 'DRAFT' ? 'bg-amber-50 text-amber-600 ring-amber-600/20' :
-                                                    post.status === 'SCHEDULED' ? 'bg-violet-50 text-violet-600 ring-violet-600/20' :
-                                                        'bg-slate-50 text-slate-600 ring-slate-600/20'
+                                            <td className="px-6 py-6">
+                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ring-1 ring-inset ${post.status === 'PUBLISHED' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 ring-emerald-600/20' :
+                                                    post.status === 'DRAFT' ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-500 ring-amber-600/20' :
+                                                    post.status === 'SCHEDULED' ? 'bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 ring-violet-600/20' :
+                                                        'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 ring-slate-600/20'
                                                     }`}>
                                                     {post.status}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-5 font-bold text-slate-700 text-xs">
-                                                {post.author?.name || 'Unknown'}
+                                            <td className="px-6 py-6 text-center">
+                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-tight">
+                                                    {post.author?.name || 'Unknown'}
+                                                </span>
                                             </td>
-                                            <td className="px-4 py-5 text-xs font-semibold text-slate-500">
-                                                {new Date(post.createdAt).toLocaleDateString()}
+                                            <td className="px-6 py-6 text-center">
+                                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                                                    {new Date(post.createdAt).toLocaleDateString()}
+                                                </span>
                                             </td>
-                                            <td className="pr-8 py-5 text-right">
+                                            <td className="pr-10 py-6 text-right">
                                                 {canManageContent && (
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <Link href={`/dashboard/comments?postId=${post.id}`} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-emerald-500 hover:border-emerald-200 transition-all" title="View Comments">
+                                                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Link href={`/dashboard/comments?postId=${post.id}`} className="btn-ghost p-2" title="View Comments">
                                                             <ChatBubbleLeftRightIcon className="h-4 w-4" />
                                                         </Link>
-                                                        <button onClick={() => handleEdit(post)} title="Edit" className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all">
+                                                        <button onClick={() => handleEdit(post)} title="Edit" className="btn-ghost p-2 text-blue-600">
                                                             <PencilSquareIcon className="h-4 w-4" />
                                                         </button>
-                                                        <button onClick={() => handleDuplicate(post.id)} title="Duplicate to draft" className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-violet-600 hover:border-violet-200 transition-all">
+                                                        <button onClick={() => handleDuplicate(post.id)} title="Duplicate to draft" className="btn-ghost p-2 text-violet-600">
                                                             <DocumentDuplicateIcon className="h-4 w-4" />
                                                         </button>
-                                                        <button onClick={() => handleDeleteClick(post.id)} title="Delete" className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 transition-all">
+                                                        <button onClick={() => handleDeleteClick(post.id)} title="Delete" className="btn-ghost p-2 text-red-500">
                                                             <TrashIcon className="h-4 w-4" />
                                                         </button>
                                                     </div>

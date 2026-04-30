@@ -165,14 +165,14 @@ export default function EditPage({ params }: { params: Promise<{ id: string }> }
             )}
 
             {/* Header */}
-            <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm sticky top-0 z-10">
+            <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm sticky top-0 z-10">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => router.back()} className="p-2 hover:bg-slate-50 rounded-xl text-slate-500 transition-colors">
+                    <button onClick={() => router.back()} className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-slate-500 dark:text-slate-400 transition-colors">
                         <ArrowLeftIcon className="h-5 w-5" />
                     </button>
                     <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Editing Page</p>
-                        <h1 className="text-xl font-bold text-slate-900 font-display">{formData.title || 'Untitled Page'}</h1>
+                        <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Editing Page</p>
+                        <h1 className="text-xl font-bold text-slate-900 dark:text-white font-display">{formData.title || 'Untitled Page'}</h1>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -180,7 +180,7 @@ export default function EditPage({ params }: { params: Promise<{ id: string }> }
                         value={formData.status}
                         onChange={e => setFormData({ ...formData, status: e.target.value })}
                         disabled={isReadOnly}
-                        className="bg-slate-50 border-none text-xs font-bold text-slate-600 py-2.5 px-4 rounded-xl focus:ring-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-600 dark:text-slate-300 py-2.5 px-4 rounded-xl focus:ring-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <option value="DRAFT">Draft</option>
                         <option value="PUBLISHED">Published</option>
@@ -199,36 +199,36 @@ export default function EditPage({ params }: { params: Promise<{ id: string }> }
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
                     {/* Title & Slug */}
-                    <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm space-y-6">
+                    <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-8 border border-slate-100 dark:border-white/[0.06] shadow-sm space-y-6">
                         <div className="space-y-3">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Page Title</label>
+                            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-2">Page Title</label>
                             <input
                                 type="text"
                                 placeholder="Enter page title..."
                                 value={formData.title}
                                 disabled={isReadOnly}
                                 onChange={e => setFormData({ ...formData, title: e.target.value, slug: e.target.value.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') })}
-                                className="w-full text-3xl font-bold text-slate-900 placeholder:text-slate-200 border-none focus:ring-0 p-0 font-display bg-transparent disabled:opacity-75 disabled:text-slate-500"
+                                className="w-full text-3xl font-bold text-slate-900 dark:text-white placeholder:text-slate-200 dark:placeholder:text-slate-700 border-none focus:ring-0 p-0 font-display bg-transparent disabled:opacity-75 disabled:text-slate-500"
                             />
                         </div>
-                        <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 w-fit">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">URL Slug</span>
-                            <span className="text-slate-300 font-mono text-xs">/</span>
+                        <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-100 dark:border-white/[0.06] w-fit">
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">URL Slug</span>
+                            <span className="text-slate-300 dark:text-slate-600 font-mono text-xs">/</span>
                             <input
                                 value={formData.slug}
                                 disabled={isReadOnly}
                                 onChange={e => setFormData({ ...formData, slug: e.target.value })}
-                                className="bg-transparent border-none focus:ring-0 p-0 text-blue-600 font-bold text-xs min-w-[200px] disabled:opacity-75 disabled:text-blue-400"
+                                className="bg-transparent border-none focus:ring-0 p-0 text-blue-600 dark:text-blue-400 font-bold text-xs min-w-[200px] disabled:opacity-75 disabled:text-blue-400"
                             />
                         </div>
                     </div>
 
                     {/* Page Sections (theme-driven) */}
                     {pageSectionSchema.length > 0 && !isReadOnly && (
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                        <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-100 dark:border-white/[0.06] shadow-sm space-y-4">
                             <div className="flex items-center gap-2">
                                 <Squares2X2Icon className="w-4 h-4 text-blue-500" />
-                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Page Sections</h3>
+                                <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Page Sections</h3>
                             </div>
                             <SectionEditor
                                 schema={pageSectionSchema}
@@ -240,13 +240,13 @@ export default function EditPage({ params }: { params: Promise<{ id: string }> }
 
                     {/* Fallback content editor when no section schema */}
                     {pageSectionSchema.length === 0 && (
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4 min-h-[500px]">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Page Content</h3>
+                        <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-100 dark:border-white/[0.06] shadow-sm space-y-4 min-h-[500px]">
+                            <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Page Content</h3>
                             <textarea
                                 value={formData.content}
                                 disabled={isReadOnly}
                                 onChange={e => setFormData({ ...formData, content: e.target.value })}
-                                className="w-full h-[400px] bg-slate-50 border border-slate-200 rounded-xl py-4 px-5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 resize-none font-mono leading-relaxed disabled:opacity-75 disabled:text-slate-500 disabled:bg-slate-100/50"
+                                className="w-full h-[400px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 rounded-xl py-4 px-5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 resize-none font-mono leading-relaxed disabled:opacity-75"
                                 placeholder="Type page content here..."
                             />
                         </div>
@@ -255,27 +255,27 @@ export default function EditPage({ params }: { params: Promise<{ id: string }> }
 
                 <div className="space-y-6">
                     {/* SEO Settings */}
-                    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">SEO Metadata</h3>
+                    <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-100 dark:border-white/[0.06] shadow-sm space-y-4">
+                        <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">SEO Metadata</h3>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SEO Title <span className="normal-case font-normal text-slate-300">({(formData.seoTitle||'').length}/60)</span></label>
+                            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">SEO Title <span className="normal-case font-normal text-slate-300 dark:text-slate-600">({(formData.seoTitle||'').length}/60)</span></label>
                             <input
                                 type="text"
                                 value={formData.seoTitle}
                                 disabled={isReadOnly}
                                 onChange={e => setFormData({ ...formData, seoTitle: e.target.value })}
                                 placeholder={formData.title || 'Page title for search engines...'}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-75 disabled:bg-slate-100/50"
+                                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 rounded-xl py-2.5 px-4 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-75"
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Meta Description <span className="normal-case font-normal text-slate-300">({(formData.description||'').length}/160)</span></label>
+                            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Meta Description <span className="normal-case font-normal text-slate-300 dark:text-slate-600">({(formData.description||'').length}/160)</span></label>
                             <textarea
                                 value={formData.description}
                                 disabled={isReadOnly}
                                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                                 rows={3}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 resize-none disabled:opacity-75 disabled:bg-slate-100/50"
+                                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 rounded-xl py-2.5 px-4 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 resize-none disabled:opacity-75"
                                 placeholder="Brief description for search engines..."
                             />
                         </div>

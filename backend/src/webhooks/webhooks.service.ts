@@ -1,11 +1,20 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as crypto from 'crypto';
+import * as dns from 'dns';
+import * as net from 'net';
+import { promisify } from 'util';
+
+const dnsLookupAll = promisify(dns.lookup) as unknown as (
+    hostname: string,
+    options: { all: true },
+) => Promise<Array<{ address: string; family: number }>>;
 
 export const WEBHOOK_EVENTS = [
     'post.published',
     'post.updated',
     'post.deleted',
+    'page.published',
     'page.updated',
     'page.deleted',
     'lead.created',
@@ -22,11 +31,18 @@ export class WebhooksService {
     private readonly encKey: Buffer;
 
     constructor(private prisma: PrismaService) {
-        // Derive a stable 32-byte key from the app secret so webhook secrets
-        // are encrypted at rest. Changing WEBHOOK_SECRET_KEY will break existing
-        // encrypted secrets — rotate carefully.
-        const seed = process.env.WEBHOOK_SECRET_KEY || process.env.JWT_SECRET || 'change-me-in-production';
-        this.encKey = crypto.createHash('sha256').update(seed).digest();
+        // Derive a stable 32-byte key from WEBHOOK_SECRET_KEY so webhook
+        // secrets are encrypted at rest. Presence is enforced at boot by
+        // assertRequiredSecrets() in main.ts — no fallbacks here, since
+        // silently reusing JWT_SECRET or a hardcoded literal would encrypt
+        // every customer's webhook secrets with the same key.
+        //
+        // Rotating WEBHOOK_SECRET_KEY breaks existing encrypted secrets —
+        // re-enter each webhook's secret after rotation.
+        if (!process.env.WEBHOOK_SECRET_KEY) {
+            throw new Error('WEBHOOK_SECRET_KEY is required — refusing to initialise WebhooksService.');
+        }
+        this.encKey = crypto.createHash('sha256').update(process.env.WEBHOOK_SECRET_KEY).digest();
     }
 
     /** Encrypt a plaintext secret using AES-256-GCM. Returns "enc:<iv>:<tag>:<data>". */
@@ -58,12 +74,12 @@ export class WebhooksService {
     }
 
     async findAll() {
-        const rows = await (this.prisma as any).webhook.findMany({ orderBy: { createdAt: 'desc' } });
+        const rows = await this.prisma.webhook.findMany({ orderBy: { createdAt: 'desc' } });
         return rows.map((wh: any) => this.redact(wh));
     }
 
     async findOne(id: string) {
-        const wh = await (this.prisma as any).webhook.findUnique({ where: { id } });
+        const wh = await this.prisma.webhook.findUnique({ where: { id } });
         if (!wh) throw new NotFoundException(`Webhook ${id} not found`);
         return this.redact(wh);
     }
@@ -75,25 +91,30 @@ export class WebhooksService {
     }
 
     async create(dto: { name: string; url: string; events: string[]; secret?: string; isActive?: boolean }) {
-        this.validateWebhookUrl(dto.url);
+        await this.validateWebhookUrl(dto.url);
         const data = { ...dto };
         if (data.secret) data.secret = this.encrypt(data.secret);
-        return (this.prisma as any).webhook.create({ data });
+        return this.prisma.webhook.create({ data });
     }
 
     async update(id: string, dto: Partial<{ name: string; url: string; events: string[]; secret: string; isActive: boolean }>) {
         await this.findOne(id);
-        if (dto.url) this.validateWebhookUrl(dto.url);
+        if (dto.url) await this.validateWebhookUrl(dto.url);
         const data = { ...dto };
         if (data.secret) data.secret = this.encrypt(data.secret);
-        return (this.prisma as any).webhook.update({ where: { id }, data });
+        return this.prisma.webhook.update({ where: { id }, data });
     }
 
     /**
      * Reject webhook URLs that point to internal / private infrastructure (SSRF protection).
      * Only HTTPS is permitted in production to avoid plaintext interception.
+     *
+     * Runs the blocklist against both (a) the raw hostname as typed by the
+     * user and (b) every IP the hostname resolves to. Without the DNS check,
+     * a public hostname with an A-record pointing at 127.0.0.1 (or the cloud
+     * metadata endpoint 169.254.169.254) would slip through.
      */
-    private validateWebhookUrl(url: string): void {
+    private async validateWebhookUrl(url: string): Promise<void> {
         let parsed: URL;
         try {
             parsed = new URL(url);
@@ -106,7 +127,34 @@ export class WebhooksService {
         }
 
         const host = parsed.hostname.toLowerCase();
+        if (this.isBlockedHost(host)) {
+            throw new BadRequestException('Webhook URL points to a private or internal address');
+        }
 
+        // If the hostname is already a literal IP, the hostname check above
+        // already covered it.
+        if (net.isIP(host)) return;
+
+        // Resolve DNS and re-check every answer. dns.lookup goes through
+        // the OS resolver so /etc/hosts entries and CNAMEs are honoured.
+        let addrs: Array<{ address: string; family: number }> = [];
+        try {
+            addrs = await dnsLookupAll(host, { all: true });
+        } catch {
+            throw new BadRequestException(`Cannot resolve webhook host "${host}"`);
+        }
+
+        for (const { address } of addrs) {
+            if (this.isBlockedHost(address.toLowerCase())) {
+                throw new BadRequestException(
+                    `Webhook host "${host}" resolves to a private or internal address (${address})`,
+                );
+            }
+        }
+    }
+
+    /** Regex blocklist shared by the hostname check and the DNS re-check. */
+    private isBlockedHost(host: string): boolean {
         const blockedPatterns = [
             /^localhost$/,
             /^127\./,
@@ -117,18 +165,20 @@ export class WebhooksService {
             /^169\.254\./, // link-local / cloud metadata (AWS 169.254.169.254)
             /^100\.64\./, // shared address space RFC 6598
             /^::1$/,
+            /^::$/, // IPv6 unspecified
             /^fc[0-9a-f][0-9a-f]:/i, // IPv6 unique local
             /^fe[89ab][0-9a-f]:/i,   // IPv6 link-local
+            /^::ffff:127\./i,         // IPv4-mapped loopback
+            /^::ffff:10\./i,          // IPv4-mapped RFC1918
+            /^::ffff:192\.168\./i,
+            /^::ffff:169\.254\./i,
         ];
-
-        if (blockedPatterns.some(r => r.test(host))) {
-            throw new BadRequestException('Webhook URL points to a private or internal address');
-        }
+        return blockedPatterns.some(r => r.test(host));
     }
 
     async remove(id: string) {
         await this.findOne(id);
-        return (this.prisma as any).webhook.delete({ where: { id } });
+        return this.prisma.webhook.delete({ where: { id } });
     }
 
     /**
@@ -136,7 +186,7 @@ export class WebhooksService {
      * Called internally by other services after content mutations.
      */
     async dispatch(event: WebhookEvent, payload: Record<string, any>) {
-        const webhooks = await (this.prisma as any).webhook.findMany({
+        const webhooks = await this.prisma.webhook.findMany({
             where: { isActive: true },
         });
 

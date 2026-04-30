@@ -1,222 +1,280 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
-    PencilSquareIcon,
-    TrashIcon,
-    EnvelopeIcon,
-    PhoneIcon,
-    UserIcon,
-    FunnelIcon,
-    ArrowDownTrayIcon,
+    InboxIcon, MagnifyingGlassIcon, FunnelIcon, TrashIcon, EyeIcon,
+    XMarkIcon, ChevronLeftIcon, ChevronRightIcon, PhoneIcon, EnvelopeIcon, BuildingOfficeIcon
 } from '@heroicons/react/24/outline';
-import { useNotification } from '@/context/NotificationContext';
 import { apiRequest } from '@/lib/api';
+import { useNotification } from '@/context/NotificationContext';
+import AlertDialog from '@/components/ui/AlertDialog';
+import PageHeader from '@/components/ui/PageHeader';
+import EmptyState from '@/components/ui/EmptyState';
+import FilterBar from '@/components/ui/FilterBar';
+
+interface Lead {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    company?: string;
+    message?: string;
+    source?: string;
+    status: string;
+    notes?: string;
+    metadata?: Record<string, any>;
+    createdAt: string;
+}
+
+const STATUS_OPTIONS = ['NEW', 'CONTACTED', 'QUALIFIED', 'CONVERTED', 'CLOSED'];
+
+const STATUS_STYLES: Record<string, string> = {
+    NEW: 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+    CONTACTED: 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+    QUALIFIED: 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400',
+    CONVERTED: 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    CLOSED: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400',
+};
 
 export default function LeadsPage() {
-    const [leads, setLeads] = useState<any[]>([]);
-    const [stats, setStats] = useState<any>({ total: 0, newLeads: 0, contacted: 0, converted: 0 });
-    const [isLoading, setIsLoading] = useState(true);
-    const [canManageContent, setCanManageContent] = useState(false);
-    const [statusFilter, setStatusFilter] = useState('');
     const { showToast } = useNotification();
+    const [leads, setLeads] = useState<Lead[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [searchInput, setSearchInput] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [total, setTotal] = useState(0);
+    const [viewLead, setViewLead] = useState<Lead | null>(null);
+    const [deleteId, setDeleteId] = useState<string | null>(null);
 
-    useEffect(() => {
-        fetchInitialData();
-    }, []);
+    const LIMIT = 20;
 
-    const fetchInitialData = async () => {
+    const fetchLeads = useCallback(async () => {
+        setIsLoading(true);
         try {
-            const [leadsData, statsData, profile] = await Promise.all([
-                apiRequest('/leads'),
-                apiRequest('/leads/stats'),
-                apiRequest('/auth/profile'),
-            ]);
-
-            setLeads(Array.isArray(leadsData) ? leadsData : []);
-            setStats(statsData || { total: 0, newLeads: 0, contacted: 0, converted: 0 });
-
-            if (profile.role?.permissions?.manage_content || profile.role?.name === 'Super Admin' || profile.role?.name === 'Admin') {
-                setCanManageContent(true);
+            const params = new URLSearchParams();
+            if (statusFilter) params.set('status', statusFilter);
+            if (searchInput) params.set('search', searchInput);
+            const data = await apiRequest(`/leads?${params.toString()}`);
+            const list = Array.isArray(data) ? data : (data?.leads || []);
+            setLeads(list);
+            setTotal(data?.total || list.length);
+            setTotalPages(Math.ceil((data?.total || list.length) / LIMIT));
+        } catch (err: any) {
+            if (!err?.message?.includes('not enabled') && !err?.message?.includes('403')) {
+                showToast('Failed to load leads', 'error');
             }
-        } catch (error) {
-            console.error('Failed to fetch data', error);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [statusFilter, searchInput]);
 
-    const handleStatusChange = async (id: string, newStatus: string) => {
+    useEffect(() => { fetchLeads(); }, [fetchLeads]);
+    useEffect(() => { setPage(1); }, [statusFilter, searchInput]);
+
+    async function updateStatus(id: string, status: string) {
         try {
-            await apiRequest(`/leads/${id}/status`, {
-                method: 'PATCH',
-                body: { status: newStatus },
-            });
-            showToast('Lead status updated!', 'success');
-            fetchInitialData();
-        } catch (error: any) {
-            console.error(error);
-            showToast(error.message || 'Failed to update status.', 'error');
-        }
-    };
+            await apiRequest(`/leads/${id}`, { method: 'PATCH', body: { status } });
+            setLeads(prev => prev.map(l => l.id === id ? { ...l, status } : l));
+            if (viewLead?.id === id) setViewLead(v => v ? { ...v, status } : v);
+            showToast('Status updated', 'success');
+        } catch { showToast('Update failed', 'error'); }
+    }
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this lead?')) return;
-
+    async function handleDelete() {
+        if (!deleteId) return;
         try {
-            await apiRequest(`/leads/${id}`, { method: 'DELETE' });
-            showToast('Lead deleted successfully!', 'success');
-            fetchInitialData();
-        } catch (error: any) {
-            console.error(error);
-            showToast(error.message || 'Failed to delete lead.', 'error');
-        }
-    };
+            await apiRequest(`/leads/${deleteId}`, { method: 'DELETE' });
+            showToast('Lead deleted', 'success');
+            setDeleteId(null);
+            if (viewLead?.id === deleteId) setViewLead(null);
+            fetchLeads();
+        } catch { showToast('Delete failed', 'error'); }
+    }
+
+    const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
 
     return (
-        <div className="space-y-6">
-            {/* Page Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-2">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight font-display">
-                        Lead <span className="text-blue-600 font-bold">Management</span>
-                    </h1>
-                    <p className="mt-1 text-xs text-slate-500 font-semibold tracking-tight">Track and manage incoming leads from your website.</p>
-                </div>
-            </div>
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <PageHeader 
+                title="Leads" 
+                accent="Management" 
+                subtitle={`${total} inquiry${total !== 1 ? 's' : ''} — review and update statuses below`}
+            />
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2">
-                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Leads</p>
-                    <p className="text-3xl font-bold text-slate-900 mt-2">{stats.total}</p>
-                </div>
-                <div className="bg-white rounded-2xl p-6 border border-blue-200/50 shadow-sm bg-blue-50/30">
-                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">New</p>
-                    <p className="text-3xl font-bold text-blue-600 mt-2">{stats.newLeads}</p>
-                </div>
-                <div className="bg-white rounded-2xl p-6 border border-amber-200/50 shadow-sm bg-amber-50/30">
-                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Contacted</p>
-                    <p className="text-3xl font-bold text-amber-600 mt-2">{stats.contacted}</p>
-                </div>
-                <div className="bg-white rounded-2xl p-6 border border-emerald-200/50 shadow-sm bg-emerald-50/30">
-                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Converted</p>
-                    <p className="text-3xl font-bold text-emerald-600 mt-2">{stats.converted}</p>
-                </div>
-            </div>
+            <FilterBar 
+                search={{
+                    value: searchInput,
+                    onChange: setSearchInput,
+                    placeholder: "Search by name, email, company…"
+                }}
+                filters={[
+                    {
+                        label: "All Statuses",
+                        value: statusFilter,
+                        onChange: setStatusFilter,
+                        options: STATUS_OPTIONS.map(s => ({ label: s.charAt(0) + s.slice(1).toLowerCase(), value: s }))
+                    }
+                ]}
+            />
+            
+            {/* Main Content Container */}
+            <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] border border-slate-100 dark:border-white/[0.06] overflow-hidden shadow-2xl shadow-slate-900/5 transition-all duration-500">
 
-            {/* Leads List */}
-            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="p-6 border-b border-slate-100 flex items-center gap-4 bg-slate-50/10">
-                    <div className="relative flex-1 md:w-48 group">
-                        <FunnelIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-all" />
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 transition-all cursor-pointer"
-                        >
-                            <option value="">All Status</option>
-                            <option value="NEW">New</option>
-                            <option value="CONTACTED">Contacted</option>
-                            <option value="CONVERTED">Converted</option>
-                            <option value="ARCHIVED">Archived</option>
-                        </select>
+                {isLoading ? (
+                    <div className="flex items-center justify-center py-16 text-slate-400">
+                        <div className="animate-spin rounded-full h-7 w-7 border-2 border-blue-600 border-t-transparent mr-3" />
+                        Loading…
                     </div>
-                    <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/leads/export/csv${statusFilter ? `?status=${statusFilter}` : ''}`}
-                        download="leads.csv"
-                        className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all whitespace-nowrap"
-                    >
-                        <ArrowDownTrayIcon className="h-4 w-4" />
-                        Export CSV
-                    </a>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="w-full min-w-[700px] text-left border-collapse">
+                ) : leads.length === 0 ? (
+                    <EmptyState 
+                        icon={InboxIcon}
+                        title="No Leads Found"
+                        description="New inquiries from your contact forms will appear here. Share your forms to start collecting leads."
+                    />
+                ) : (
+                    <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50/30">
-                                <th className="pl-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Contact</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Message</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Source</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date</th>
-                                <th className="pr-8 py-4 text-right"></th>
+                            <tr className="border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.02]">
+                                <th className="pl-10 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Contact</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest hidden md:table-cell">Source</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Status</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest hidden sm:table-cell text-center">Date</th>
+                                <th className="pr-10 py-5 text-right"></th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {isLoading ? (
-                                [1, 2, 3].map(i => (
-                                    <tr key={i} className="animate-pulse">
-                                        <td colSpan={6} className="px-8 py-8"><div className="h-12 bg-slate-50 rounded-2xl" /></td>
-                                    </tr>
-                                ))
-                            ) : leads.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-8 py-20 text-center">
-                                        <UserIcon className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-                                        <p className="text-sm font-bold text-slate-500">No leads found.</p>
+                        <tbody>
+                            {leads.map(lead => (
+                                <tr key={lead.id} className="group border-b border-slate-50 dark:border-white/5 last:border-0 hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
+                                    <td className="pl-10 py-6">
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">{lead.name}</span>
+                                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5">{lead.email}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-6 hidden md:table-cell">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-white/5 px-2 py-1 rounded-md">
+                                            {lead.source || 'Direct'}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-6">
+                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ring-1 ring-inset ${lead.status === 'NEW' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 ring-blue-600/20' :
+                                                lead.status === 'CONTACTED' ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-500 ring-amber-600/20' :
+                                                    lead.status === 'QUALIFIED' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 ring-emerald-600/20' :
+                                                        lead.status === 'CLOSED' ? 'bg-slate-50 dark:bg-slate-800 text-slate-400 ring-slate-400/20' :
+                                                            'bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 ring-violet-600/20'
+                                            }`}>
+                                            {lead.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-6 hidden sm:table-cell text-center">
+                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                                            {new Date(lead.createdAt).toLocaleDateString()}
+                                        </span>
+                                    </td>
+                                    <td className="pr-10 py-6 text-right">
+                                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => setViewLead(lead)} className="btn-ghost p-2 text-slate-400 hover:text-blue-600">
+                                                <EyeIcon className="h-4 w-4" />
+                                            </button>
+                                            <button onClick={() => setDeleteId(lead.id)} className="btn-ghost p-2 text-slate-400 hover:text-red-600">
+                                                <TrashIcon className="h-4 w-4" />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
-                            ) : (
-                                leads
-                                    .filter(lead => !statusFilter || lead.status === statusFilter)
-                                    .map((lead) => (
-                                        <tr key={lead.id} className="group hover:bg-slate-50/50 transition-colors">
-                                            <td className="pl-8 py-5">
-                                                <div className="space-y-1">
-                                                    <p className="text-sm font-bold text-slate-900">{lead.name}</p>
-                                                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                                                        <EnvelopeIcon className="h-3 w-3" />
-                                                        <span>{lead.email}</span>
-                                                    </div>
-                                                    {lead.phone && (
-                                                        <div className="flex items-center gap-2 text-xs text-slate-500">
-                                                            <PhoneIcon className="h-3 w-3" />
-                                                            <span>{lead.phone}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-5">
-                                                <p className="text-xs text-slate-600 line-clamp-2">{lead.message || 'No message'}</p>
-                                            </td>
-                                            <td className="px-4 py-5 text-xs font-semibold text-slate-500">{lead.originPage || 'Unknown'}</td>
-                                            <td className="px-4 py-5">
-                                                <select
-                                                    value={lead.status}
-                                                    onChange={(e) => handleStatusChange(lead.id, e.target.value)}
-                                                    className={`text-[10px] font-black uppercase tracking-widest rounded-lg px-2.5 py-1 border-none focus:ring-2 focus:ring-blue-600/10 cursor-pointer ${lead.status === 'NEW' ? 'bg-blue-50 text-blue-600' :
-                                                        lead.status === 'CONTACTED' ? 'bg-amber-50 text-amber-600' :
-                                                            lead.status === 'CONVERTED' ? 'bg-emerald-50 text-emerald-600' :
-                                                                'bg-slate-50 text-slate-600'
-                                                        }`}
-                                                >
-                                                    <option value="NEW">New</option>
-                                                    <option value="CONTACTED">Contacted</option>
-                                                    <option value="CONVERTED">Converted</option>
-                                                    <option value="ARCHIVED">Archived</option>
-                                                </select>
-                                            </td>
-                                            <td className="px-4 py-5 text-xs font-semibold text-slate-500">
-                                                {new Date(lead.createdAt).toLocaleDateString()}
-                                            </td>
-                                            <td className="pr-8 py-5 text-right">
-                                                {canManageContent && (
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <button onClick={() => handleDelete(lead.id)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 transition-all">
-                                                            <TrashIcon className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))
-                            )}
+                            ))}
                         </tbody>
                     </table>
-                </div>
+                )}
+
+                {totalPages > 1 && (
+                    <div className="px-8 py-4 border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between bg-slate-50/50 dark:bg-white/[0.01]">
+                        <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Page {page} of {totalPages}</p>
+                        <div className="flex gap-2">
+                            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                                className="btn-outline p-2">
+                                <ChevronLeftIcon className="h-4 w-4" />
+                            </button>
+                            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                                className="btn-outline p-2">
+                                <ChevronRightIcon className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
+
+            {/* View Lead Modal */}
+            {viewLead && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg ring-1 ring-slate-200 dark:ring-white/10">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+                            <h2 className="text-base font-black text-slate-900 dark:text-white">Lead Details</h2>
+                            <button onClick={() => setViewLead(null)} className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                                <XMarkIcon className="h-5 w-5" />
+                            </button>
+                        </div>
+                        <div className="px-6 py-5 space-y-4">
+                            <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center shrink-0 font-black text-green-600 dark:text-green-400 text-lg">
+                                    {viewLead.name[0].toUpperCase()}
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-slate-900 dark:text-white">{viewLead.name}</h3>
+                                    <div className="flex flex-wrap gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                        <span className="flex items-center gap-1"><EnvelopeIcon className="h-3.5 w-3.5" />{viewLead.email}</span>
+                                        {viewLead.phone && <span className="flex items-center gap-1"><PhoneIcon className="h-3.5 w-3.5" />{viewLead.phone}</span>}
+                                        {viewLead.company && <span className="flex items-center gap-1"><BuildingOfficeIcon className="h-3.5 w-3.5" />{viewLead.company}</span>}
+                                    </div>
+                                </div>
+                            </div>
+                            {viewLead.message && (
+                                <div className="bg-slate-50 dark:bg-slate-950 rounded-xl p-4">
+                                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Message</p>
+                                    <p className="text-sm text-slate-700 dark:text-slate-300">{viewLead.message}</p>
+                                </div>
+                            )}
+                            <div className="grid grid-cols-2 gap-3 text-xs">
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Source</p>
+                                    <p className="text-slate-700 dark:text-slate-300">{viewLead.source || '—'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Received</p>
+                                    <p className="text-slate-700 dark:text-slate-300">{formatDate(viewLead.createdAt)}</p>
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Status</p>
+                                <select value={viewLead.status} onChange={e => updateStatus(viewLead.id, e.target.value)}
+                                    className="w-full border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+                                    {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="flex justify-between px-6 py-4 border-t border-slate-100 dark:border-white/[0.06] bg-slate-50 dark:bg-slate-950/50">
+                            <button onClick={() => { setDeleteId(viewLead.id); setViewLead(null); }} className="btn-ghost px-4 py-2 text-sm text-red-600">
+                                <TrashIcon className="h-4 w-4" /> Delete
+                            </button>
+                            <button onClick={() => setViewLead(null)} className="btn-outline px-5 py-2 text-sm">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <AlertDialog
+                isOpen={!!deleteId}
+                onCancel={() => setDeleteId(null)}
+                onConfirm={handleDelete}
+                title="Delete Lead"
+                description="Are you sure you want to delete this lead? This cannot be undone."
+                confirmLabel="Delete"
+                variant="danger"
+            />
         </div>
     );
 }

@@ -25,7 +25,9 @@ const outfit = Outfit({
   subsets: ["latin"],
 });
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { getApiBaseUrl } from '@/lib/api';
+
+const API_URL = getApiBaseUrl();
 
 async function getGlobalSeo() {
   try {
@@ -91,13 +93,13 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       locale: "en_US",
       url: siteUrl,
-      siteName: "Blendwit CMS",
-      title: seo?.title || "Blendwit CMS | Premium Content Management System",
+      siteName: "Mero CMS",
+      title: seo?.title || "Mero CMS | Premium Content Management System",
       description: seo?.description || "Advanced Content Management System with powerful features for modern web applications",
     },
     twitter: {
       card: "summary_large_image",
-      title: seo?.title || "Blendwit CMS",
+      title: seo?.title || "Mero CMS",
       description: seo?.description || "Advanced Content Management System",
     },
     robots: {
@@ -108,6 +110,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 import { SettingsProvider } from '@/context/SettingsContext';
+import { ThemeProvider } from '@/components/theme-provider';
+import AppSplash from '@/components/ui/AppSplash';
 
 export default async function RootLayout({
   children,
@@ -117,16 +121,20 @@ export default async function RootLayout({
   const analyticsConfig = await getAnalyticsConfig();
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <AnalyticsScripts config={analyticsConfig} />
       </head>
       <body
         className={`${inter.variable} ${plusJakartaSans.variable} ${syne.variable} ${outfit.variable} font-sans antialiased`}
       >
+        <AppSplash />
+
         <NotificationProvider>
           <SettingsProvider>
-            {children}
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              {children}
+            </ThemeProvider>
             <ToastStack />
           </SettingsProvider>
         </NotificationProvider>

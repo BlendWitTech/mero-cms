@@ -1,7 +1,7 @@
 name: Deploy — Staging
 
 # Triggered when develop branch is updated.
-# Railway and Vercel auto-deploy via their GitHub integrations.
+# Render and Vercel auto-deploy via their GitHub integrations.
 # This workflow validates the build and reports status.
 
 on:
@@ -51,9 +51,9 @@ jobs:
               env:
                   NEXT_PUBLIC_API_URL: ${{ secrets.STAGING_API_URL }}
 
-    # Railway and Vercel will auto-deploy from the develop branch via their
+    # Render and Vercel will auto-deploy from the develop branch via their
     # GitHub integrations. No additional deploy step needed here.
-    # To monitor: check Railway and Vercel dashboards after this job passes.
+    # To monitor: check Render and Vercel dashboards after this job passes.
 
     notify:
         name: Staging Deploy Notice
@@ -61,8 +61,21 @@ jobs:
         needs: validate
         if: success()
         steps:
+            # Guard the secret print — without this, an unset STAGING_API_URL
+            # silently prints "Backend (staging):" with nothing after it,
+            # which looks like a successful deploy but really means the
+            # secret was never wired up. Loud failure beats silent success.
+            - name: Verify staging secrets are configured
+              run: |
+                  if [ -z "${{ secrets.STAGING_API_URL }}" ]; then
+                      echo "::error::STAGING_API_URL secret is not set in repo settings."
+                      echo "::error::Settings → Secrets and variables → Actions → New repository secret."
+                      echo "::error::Set it to your Render staging backend URL, e.g. https://mero-cms-backend-staging.onrender.com"
+                      exit 1
+                  fi
+
             - name: Print staging URLs
               run: |
-                  echo "Build validated. Railway and Vercel are deploying..."
+                  echo "Build validated. Render and Vercel are deploying..."
                   echo "Backend (staging):  ${{ secrets.STAGING_API_URL }}"
                   echo "Frontend (staging): Check Vercel dashboard for preview URL"

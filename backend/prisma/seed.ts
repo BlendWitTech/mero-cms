@@ -52,7 +52,7 @@ async function main() {
     console.log('CMS UI settings initialized.');
     console.log('--- Seeding Completed ---');
     console.log('Next step: Open the admin panel and complete the setup wizard to create your superadmin account.');
-    console.log('Note: Theme demo content (plots, pages, menus etc.) is seeded via Themes → Activate with "Import demo content".');
+    console.log('Note: Theme demo content (pages, menus etc.) is seeded via Themes → Activate with "Import demo content".');
 }
 
 main()

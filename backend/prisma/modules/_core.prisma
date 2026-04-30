@@ -16,11 +16,54 @@ model User {
   avatar              String?
   bio                 String?
   status              String        @default("ACTIVE")
+  isActive            Boolean       @default(true)
   lastActive          DateTime?
+  passwordResetToken  String?
+  passwordResetExpiry DateTime?
   activityLogs        ActivityLog[]
   comments            Comment[]
   posts               Post[]
+  apiKeys             ApiKey[]
+  refreshTokens       RefreshToken[]
   role                Role          @relation(fields: [roleId], references: [id])
+}
+
+model ApiKey {
+  id         String    @id @default(uuid())
+  name       String
+  tokenHash  String    @unique
+  prefix     String
+  userId     String
+  scopes     String[]  @default([])
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+// Refresh-token rotation. Each row is a single refresh token (stored as a
+// SHA-256 hash so a DB leak doesn't hand over bearer credentials).
+// `family` groups a login's rotated descendants together — if we ever see
+// a token from a family that's already been rotated, the entire family
+// is revoked on the theory that an attacker is replaying a stolen token.
+model RefreshToken {
+  id         String    @id @default(uuid())
+  tokenHash  String    @unique
+  family     String    // UUID tying rotated descendants together
+  userId     String
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  replacedBy String?   // tokenHash of the successor after rotation
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([family])
+  @@index([tokenHash])
 }
 
 model ActivityLog {
@@ -76,18 +119,23 @@ model Notification {
 }
 
 model Media {
-  id        String   @id @default(uuid())
-  filename  String
-  url       String
-  mimetype  String
-  size      Int
-  createdAt DateTime @default(now())
-  altText   String?
-  folder    String   @default("root")
-  height    Int?
-  metadata  Json?
-  updatedAt DateTime @updatedAt
-  width     Int?
+  id         String   @id @default(uuid())
+  filename   String
+  url        String
+  mimetype   String
+  size       Int
+  createdAt  DateTime @default(now())
+  altText    String?
+  folder     String   @default("root")
+  height     Int?
+  metadata   Json?
+  updatedAt  DateTime @updatedAt
+  width      Int?
+  // PUBLIC (default): statically served from /uploads — anyone with the URL
+  // can fetch. PRIVATE: lives under /uploads/private/ and is only reachable
+  // through a time-limited signed URL obtained from POST /media/:id/sign.
+  visibility String   @default("PUBLIC")
+  ownerId    String?
 }
 
 model Collection {
@@ -135,4 +183,91 @@ model FormSubmission {
   userAgent String?
   createdAt DateTime @default(now())
   form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+}
+
+model Webhook {
+  id        String   @id @default(uuid())
+  name      String
+  url       String
+  events    String[]
+  secret    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Package {
+  id            String   @id
+  name          String
+  websiteType   String
+  tier          Int
+  aiEnabled     Boolean  @default(false)
+  priceMin      Int?
+  priceMax      Int?
+  isCustomPrice Boolean  @default(false)
+  tagline       String
+  features      String[]
+  comingSoon    String[] @default([])
+  starterThemes String[] @default([])
+  supportLevel  String
+  highlighted   Boolean  @default(false)
+  // Enforcement metadata
+  storageLimitGB Int      @default(5)
+  teamLimit      Int      @default(1)
+  hasWhiteLabel  Boolean  @default(false)
+  hasApiAccess   Boolean  @default(false)
+  order         Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+/// One row per attempted purchase. Created the moment a customer
+/// initiates checkout and updated as the provider's webhook (or
+/// return URL) reports the outcome. The license JWT signed for a
+/// successful order is persisted on `licenseKey` so the success
+/// page can show it without depending on email delivery.
+///
+/// Lives in _core.prisma because payments is a core module — the
+/// Order table must exist whether or not the customer enabled the
+/// optional content modules. Put here it survives the build-schema
+/// reassembly that the setup wizard runs on module changes.
+model Order {
+  id              String    @id @default(cuid())
+  customerEmail   String
+  customerName    String?
+  customerPhone   String?
+
+  // What was purchased.
+  itemType        String    // 'package' | 'plugin' | 'cloud-tier' | 'maintenance'
+  packageId       String?
+  pluginSlug      String?
+  cloudTierId     String?
+
+  // Money.
+  amountNPR       Int
+  currency        String    @default("NPR")
+  amountCharged   Int?      // amount actually charged in `currency` (after FX)
+
+  // Provider lifecycle.
+  provider        String    // 'stripe' | 'khalti' | 'esewa'
+  providerOrderId String?   @unique
+  providerPayload Json?
+  status          String    @default("pending")
+  failureReason   String?
+
+  // What we issued back.
+  licenseKey       String?   @db.Text
+  licenseExpiresAt DateTime?
+
+  metadata        Json?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  paidAt          DateTime?
+
+  @@index([customerEmail])
+  @@index([provider, status])
+  @@index([itemType, packageId])
 }

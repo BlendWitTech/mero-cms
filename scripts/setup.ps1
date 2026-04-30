@@ -2,7 +2,7 @@ param (
     [string]$Mode = "PROMPT"
 )
 
-Write-Host "`n--- Blendwit CMS Setup ---" -ForegroundColor Blue
+# Banner handled by mero.js
 
 if ($Mode -eq "PROMPT") {
     $choice = Read-Host "Select Setup Mode: [1] Manual (Local DB), [2] Docker (Containerized DB)"
@@ -11,7 +11,18 @@ if ($Mode -eq "PROMPT") {
 }
 
 # 1. Root dependencies
-Write-Host "`n[1/5] Installing root dependencies..." -ForegroundColor Gray
+Write-Host "`n[1/5] Cleaning and installing dependencies..." -ForegroundColor Gray
+
+# Cleanup nested lockfiles that interfere with npm workspaces
+if (Test-Path "frontend/package-lock.json") { 
+    Remove-Item "frontend/package-lock.json" -Force 
+    Write-Host "Removed redundant frontend/package-lock.json" -ForegroundColor Yellow
+}
+if (Test-Path "backend/package-lock.json") { 
+    Remove-Item "backend/package-lock.json" -Force 
+    Write-Host "Removed redundant backend/package-lock.json" -ForegroundColor Yellow
+}
+
 npm install
 
 # 2. Environment Setup
@@ -69,7 +80,7 @@ if ($choice -eq "2") {
     $dbName = if ($env:DB_NAME) { $env:DB_NAME } else { "mero_cms" }
     $dockerDbUrl = "postgresql://${dbUser}:${dbPass}@localhost:5432/${dbName}"
     (Get-Content "backend/.env") -replace "^DATABASE_URL=.*", "DATABASE_URL=$dockerDbUrl" | Set-Content "backend/.env"
-    Write-Host "Set DATABASE_URL → $dockerDbUrl" -ForegroundColor Green
+    Write-Host "Set DATABASE_URL -> $dockerDbUrl" -ForegroundColor Green
 
     # Copy LICENSE_KEY from root .env into backend/.env if present
     $rootLicense = (Get-Content ".env" | Where-Object { $_ -match "^LICENSE_KEY=.+" } | Select-Object -First 1) -replace "^LICENSE_KEY=", ""
@@ -122,19 +133,57 @@ if ($choice -eq "2") {
 # 4. Database Initialization
 Write-Host "[4/5] Initializing database..." -ForegroundColor Gray
 node scripts/build-schema.js all
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "`n[ERROR] Schema assembly failed. Setup aborted." -ForegroundColor Red
+    exit $LASTEXITCODE
+}
 Set-Location backend
+
+Write-Host "Generating Prisma Client..." -ForegroundColor Gray
 npx prisma generate
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "`nError: Prisma generation failed (Exit Code: $LASTEXITCODE)." -ForegroundColor Red
+    Write-Host "IMPORTANT: Ensure no backend processes (npm run dev) are running and holding a lock on node_modules." -ForegroundColor Yellow
+    Set-Location ..
+    exit 1
+}
+
+Write-Host "Pushing schema to database..." -ForegroundColor Gray
 npx prisma db push
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "`nError: Database push failed. Ensure your database is running." -ForegroundColor Red
+    Set-Location ..
+    exit 1
+}
+
+Write-Host "Seeding initial data..." -ForegroundColor Gray
 npm run seed
 Set-Location ..
 
-# 5. Build
-Write-Host "[5/5] Finalizing setup..." -ForegroundColor Gray
+# 5. Theme dependencies
+# Pre-install node_modules inside every theme so the first `dev:all` boots
+# cleanly instead of stalling (or failing with "page-path/ensure-leading-slash"
+# if a previous install was torn down mid-way).
+Write-Host "[5/6] Installing theme dependencies..." -ForegroundColor Gray
+if (Test-Path "themes") {
+    Get-ChildItem "themes" -Directory | ForEach-Object {
+        $themeDir = $_.FullName
+        $themeName = $_.Name
+        $pkg = Join-Path $themeDir "package.json"
+        if (Test-Path $pkg) {
+            Write-Host "  Installing $themeName..." -ForegroundColor DarkGray
+            Push-Location $themeDir
+            npm install --prefer-offline --no-audit --no-fund
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "  Warning: $themeName install exited with code $LASTEXITCODE." -ForegroundColor Yellow
+            }
+            Pop-Location
+        }
+    }
+}
+
+# 6. Build
+Write-Host "[6/6] Finalizing setup..." -ForegroundColor Gray
 npm run build
 
-Write-Host "`nSetup Complete! Run 'npm run dev' to start the application." -ForegroundColor Green
-Write-Host "`n--- NEXT STEPS ---" -ForegroundColor Cyan
-Write-Host "1. Run:  npm run dev" -ForegroundColor White
-Write-Host "2. Open: http://localhost:3000/setup" -ForegroundColor White
-Write-Host "3. Complete the setup wizard to create your superadmin account and choose enabled modules." -ForegroundColor White
-Write-Host "------------------" -ForegroundColor Cyan
+# Completion handled by mero.js

@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as crypto from 'crypto';
 
 import { MailService } from '../mail/mail.service';
+import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
 export class InvitationsService {
@@ -10,7 +11,10 @@ export class InvitationsService {
 
     constructor(
         private prisma: PrismaService,
-        private mailService: MailService
+        private mailService: MailService,
+        // SettingsService.getSiteUrl() — invite links must point to the
+        // customer's public hostname, configured in Settings → Branding.
+        private settings: SettingsService,
     ) { }
 
     async createInvitation(data: { email: string; roleId: string; ipWhitelist: string[] }) {
@@ -42,7 +46,7 @@ export class InvitationsService {
                 },
             });
 
-        const frontendUrl = (process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+        const frontendUrl = await this.settings.getSiteUrl();
         const inviteLink = `${frontendUrl}/register?token=${token}`;
         const html = `
             <h2 style="margin:0 0 8px;font-size:22px;font-weight:900;color:#1E1E1E;line-height:1.2;">You've Been Invited!</h2>
@@ -122,7 +126,7 @@ export class InvitationsService {
             data: { token, expiresAt },
         });
 
-        const frontendUrl = (process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+        const frontendUrl = await this.settings.getSiteUrl();
         const inviteLink = `${frontendUrl}/register?token=${token}`;
         const html = `
             <h2 style="margin:0 0 8px;font-size:22px;font-weight:900;color:#1E1E1E;line-height:1.2;">Your Invitation Has Been Refreshed</h2>

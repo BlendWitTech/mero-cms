@@ -1,6 +1,10 @@
-# Mero CMS — Setup & Deployment Guide
+# Mero CMS — Developer Setup & Deployment Guide
 
-This guide walks through every step to get Mero CMS running locally, on Railway (staging and production), and on Vercel.
+This guide is for **developers and contributors** working on Mero CMS itself, or for anyone deploying Mero to staging / production infrastructure (Render + Supabase + Vercel by default; Railway, Fly.io, VPS, or Docker if you'd rather).
+
+> **If you're a customer who just bought a Mero CMS license**, you probably want [docs/customer/INSTALL.md](docs/customer/INSTALL.md) instead — it covers the four installation paths in customer-friendly language: Mero Cloud (we host it), managed install (your agency installs it), VPS self-host (you install on a server), or local self-host (testing on your laptop).
+
+This document focuses on the developer workflow and the underlying mechanics. It assumes you're comfortable with Node.js, Git, and the command line.
 
 ---
 
@@ -20,11 +24,9 @@ Standard promotion path: `develop` → `testing` → `main` → `production`.
 
 ## Part 1 — Local Development
 
-### Prerequisites
+This is the developer workflow — fast iteration with hot reload, direct source access, real-time TypeScript and React errors in your terminal.
 
-- Node.js 20+
-- PostgreSQL (local install or use Docker: `docker run -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:15`)
-- Git
+**Prerequisites:** Node.js 20+, Git, and either Docker (for the local Postgres container started by `dev:all`) or a Postgres instance you point at via `DATABASE_URL`.
 
 ### Step 1 — Clone the repository
 
@@ -34,52 +36,65 @@ cd mero-cms
 git checkout develop
 ```
 
-### Step 2 — Backend setup
+### Step 2 — One-time install
+
+From the repo root:
 
 ```bash
-cd backend
-cp .env.development.example .env
+npm run setup
 ```
 
-Open `.env` and fill in:
-```
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/merocms"
-JWT_SECRET="any-long-random-string-here"
-```
+This runs `scripts/setup.ps1` which installs all npm workspaces (backend, frontend, themes), generates the Prisma client, and prepares the dev environment. You only run it once per checkout.
+
+### Step 3 — Start everything
 
 ```bash
-npm install
-npx prisma migrate dev
-npm run start:dev
+npm run dev:all
 ```
 
-Backend runs at **http://localhost:3001**
+That single command starts:
 
-### Step 3 — Frontend setup
+- **Postgres** in Docker (`docker compose up db -d`) — skipped silently if Docker isn't running, in which case set `DATABASE_URL` to point at your own Postgres instance.
+- **Backend** at `http://localhost:3001`.
+- **Frontend** at `http://localhost:3000`.
+- **Active theme** dev server at `http://localhost:3002`.
 
-Open a new terminal:
+If you only want backend + frontend (no theme dev server), run `npm run dev` instead.
 
-```bash
-cd frontend
-cp .env.development.example .env.local
-npm install
-npm run dev
-```
-
-Frontend runs at **http://localhost:3000**
+> The wizard collects database credentials in the browser if `DATABASE_URL` isn't already set in env — you never need to hand-edit `.env`. `JWT_SECRET` is auto-generated to `secrets.json` on first boot, also handled for you.
 
 ### Step 4 — Run the setup wizard
 
 Open **http://localhost:3000/setup** in your browser.
 
-The wizard will:
-1. Create your Super Admin account (email + password)
-2. Let you select which modules to enable (blogs, services, testimonials, etc.)
-3. Create the database schema
-4. Optionally seed demo content from the active theme
+The wizard walks you through:
 
-> **Important:** On the wizard, click **Fresh Start** (not Restore). This seeds demo content.
-> `SETUP_COMPLETE` and `ENABLED_MODULES` are stored in the database — never set them as env vars.
+1. **Site & Admin** — name your site, create the Super Admin account.
+2. **Database** — connection details (skipped automatically when `DATABASE_URL` is set in env, e.g. via the `dev:all` Docker container).
+3. **Site Configuration** — public site URL, optional SMTP/Resend email, optional S3/R2/Minio storage. Each section is skippable; everything can be revisited later from Settings.
+4. **License & Modules** — paste your license key (optional) and pick which modules to enable.
+5. **Complete** — schema build, migrations, admin user creation, and a live streaming terminal that shows each step.
+
+> **Important:** On the wizard, click **Fresh Start** (not Restore) for a brand-new install. This seeds demo content from the active theme.
+>
+> `SETUP_COMPLETE` and `ENABLED_MODULES` are stored in the database — the wizard manages them; never set them as env vars manually.
+>
+> To change anything after setup — site URL, email, storage, etc. — go to **Settings** in the admin dashboard. To start over, **Settings → Danger Zone** has Reset content / Factory reset / Reinstall theme buttons that stream their own progress through the same terminal.
+
+### Other useful commands
+
+```bash
+npm run reset          # full project reset (runs scripts/reset.ps1)
+npm run clean          # clean build artifacts
+npm run dev            # backend + frontend only (no theme)
+npm run dev:backend    # backend only
+npm run dev:frontend   # frontend only
+npm run dev:theme      # active theme dev server only
+npm run dev:db         # Postgres docker container only
+npm run prisma:generate # regenerate the Prisma client
+npm run mint-license   # mint a JWT-signed Custom-tier license for testing
+npm run theme:validate # validate theme.json against the manifest schema
+```
 
 ### Step 5 — (Optional) Start the demo playground locally
 
@@ -93,101 +108,42 @@ npm run dev
 
 Demo runs at **http://localhost:3002**
 
----
+### Optional — Docker Compose (for production-like local testing)
 
-## Part 2 — Staging Setup (Railway + Vercel)
-
-### Step 1 — GitHub repository setup
-
-If you haven't already:
+If you want to test what a customer's Docker self-host would look like — built containers, named volumes, the actual `MERO_DATA_DIR` persistence model — use the compose file at the repo root:
 
 ```bash
-# Make sure you're on develop and it's pushed
-git checkout develop
-git push origin develop
-
-# Make sure main is pushed
-git push origin master:main
+docker compose up --build
 ```
 
-Then on GitHub:
-- Go to **Settings → General → Default branch** → switch to `develop` → Update
+This is **not** the recommended developer workflow (no hot reload, slower iteration, build cache to fight) but it's the right way to verify changes before tagging a release. The compose file ships with sensible defaults — no `.env` required.
 
-### Step 2 — Railway (Backend, Staging)
+Customer-facing Docker instructions live in [docs/customer/INSTALL.md](docs/customer/INSTALL.md) (Path 4 — Local self-host). Don't recommend Docker as the primary customer path; Mero Cloud and managed install are better fits for non-developers.
 
-1. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub**
-2. Select the `BlendWitTech/blendwit-cms` repository
-3. **Root Directory**: leave **blank** (Railway must use the repo root, not `backend/`)
-4. Railway will pick up `railway.json` automatically and use the Dockerfile builder
+---
 
-**Add a database:**
-- In the project view → **+ New** → **Database** → **Add PostgreSQL**
-- Railway will automatically inject `DATABASE_URL` into your backend service
+## Part 2 — Staging Setup
 
-**Set environment variables** (service → Variables tab):
-```
-NODE_ENV            = production
-JWT_SECRET          = <generate with: openssl rand -base64 64>
-CORS_ORIGINS        = https://your-frontend.vercel.app
-CORS_VERCEL_PROJECT = your-vercel-project-name
-```
+The hosting stack for testing/beta is **Render** (backend) + **Supabase**
+(Postgres) + **Vercel** (frontend). This was previously documented as
+Railway here; we moved off Railway because their free tier is a one-time
+$5 trial credit, while Render + Supabase + Vercel are all genuinely free
+for testing-grade traffic.
 
-> Fill in CORS values after Step 3 below — you can update them after Vercel is set up.
+The full click-by-click setup — provisioning Supabase, creating the Render
+service, configuring Vercel, wiring CORS, adding GitHub Actions secrets,
+setting up the production approval gate — lives in
+**[`docs/internal/OPERATIONS.md`](./docs/internal/OPERATIONS.md)**. That's
+the canonical runbook; treat this part of SETUP.md as the high-level map.
 
-**Set Watch Paths** (prevents Railway rebuilding on frontend/demo changes):
-- Service → Settings → Watch Paths
-- Add: `backend/**`
-- Add: `themes/**`
+The branch model that drives all of this — `develop` → staging,
+`main` → production with manual approval, tags for releases — is in
+**[`docs/internal/BRANCHING.md`](./docs/internal/BRANCHING.md)**.
 
-**Connect to develop branch:**
-- Service → Settings → Source → Branch → `develop`
-
-**After the first deploy:**
-- Copy your Railway service URL (e.g. `https://blendwit-cms-backend.up.railway.app`)
-- Add it to GitHub Secrets: repo → Settings → Secrets → Actions → New secret
-  - Name: `STAGING_API_URL`
-  - Value: your Railway URL
-
-### Step 3 — Vercel (Frontend, Staging)
-
-1. Go to [vercel.com](https://vercel.com) → **New Project** → **Import** → select `blendwit-cms`
-2. **Root Directory**: `frontend`
-3. Framework: Next.js (auto-detected)
-4. **Environment Variables** → set for **Preview** environment:
-   ```
-   NEXT_PUBLIC_API_URL = https://your-backend.up.railway.app
-   ```
-5. Deploy
-
-**After deploy:**
-- Copy your Vercel URL (e.g. `https://blendwit-cms-frontend.vercel.app`)
-- Go back to Railway → update `CORS_ORIGINS` to this URL
-- Update `CORS_VERCEL_PROJECT` to your Vercel project name (the slug in the URL)
-
-### Step 4 — Run the setup wizard on staging
-
-Open your Vercel frontend URL + `/setup` and complete the wizard as in Part 1 Step 4.
-
-### Step 5 — Vercel (Demo Playground, Staging)
-
-1. Vercel → **New Project** → Import same repo
-2. **Root Directory**: `demo`
-3. Set environment variables (all environments):
-
-```
-NEXTAUTH_URL             = https://your-demo.vercel.app
-NEXTAUTH_SECRET          = <generate with: openssl rand -base64 32>
-GOOGLE_CLIENT_ID         = <from Google OAuth — see Part 3>
-GOOGLE_CLIENT_SECRET     = <from Google OAuth>
-GITHUB_CLIENT_ID         = <from GitHub OAuth>
-GITHUB_CLIENT_SECRET     = <from GitHub OAuth>
-LINKEDIN_CLIENT_ID       = <from LinkedIn OAuth>
-LINKEDIN_CLIENT_SECRET   = <from LinkedIn OAuth>
-CMS_API_URL              = https://your-backend.up.railway.app
-NEXT_PUBLIC_DEMO_CMS_URL = https://your-frontend.vercel.app
-NEXT_PUBLIC_BUY_URL      = https://blendwit.com/mero-cms/pricing
-NEXT_PUBLIC_CONTACT_URL  = https://blendwit.com/contact
-```
+If you'd rather host on Railway, Fly.io, or your own VPS, the workflows
+and Dockerfiles work identically; you'd swap the dashboard click-paths.
+The render.yaml at the repo root is Render-specific Infrastructure as Code
+— ignore it on other platforms.
 
 ---
 
@@ -236,68 +192,56 @@ Go to: GitHub → repo → **Settings** → **Secrets and variables** → **Acti
 
 | Secret name | Value |
 |---|---|
-| `STAGING_API_URL` | Railway staging service URL |
-| `PRODUCTION_API_URL` | Railway production service URL (add when ready) |
+| `STAGING_API_URL` | Render staging backend URL (e.g. `mero-cms-backend-staging.onrender.com`) |
+| `PRODUCTION_API_URL` | Render production backend URL (add when ready) |
+| `VERCEL_PROJECT` | Vercel project slug (used by `pr-preview-comment.yml` to predict preview URLs) |
 
 ---
 
 ## Part 5 — Production Setup (when ready for custom domain)
 
-### Railway — Production service
+Production is a second copy of the staging stack — separate Render
+service for the backend, separate Supabase project for the database,
+separate Vercel deployment configured for your custom domain. The
+mechanics are identical to staging but pointed at `main` instead of
+`develop`. Click-by-click steps live in
+[`docs/internal/OPERATIONS.md`](./docs/internal/OPERATIONS.md) under
+the "Production environment" section.
 
-1. In your existing Railway project → **+ New Service** → Deploy from GitHub (same repo)
-2. Connect to the `main` branch
-3. Set Watch Paths: `backend/**` and `themes/**`
-4. Add a second PostgreSQL database for production
-5. Set environment variables (same as staging but with production values):
-   ```
-   NODE_ENV            = production
-   JWT_SECRET          = <different 64-char secret from staging>
-   CORS_ORIGINS        = https://your-production-domain.com
-   ```
-6. Copy this service URL → add as `PRODUCTION_API_URL` GitHub secret
+The **manual approval gate** for production deploys is configured in
+GitHub Environments and already wired into `deploy-production.yml`. See
+the same OPERATIONS.md section for the dashboard steps.
 
-### Vercel — Production domain
-
-1. Vercel → your frontend project → **Settings** → **Domains**
-2. Add your custom domain (e.g. `app.blendwit.com`)
-3. Follow the DNS setup instructions Vercel gives you
-4. Update the **Production** environment variable:
-   ```
-   NEXT_PUBLIC_API_URL = https://your-production-railway-url.up.railway.app
-   ```
-
-### GitHub — Production approval gate (optional but recommended)
-
-1. GitHub → repo → **Settings** → **Environments** → **New environment**
-2. Name: `production`
-3. **Required reviewers** → add your GitHub username
-4. **Deployment branches** → Selected branches → add `main`
-
-After this, every push to `main` will pause and send you an email. You click **Review deployments → Approve** before Railway and Vercel deploy.
+> Reminder: free-tier Render Web Services have no persistent disk, so
+> the wizard's saved state and uploads regenerate per redeploy. For
+> production, bump the backend service to Render's Starter plan
+> ($7/mo) — the `render.yaml` has a commented production block ready
+> to uncomment.
 
 ---
 
 ## Part 6 — Day-to-Day Development Workflow
 
-```
-production   ← live (merge from main)
-  └── main   ← clean trunk (merge from testing)
-        └── testing ← staging (merge from develop)
-              └── develop ← active work
-```
+The branch model is `develop → main → tags`. Two long-lived branches,
+plus version tags for releases. See
+[`docs/internal/BRANCHING.md`](./docs/internal/BRANCHING.md) for the
+full doc — including hotfix flow, branch protection, and why we picked
+this model over GitFlow / trunk-based.
+
+Quick reference:
 
 ```bash
 # Start a new feature
-git checkout develop
-git pull origin develop
-git checkout -b feature/my-feature
+git switch develop && git pull
+git switch -c feature/my-feature
 
 # Work, commit, push
-git push origin feature/my-feature
+git push -u origin feature/my-feature
 
-# Open PR: feature/my-feature → develop
-# CI validates → merge to develop → testing → main → production
+# Open PR → develop. CI validates. Merge.
+# develop auto-deploys to staging (Render + Vercel preview).
+# When solid, open PR develop → main, get approval, merge.
+# Production deploys after the manual approval gate.
 ```
 
 ---
@@ -307,10 +251,10 @@ git push origin feature/my-feature
 | Workflow file | Trigger | What it does |
 |---|---|---|
 | `ci.yml` | Every push and PR | Builds backend + frontend + demo, validates |
-| `deploy-staging.yml` | Push to `develop` | Confirms build passes (Railway+Vercel deploy automatically) |
+| `deploy-staging.yml` | Push to `develop` | Confirms build passes (Render + Vercel deploy automatically via their GitHub integrations) |
 | `deploy-production.yml` | Push to `main` | Runs full build check, logs success for production tracking |
 
-Railway and Vercel automatically deploy when they detect a push to their connected branch. The GitHub workflows serve as build gates — if CI fails, you know before it reaches Railway.
+Render and Vercel automatically deploy when they detect a push to their connected branch. The GitHub workflows serve as build gates — if CI fails, you know before it reaches the host.
 
 ---
 
@@ -356,8 +300,8 @@ After this:
 | File | Used for |
 |---|---|
 | `backend/.env.development.example` | Copy to `backend/.env` for local dev |
-| `backend/.env.staging.example` | Reference for Railway staging env vars |
-| `backend/.env.production.example` | Reference for Railway production env vars |
+| `backend/.env.staging.example` | Reference for staging env vars (set in Render dashboard, not in `.env`) |
+| `backend/.env.production.example` | Reference for production env vars (set in Render dashboard, not in `.env`) |
 | `frontend/.env.development.example` | Copy to `frontend/.env.local` for local dev |
 | `frontend/.env.staging.example` | Reference for Vercel preview env vars |
 | `demo/.env.local.example` | Copy to `demo/.env.local` for local demo dev |
@@ -369,22 +313,22 @@ After this:
 **`prisma generate` fails in Docker**
 Ensure `backend/Dockerfile` has `ARG DATABASE_URL=postgresql://ci:ci@localhost:5432/ci` — this provides a dummy value so Prisma can generate the client without a real DB during the build.
 
-**`dist/main.js` not found after Railway build**
+**`dist/main.js` not found after backend build (Render or Railway)**
 Check `backend/tsconfig.build.json` has `"rootDir": "src"`. Without this, TypeScript widens its output path to `dist/src/main.js` when root-level `.ts` files exist.
 
 **Themes not showing in the CMS dashboard**
-- Ensure Railway Root Directory is left **blank** (repo root), not set to `backend/`
+- Ensure the build context is the **repo root** (not `backend/`). On Render the Dockerfile path is set to `./backend/Dockerfile` with the context at root — same on Railway. The Dockerfile copies from the repo root because it needs `themes/` and `scripts/` alongside `backend/`.
 - This allows Docker to run `COPY themes/ /themes/`
 - Each theme must have a valid `theme.json` with a `slug` field
 
-**CORS errors from Vercel frontend to Railway**
-- Set `CORS_ORIGINS` in Railway to your exact Vercel URL
+**CORS errors from Vercel frontend to backend**
+- Set `CORS_ORIGINS` on the backend (Render → Environment tab) to include your exact Vercel URL.
 - For dynamic Vercel preview URLs: also set `CORS_VERCEL_PROJECT` to your Vercel project slug
 
 **Setup wizard returns 500**
 - Click **Fresh Start** (not Restore Backup) on the setup type screen
 - The demo seed only runs when `setupType === 'FRESH'`
-- Do not set `SETUP_COMPLETE` or `ENABLED_MODULES` as Railway env vars
+- Do not set `SETUP_COMPLETE` or `ENABLED_MODULES` as host env vars
 
-**Media uploads not persisting on Railway**
-Railway's filesystem is ephemeral — uploaded files are lost on redeploy. For production, configure an S3-compatible storage (e.g. Cloudflare R2) and set `STORAGE_DRIVER=s3` in the backend env vars.
+**Media uploads not persisting on the host**
+Both Render's free tier and Railway's free tier have ephemeral filesystems — uploaded files are lost on redeploy. The fix is the same in both: in the wizard's Site Configuration → Storage step, pick S3 / Cloudflare R2 / Supabase Storage instead of Local. Local-disk uploads only work on Render Starter (with a persistent disk) or a real VM. The wizard exposes this so customers don't need to edit env vars.

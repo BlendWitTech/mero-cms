@@ -44,7 +44,18 @@ export class ModuleEnabledGuard implements CanActivate {
             where: { key: 'enabled_modules' },
         });
 
-        const modules: string[] = setting ? JSON.parse(setting.value) : [...CORE_MODULES];
+        let modules: string[] = [...CORE_MODULES];
+        if (setting?.value) {
+            try {
+                // Try JSON first
+                const parsed = JSON.parse(setting.value);
+                modules = Array.isArray(parsed) ? parsed : setting.value.split(',').map((m: string) => m.trim());
+            } catch (e) {
+                // Fallback to comma-separated
+                modules = setting.value.split(',').map((m: string) => m.trim());
+            }
+        }
+
         this.cache = { modules, expires: now + 30_000 };
         return modules;
     }

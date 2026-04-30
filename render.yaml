@@ -1,0 +1,89 @@
+# Render — Infrastructure as Code
+#
+# Connect your GitHub repo at render.com → New → Blueprint → pick this repo.
+# Render reads this file and creates the services described below.
+#
+# Why a Blueprint instead of clicking through the dashboard:
+#   The dashboard click-paths drift over time (Render redesigns the
+#   onboarding every few months). This file is the single source of
+#   truth for the staging + production services and stays in sync
+#   with whatever the source code expects.
+#
+# What this defines:
+#   1. mero-cms-backend-staging  → deploys from `develop`
+#   2. mero-cms-backend-production → deploys from `main`
+#
+# What you still set manually (per-service, in the Render dashboard):
+#   - DATABASE_URL  — your Supabase connection string (different per env)
+#   - JWT_SECRET    — `openssl rand -base64 32` (set once, don't change)
+#   - LICENSE_KEY   — optional, customer pastes via wizard if unset
+#   - CORS_ORIGINS  — your Vercel URLs after Vercel is set up
+#   - MERO_DATA_DIR — only on paid plans with persistent disks
+#
+# Free-tier caveat:
+#   Render's free Web Service has NO persistent disk. The MERO_DATA_DIR
+#   volume mount only works on Starter ($7/mo) and above. On free tier
+#   the backend regenerates secrets.json on every wake, which means
+#   JWT_SECRET rotates and active sessions invalidate. Acceptable for
+#   testing/beta — set JWT_SECRET as an explicit env var below to
+#   override the auto-generation and keep sessions stable.
+
+services:
+    # ── Backend — staging ─────────────────────────────────────────
+    - type: web
+      name: mero-cms-backend-staging
+      runtime: docker
+      dockerfilePath: ./backend/Dockerfile
+      dockerContext: .
+      branch: develop
+      plan: free # bump to "starter" when you need persistent disk + always-on
+      autoDeploy: true
+      healthCheckPath: /health
+      envVars:
+          - key: NODE_ENV
+            value: production
+          - key: PORT
+            value: 3001
+          - key: MERO_DATA_DIR
+            value: /app/data
+          - key: DATABASE_URL
+            sync: false # set in Render dashboard — point at Supabase staging DB
+          - key: JWT_SECRET
+            sync: false # set in Render dashboard — `openssl rand -base64 32`
+          - key: CORS_ORIGINS
+            sync: false # set in Render dashboard — your Vercel URLs
+          - key: LICENSE_KEY
+            sync: false # optional; wizard accepts it instead
+
+    # ── Backend — production ──────────────────────────────────────
+    # Uncomment when you're ready to ship to real customers. Set the
+    # plan to at least "starter" so you get a persistent disk and no
+    # cold starts. Production WILL break the wizard's saved state on
+    # the free tier without that disk.
+    #
+    # - type: web
+    #   name: mero-cms-backend-production
+    #   runtime: docker
+    #   dockerfilePath: ./backend/Dockerfile
+    #   dockerContext: .
+    #   branch: main
+    #   plan: starter
+    #   autoDeploy: true
+    #   healthCheckPath: /health
+    #   disk:
+    #       name: mero-data
+    #       mountPath: /app/data
+    #       sizeGB: 1
+    #   envVars:
+    #       - key: NODE_ENV
+    #         value: production
+    #       - key: PORT
+    #         value: 3001
+    #       - key: MERO_DATA_DIR
+    #         value: /app/data
+    #       - key: DATABASE_URL
+    #         sync: false
+    #       - key: JWT_SECRET
+    #         sync: false
+    #       - key: CORS_ORIGINS
+    #         sync: false

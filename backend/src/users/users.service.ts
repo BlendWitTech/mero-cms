@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -74,6 +74,12 @@ export class UsersService {
     }
 
     async remove(id: string): Promise<User> {
+        if (process.env.DEMO_MODE === 'true') {
+            const user = await this.prisma.user.findUnique({ where: { id } });
+            if (user?.email === 'admin@merocms.test') {
+                throw new Error('Deletion of demo admin account is prohibited in Demo Mode.');
+            }
+        }
         return (this.prisma as any).user.delete({
             where: { id },
         });
@@ -114,6 +120,17 @@ export class UsersService {
     }
 
     async updateProfile(id: string, data: { name?: string; bio?: string; avatar?: string; forcePasswordChange?: boolean; preferences?: any }) {
+        if (process.env.DEMO_MODE === 'true') {
+            const user = await this.prisma.user.findUnique({ where: { id } });
+            if (user?.email === 'admin@merocms.test') {
+                // In demo mode, only allow certain harmless preference updates
+                const { preferences } = data;
+                return (this.prisma as any).user.update({
+                    where: { id },
+                    data: { preferences },
+                });
+            }
+        }
         const { name, bio, avatar, forcePasswordChange, preferences } = data;
         return (this.prisma as any).user.update({
             where: { id },
@@ -151,14 +168,40 @@ export class UsersService {
     }
 
     async create(data: Prisma.UserCreateInput): Promise<User> {
-        const hashedPassword = await bcrypt.hash(data.password, 10);
-        return (this.prisma as any).user.create({
-            data: {
-                ...data,
-                password: hashedPassword,
-                status: 'ACTIVE',
-            },
-        });
+        // 12 rounds matches auth.service (register / reset-password / invite-accept).
+        // Keeping them aligned prevents weaker hashes for users created via the
+        // admin API or internal seeders.
+        const hashedPassword = await bcrypt.hash(data.password, 12);
+        try {
+            return await (this.prisma as any).user.create({
+                data: {
+                    ...data,
+                    password: hashedPassword,
+                    status: 'ACTIVE',
+                },
+            });
+        } catch (err: any) {
+            // Prisma raises P2002 with `meta.target` listing the unique
+            // field(s) when a uniqueness constraint trips. Without this
+            // catch, the raw stack — including absolute file paths and
+            // Prisma's internals — escapes as a 500 to the client. We
+            // map the most common case (duplicate email on /auth/register
+            // and on admin user-create) to a clean 409 ConflictException
+            // so the frontend can surface a friendly "that email is
+            // already registered" message.
+            if (err?.code === 'P2002') {
+                const target = Array.isArray(err?.meta?.target)
+                    ? err.meta.target.join(', ')
+                    : (err?.meta?.target ?? 'field');
+                if (target.includes('email')) {
+                    throw new ConflictException(
+                        'An account with that email already exists. Try signing in instead, or use the password reset link.',
+                    );
+                }
+                throw new ConflictException(`A user with that ${target} already exists.`);
+            }
+            throw err;
+        }
     }
 
     async updateLastActive(id: string) {
@@ -183,6 +226,22 @@ export class UsersService {
         return this.prisma.user.update({
             where: { id },
             data,
+        });
+    }
+
+    /**
+     * Admin action: zero out a user's lockout state.
+     * Lets support unlock a legitimate user who tripped the failed-login
+     * threshold (e.g. a password-manager loop) without waiting for
+     * `lockout_duration` minutes to elapse.
+     */
+    async unlockAccount(id: string) {
+        return this.prisma.user.update({
+            where: { id },
+            data: {
+                failedLoginAttempts: 0,
+                lockoutUntil: null,
+            },
         });
     }
 

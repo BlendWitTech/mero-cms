@@ -15,6 +15,8 @@ import {
     TrashIcon,
     PhotoIcon,
     Squares2X2Icon,
+    ArrowsUpDownIcon,
+    LockClosedIcon,
 } from '@heroicons/react/24/outline';
 import dynamic from 'next/dynamic';
 import { apiRequest } from '@/lib/api';
@@ -24,6 +26,7 @@ import EmojiPicker from 'emoji-picker-react';
 import { SERVICE_ICONS } from '@/lib/service-icons';
 
 import { usePermissions } from '@/context/PermissionsContext';
+import { useCapabilities } from '@/context/CapabilitiesContext';
 import SectionPaletteModal from '@/components/dashboard/SectionPaletteModal';
 
 const PostEditor = dynamic(() => import('@/components/blog/PostEditor'), { ssr: false });
@@ -46,11 +49,18 @@ interface FieldDef {
     defaultValue?: any;
 }
 
+interface SectionVariant {
+    key: string;
+    label: string;
+    description?: string;
+}
+
 interface SectionDef {
     id: string;
     label: string;
     description?: string;
     fields: FieldDef[];
+    variants?: SectionVariant[];
 }
 
 interface PageDef {
@@ -82,15 +92,15 @@ function IconValueField({ value, onChange, disabled }: { value: string; onChange
                 type="button"
                 disabled={disabled}
                 onClick={() => setOpen(!open)}
-                className="w-16 h-10 border border-slate-200 rounded-xl flex items-center justify-center bg-white hover:border-blue-300 transition-all disabled:opacity-50 shadow-sm"
+                className="w-16 h-10 border border-slate-200 dark:border-white/10 rounded-xl flex items-center justify-center bg-white dark:bg-slate-900/60 hover:border-blue-300 dark:hover:border-blue-500 transition-all disabled:opacity-50 shadow-sm"
                 title="Click to pick an icon"
             >
-                {selectedIcon ? <selectedIcon.icon className="w-5 h-5 text-slate-700" /> : <span className="text-slate-300 text-xs font-bold">Pick</span>}
+                {selectedIcon ? <selectedIcon.icon className="w-5 h-5 text-slate-700 dark:text-slate-300" /> : <span className="text-slate-300 dark:text-slate-500 text-xs font-bold">Pick</span>}
             </button>
             {open && (
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-                    <div className="absolute z-20 top-full mt-2 left-0 bg-white border border-slate-200 rounded-2xl shadow-2xl p-3 w-80 max-h-80 overflow-y-auto custom-scrollbar">
+                    <div className="absolute z-20 top-full mt-2 left-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-3 w-80 max-h-80 overflow-y-auto custom-scrollbar">
                         <div className="grid grid-cols-5 gap-2">
                             {SERVICE_ICONS.map(ic => {
                                 const isSelected = value === ic.name;
@@ -100,7 +110,7 @@ function IconValueField({ value, onChange, disabled }: { value: string; onChange
                                         type="button"
                                         title={ic.label}
                                         onClick={() => { onChange(ic.name); setOpen(false); }}
-                                        className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center justify-center gap-1 ${isSelected ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-100 hover:border-slate-300 text-slate-500 hover:text-slate-700'}`}
+                                        className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center justify-center gap-1 ${isSelected ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'border-slate-100 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/20 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                                     >
                                         <ic.icon className="w-6 h-6 stroke-[1.5]" />
                                     </button>
@@ -122,10 +132,10 @@ function EmojiValueField({ value, onChange, disabled }: { value: string; onChang
                 type="button"
                 disabled={disabled}
                 onClick={() => setOpen(!open)}
-                className="w-full h-10 border border-slate-200 rounded-xl text-xl flex items-center justify-center bg-white hover:border-red-300 transition-all disabled:opacity-50 shadow-sm"
+                className="w-full h-10 border border-slate-200 dark:border-white/10 rounded-xl text-xl flex items-center justify-center bg-white dark:bg-slate-900/60 hover:border-red-300 dark:hover:border-red-500 transition-all disabled:opacity-50 shadow-sm"
                 title="Click to pick an emoji"
             >
-                {value ? <span>{value}</span> : <span className="text-slate-300 text-xs font-bold">Pick</span>}
+                {value ? <span>{value}</span> : <span className="text-slate-300 dark:text-slate-500 text-xs font-bold">Pick</span>}
             </button>
             {open && (
                 <>
@@ -145,9 +155,11 @@ function EmojiValueField({ value, onChange, disabled }: { value: string; onChang
 
 // ─── Image field (own component so useState is always called at top level) ────
 
+import { getApiBaseUrl } from '@/lib/api';
+
 function ImageField({ value, onChange, disabled, base }: { value: any; onChange: (v: any) => void; disabled: boolean; base: string }) {
     const [pickerOpen, setPickerOpen] = useState(false);
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const API_BASE = getApiBaseUrl();
     const previewSrc = value ? (value.startsWith('http') ? value : `${API_BASE}${value}`) : '';
     return (
         <div className="space-y-2">
@@ -156,7 +168,7 @@ function ImageField({ value, onChange, disabled, base }: { value: any; onChange:
                     type="button"
                     disabled={disabled}
                     onClick={() => setPickerOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold hover:bg-slate-700 transition-all disabled:opacity-40 shrink-0 shadow"
+                    className="btn-primary px-4 py-2.5 text-xs shrink-0"
                 >
                     <PhotoIcon className="w-4 h-4" />
                     Choose Image
@@ -170,7 +182,7 @@ function ImageField({ value, onChange, disabled, base }: { value: any; onChange:
                     className={base + ' flex-1'}
                 />
                 {value && (
-                    <button type="button" disabled={disabled} onClick={() => onChange('')} className="p-2 text-slate-400 hover:text-red-500 transition-colors disabled:opacity-40">
+                    <button type="button" disabled={disabled} onClick={() => onChange('')} className="btn-ghost p-2 text-slate-400 hover:text-red-500">
                         <XMarkIcon className="w-4 h-4" />
                     </button>
                 )}
@@ -198,7 +210,7 @@ function FieldEditor({ field, value, onChange, disabled }: {
     onChange: (v: any) => void;
     disabled: boolean;
 }) {
-    const base = 'w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white disabled:opacity-50';
+    const base = 'w-full border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white dark:bg-slate-950/40 disabled:opacity-50';
 
     if (field.type === 'divider') {
         return null; // rendered inline by SectionCard, not here
@@ -213,14 +225,39 @@ function FieldEditor({ field, value, onChange, disabled }: {
     }
 
     if (field.type === 'textarea') {
-        const lineCount = (value || '').split('\n').length;
+        // Value may be a string (most cases) or an array (seeded list fields
+        // like trust_logos, logos — "one per line" inputs). Coerce to a
+        // newline-joined string for display and split back to an array on
+        // edit so the original data shape is preserved across save cycles.
+        const wasArray = Array.isArray(value);
+        const displayValue = wasArray
+            ? (value as any[]).map((v) => (v == null ? '' : String(v))).join('\n')
+            : typeof value === 'string'
+                ? value
+                : value == null
+                    ? ''
+                    : String(value);
+        const lineCount = displayValue.split('\n').length;
         const rows = Math.max(2, Math.min(lineCount + 1, 10));
         return (
             <textarea
                 rows={rows}
                 disabled={disabled}
-                value={value || ''}
-                onChange={(e) => onChange(e.target.value)}
+                value={displayValue}
+                onChange={(e) => {
+                    const next = e.target.value;
+                    if (wasArray) {
+                        // Split on newline, trim, drop empties — matches the
+                        // "one per line" convention declared in pageSchema.
+                        const list = next
+                            .split('\n')
+                            .map((s) => s.trim())
+                            .filter(Boolean);
+                        onChange(list);
+                    } else {
+                        onChange(next);
+                    }
+                }}
                 placeholder={field.placeholder}
                 className={base + ' resize-none leading-relaxed'}
             />
@@ -262,13 +299,13 @@ function FieldEditor({ field, value, onChange, disabled }: {
                     <div key={i} className="flex gap-2 items-center">
                         <input type="text" disabled={disabled} value={btn.text || ''} onChange={(e) => { const nb = [...buttons]; nb[i] = { ...nb[i], text: e.target.value }; onChange(nb); }} placeholder="Button label" className={base + ' flex-1'} />
                         <input type="text" disabled={disabled} value={btn.url || ''} onChange={(e) => { const nb = [...buttons]; nb[i] = { ...nb[i], url: e.target.value }; onChange(nb); }} placeholder="/path or URL" className={base + ' flex-1'} />
-                        <button disabled={disabled} onClick={() => onChange(buttons.filter((_, j) => j !== i))} className="p-2 text-red-400 hover:text-red-600 disabled:opacity-40">
+                        <button disabled={disabled} onClick={() => onChange(buttons.filter((_, j) => j !== i))} className="btn-ghost p-2 text-red-400 hover:text-red-600">
                             <TrashIcon className="w-4 h-4" />
                         </button>
                     </div>
                 ))}
                 {buttons.length < max && (
-                    <button disabled={disabled} onClick={() => onChange([...buttons, { text: '', url: '' }])} className="flex items-center gap-1.5 text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-40">
+                    <button disabled={disabled} onClick={() => onChange([...buttons, { text: '', url: '' }])} className="btn-ghost flex items-center gap-1.5 text-sm text-red-600 hover:text-red-700">
                         <PlusIcon className="w-4 h-4" /> Add Button
                     </button>
                 )}
@@ -302,13 +339,13 @@ function FieldEditor({ field, value, onChange, disabled }: {
                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Label</span>
                             <input type="text" disabled={disabled} value={stat.label || ''} onChange={(e) => { const ns = [...items]; ns[i] = { ...ns[i], label: e.target.value }; onChange(ns); }} placeholder="Units Sold" className={base} />
                         </div>
-                        <button disabled={disabled} onClick={() => onChange(items.filter((_, j) => j !== i))} className="p-2 text-red-400 hover:text-red-600 disabled:opacity-40 mt-4">
+                        <button disabled={disabled} onClick={() => onChange(items.filter((_, j) => j !== i))} className="btn-ghost p-2 text-red-400 hover:text-red-600 mt-4">
                             <TrashIcon className="w-4 h-4" />
                         </button>
                     </div>
                 ))}
                 {items.length < max && (
-                    <button disabled={disabled} onClick={() => onChange([...items, { value: '', label: '' }])} className="flex items-center gap-1.5 text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-40 mt-1">
+                    <button disabled={disabled} onClick={() => onChange([...items, { value: '', label: '' }])} className="btn-ghost flex items-center gap-1.5 text-sm text-red-600 hover:text-red-700 mt-1">
                         <PlusIcon className="w-4 h-4" /> Add Stat
                     </button>
                 )}
@@ -359,9 +396,103 @@ function FieldEditor({ field, value, onChange, disabled }: {
     );
 }
 
+// ─── Design tab helpers ───────────────────────────────────────────────────────
+
+function NumberSlider({
+    label,
+    min,
+    max,
+    step = 1,
+    value,
+    onChange,
+    disabled,
+    unit = 'px',
+}: {
+    label: string;
+    min: number;
+    max: number;
+    step?: number;
+    value: number | string;
+    onChange: (v: number | '') => void;
+    disabled?: boolean;
+    unit?: string;
+}) {
+    const numValue = value === '' || value === null || value === undefined ? '' : Number(value);
+    return (
+        <div>
+            <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[11px] text-slate-600 dark:text-slate-400">{label}</span>
+                <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 tabular-nums min-w-[3rem] text-right">
+                    {numValue === '' ? '—' : `${numValue}${unit}`}
+                </span>
+            </div>
+            <input
+                type="range"
+                min={min}
+                max={max}
+                step={step}
+                value={numValue === '' ? min : numValue}
+                disabled={disabled}
+                onChange={(e) => onChange(Number(e.target.value))}
+                className="w-full accent-blue-600 disabled:opacity-50"
+            />
+        </div>
+    );
+}
+
+function ColorField({
+    label,
+    value,
+    onChange,
+    disabled,
+}: {
+    label: string;
+    value: string;
+    onChange: (v: string) => void;
+    disabled?: boolean;
+}) {
+    return (
+        <div>
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 mb-1.5">{label}</div>
+            <div className="flex items-center gap-2">
+                <input
+                    type="color"
+                    value={value || '#000000'}
+                    onChange={(e) => onChange(e.target.value)}
+                    disabled={disabled}
+                    className="w-9 h-9 rounded-md border border-slate-200 dark:border-white/10 cursor-pointer bg-transparent disabled:opacity-50"
+                />
+                <input
+                    type="text"
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    disabled={disabled}
+                    placeholder="—"
+                    className="flex-1 px-2 py-1.5 rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-[11px] font-mono text-slate-700 dark:text-slate-200 disabled:opacity-50"
+                />
+            </div>
+        </div>
+    );
+}
+
 // ─── Section card ─────────────────────────────────────────────────────────────
 
-function SectionCard({ sectionDef, sectionData, onToggle, onDataChange, onRemove, onMoveUp, onMoveDown, saving, isEnterprise }: {
+function SectionCard({
+    sectionDef,
+    sectionData,
+    onToggle,
+    onDataChange,
+    onRemove,
+    onMoveUp,
+    onMoveDown,
+    onVariantChange,
+    saving,
+    isEnterprise,
+    canUseVisualEditor,
+    dragProps,
+    isDragging,
+    isDragOver,
+}: {
     sectionDef: SectionDef;
     sectionData: SectionData;
     onToggle: () => void;
@@ -369,28 +500,60 @@ function SectionCard({ sectionDef, sectionData, onToggle, onDataChange, onRemove
     onRemove: () => void;
     onMoveUp?: () => void;
     onMoveDown?: () => void;
+    onVariantChange?: (variantKey: string | null) => void;
     saving: boolean;
     isEnterprise: boolean;
+    canUseVisualEditor: boolean;
+    dragProps?: {
+        onDragStart: (e: React.DragEvent) => void;
+        onDragOver: (e: React.DragEvent) => void;
+        onDrop: (e: React.DragEvent) => void;
+        onDragEnd: () => void;
+        draggable: boolean;
+    };
+    isDragging?: boolean;
+    isDragOver?: boolean;
 }) {
     const [expanded, setExpanded] = useState(false);
+    const [activeTab, setActiveTab] = useState<'content' | 'design'>('content');
     const enabled = sectionData.enabled;
     const hasFields = sectionDef.fields.length > 0;
+    const hasVariants = (sectionDef.variants?.length ?? 0) > 0;
+    const currentVariant = (sectionData.data?._variant as string | undefined) ?? sectionDef.variants?.[0]?.key ?? '';
+    const style = (sectionData.data?._style as Record<string, any> | undefined) ?? {};
+
+    const updateStyle = (key: string, value: any) => {
+        const next = { ...style };
+        if (value === '' || value === null || value === undefined) delete next[key];
+        else next[key] = value;
+        onDataChange('_style', Object.keys(next).length ? next : undefined);
+    };
 
     return (
-        <div className={`border rounded-2xl transition-all ${enabled ? 'border-slate-200' : 'border-slate-100 opacity-60'}`}>
+        <div
+            {...(dragProps ?? {})}
+            className={`border rounded-2xl transition-all ${enabled ? 'border-slate-200 dark:border-white/10' : 'border-slate-100 dark:border-white/[0.06] opacity-60'} ${isDragging ? 'opacity-40 scale-[0.98]' : ''} ${isDragOver ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
+        >
             {/* Header */}
-            <div className={`flex items-center justify-between px-5 py-4 bg-white rounded-t-2xl ${expanded ? 'border-b border-slate-50' : ''}`}>
+            <div className={`flex items-center justify-between px-5 py-4 bg-white dark:bg-slate-900/60 rounded-t-2xl ${expanded ? 'border-b border-slate-50 dark:border-white/[0.06]' : ''}`}>
                 <div className="flex items-center gap-3">
+                    {/* Drag handle — primary reorder UX. Up/down arrows kept as a11y fallback. */}
+                    <div
+                        className="cursor-grab active:cursor-grabbing text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400"
+                        title="Drag to reorder"
+                    >
+                        <ArrowsUpDownIcon className="w-4 h-4" />
+                    </div>
                     {isEnterprise && (
-                        <div className="flex flex-col gap-1 mr-1">
-                            <button onClick={onMoveUp} disabled={saving} className="p-0.5 text-slate-300 hover:text-red-500 disabled:opacity-0"><ChevronUpIcon className="w-4 h-4" /></button>
-                            <button onClick={onMoveDown} disabled={saving} className="p-0.5 text-slate-300 hover:text-red-500 disabled:opacity-0"><ChevronDownIcon className="w-4 h-4" /></button>
+                        <div className="hidden md:flex flex-col gap-1 mr-1">
+                            <button onClick={onMoveUp} disabled={saving} aria-label="Move up" className="p-0.5 text-slate-300 hover:text-red-500 disabled:opacity-0"><ChevronUpIcon className="w-4 h-4" /></button>
+                            <button onClick={onMoveDown} disabled={saving} aria-label="Move down" className="p-0.5 text-slate-300 hover:text-red-500 disabled:opacity-0"><ChevronDownIcon className="w-4 h-4" /></button>
                         </div>
                     )}
-                    <div className={`w-2.5 h-2.5 rounded-full ${enabled ? 'bg-green-500' : 'bg-slate-300'}`} />
+                    <div className={`w-2.5 h-2.5 rounded-full ${enabled ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
                     <div>
-                        <h4 className="font-bold text-slate-800 text-sm">{sectionDef.label}</h4>
-                        <p className="text-[10px] text-slate-400 font-mono mt-0.5 uppercase tracking-wider">{sectionDef.id}</p>
+                        <h4 className="font-bold text-slate-800 dark:text-white text-sm">{sectionDef.label}</h4>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5 uppercase tracking-wider">{sectionDef.id}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -399,7 +562,7 @@ function SectionCard({ sectionDef, sectionData, onToggle, onDataChange, onRemove
                         onClick={onToggle}
                         disabled={saving}
                         title={enabled ? 'Disable section' : 'Enable section'}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50 ${enabled ? 'bg-green-50 text-green-700 hover:bg-red-50 hover:text-red-600' : 'bg-slate-100 text-slate-500 hover:bg-green-50 hover:text-green-600'}`}
+                        className={`btn-outline flex items-center gap-1.5 px-3 py-1.5 text-xs ${enabled ? 'text-emerald-600 hover:text-red-600 border-emerald-100 hover:border-red-100' : 'text-slate-500 hover:text-emerald-600'}`}
                     >
                         {enabled ? <><EyeIcon className="w-3.5 h-3.5" /> Visible</> : <><EyeSlashIcon className="w-3.5 h-3.5" /> Hidden</>}
                     </button>
@@ -407,7 +570,7 @@ function SectionCard({ sectionDef, sectionData, onToggle, onDataChange, onRemove
                     {hasFields && (
                         <button
                             onClick={() => setExpanded(!expanded)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all"
+                            className="btn-outline flex items-center gap-1.5 px-3 py-1.5 text-xs"
                         >
                             <PencilSquareIcon className="w-3.5 h-3.5" />
                             {expanded ? 'Close' : 'Edit Content'}
@@ -417,7 +580,7 @@ function SectionCard({ sectionDef, sectionData, onToggle, onDataChange, onRemove
                         <button
                             onClick={onRemove}
                             disabled={saving}
-                            className="p-1.5 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            className="btn-ghost p-1.5 text-slate-300 hover:text-red-600"
                             title="Remove section from page"
                         >
                             <TrashIcon className="w-4 h-4" />
@@ -428,8 +591,139 @@ function SectionCard({ sectionDef, sectionData, onToggle, onDataChange, onRemove
 
             {/* Editable fields */}
             {expanded && hasFields && (
-                <div className="bg-slate-50 border-t border-slate-100 px-5 py-4 space-y-4">
-                    {sectionDef.fields.map((field) => {
+                <div className="bg-slate-50 dark:bg-slate-900/20 border-t border-slate-100 dark:border-white/[0.06] px-5 py-4 space-y-4">
+                    {/* Content / Design tab switcher */}
+                    <div className="flex gap-1 bg-white dark:bg-slate-900/40 rounded-lg p-1 w-fit">
+                        {(['content', 'design'] as const).map((tab) => {
+                            const isActive = activeTab === tab;
+                            const designLocked = tab === 'design' && !canUseVisualEditor;
+                            return (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    disabled={designLocked}
+                                    className={`text-xs font-semibold px-3 py-1.5 rounded-md transition flex items-center gap-1.5 ${
+                                        isActive
+                                            ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+                                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                                    } ${designLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    {tab === 'content' ? 'Content' : 'Design'}
+                                    {designLocked && <LockClosedIcon className="w-3 h-3" />}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* DESIGN TAB ─────────────────────────────────────────────── */}
+                    {activeTab === 'design' && canUseVisualEditor && (
+                        <div className="space-y-4">
+                            <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/40 p-4 space-y-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Spacing</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <NumberSlider
+                                            label="Top padding"
+                                            min={0}
+                                            max={200}
+                                            step={4}
+                                            value={style.paddingTop ?? ''}
+                                            onChange={(v) => updateStyle('paddingTop', v)}
+                                            disabled={saving}
+                                        />
+                                        <NumberSlider
+                                            label="Bottom padding"
+                                            min={0}
+                                            max={200}
+                                            step={4}
+                                            value={style.paddingBottom ?? ''}
+                                            onChange={(v) => updateStyle('paddingBottom', v)}
+                                            disabled={saving}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Colors</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <ColorField
+                                            label="Background"
+                                            value={style.backgroundColor ?? ''}
+                                            onChange={(v) => updateStyle('backgroundColor', v)}
+                                            disabled={saving}
+                                        />
+                                        <ColorField
+                                            label="Text color"
+                                            value={style.color ?? ''}
+                                            onChange={(v) => updateStyle('color', v)}
+                                            disabled={saving}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Typography</label>
+                                    <NumberSlider
+                                        label="Heading scale (×)"
+                                        min={0.6}
+                                        max={1.8}
+                                        step={0.1}
+                                        value={style.fontScale ?? ''}
+                                        onChange={(v) => updateStyle('fontScale', v)}
+                                        disabled={saving}
+                                        unit=""
+                                    />
+                                </div>
+                                {Object.keys(style).length > 0 && (
+                                    <button
+                                        onClick={() => onDataChange('_style', undefined)}
+                                        className="text-[11px] font-semibold text-slate-500 hover:text-red-600"
+                                    >
+                                        Reset all design overrides
+                                    </button>
+                                )}
+                            </div>
+                            <p className="text-[11px] text-slate-400 italic">
+                                Overrides here are stored on this section only. For site-wide tokens, use Theme → Customize.
+                            </p>
+                        </div>
+                    )}
+
+                    {/* CONTENT TAB ────────────────────────────────────────────── */}
+                    {activeTab === 'content' && hasVariants && (
+                        <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/40 p-4">
+                            <div className="flex items-center justify-between gap-3 mb-2">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                                        Section variant
+                                    </label>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                        Swap the component rendered for this section while keeping its content.
+                                    </p>
+                                </div>
+                                {!canUseVisualEditor && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-1 rounded-md">
+                                        <LockClosedIcon className="w-3 h-3" /> Pro+
+                                    </span>
+                                )}
+                            </div>
+                            <select
+                                value={currentVariant}
+                                onChange={(e) => onVariantChange?.(e.target.value)}
+                                disabled={saving || !canUseVisualEditor}
+                                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {sectionDef.variants?.map((v) => (
+                                    <option key={v.key} value={v.key}>{v.label}</option>
+                                ))}
+                            </select>
+                            {sectionDef.variants?.find((v) => v.key === currentVariant)?.description && (
+                                <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                                    {sectionDef.variants?.find((v) => v.key === currentVariant)?.description}
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'content' && sectionDef.fields.map((field) => {
                         if (field.type === 'divider') {
                             return (
                                 <div key={field.key} className="flex items-center gap-3 pt-1">
@@ -466,6 +760,8 @@ export default function SitePagesPage() {
     const { showToast } = useNotification();
     const { license } = usePermissions();
     const isEnterprise = license?.tierName === 'Enterprise' || license?.tier >= 3;
+    const { has: hasCapability } = useCapabilities();
+    const canUseVisualEditor = hasCapability('visualThemeEditor');
 
     const [pageSchema, setPageSchema] = useState<PageDef[]>([]);
     const [activePage, setActivePage] = useState<string>('');
@@ -475,6 +771,10 @@ export default function SitePagesPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+
+    // Drag-and-drop reorder
+    const [dragIndex, setDragIndex] = useState<number | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
     // Load schema + current saved data
     const load = useCallback(async () => {
@@ -513,7 +813,12 @@ export default function SitePagesPage() {
                         const fieldsData: Record<string, any> = { ...(s.data || {}) };
                         
                         if (secDef) {
-                            for (const field of secDef.fields) {
+                            // Guard against schemas where `fields` was
+                            // missed by the inlining step (e.g. unknown
+                            // section type with no matching moduleSchemas
+                            // entry). Treat as empty rather than crashing.
+                            const defFields = Array.isArray(secDef.fields) ? secDef.fields : [];
+                            for (const field of defFields) {
                                 if (fieldsData[field.key] === undefined) {
                                     if (field.settingsKey && settingsMap[field.settingsKey]) {
                                         fieldsData[field.key] = settingsMap[field.settingsKey];
@@ -531,7 +836,12 @@ export default function SitePagesPage() {
                     for (const sec of pageDef.sections) {
                         layout.push(sec.id);
                         const fieldsData: Record<string, any> = {};
-                        for (const field of sec.fields) {
+                        // Same defensive guard as the saved-data path —
+                        // sections without a `fields` array (unknown section
+                        // type) get an empty defaults object instead of a
+                        // crash.
+                        const secFields = Array.isArray(sec.fields) ? sec.fields : [];
+                        for (const field of secFields) {
                             if (field.settingsKey && settingsMap[field.settingsKey]) {
                                 fieldsData[field.key] = settingsMap[field.settingsKey];
                             } else if (field.defaultValue !== undefined) {
@@ -621,10 +931,13 @@ export default function SitePagesPage() {
                 return { id, enabled: secState?.enabled ?? true, data: secState?.data || {} };
             });
 
-            await apiRequest(`/pages/by-slug/${activePage}`, 'PUT', {
-                title: currentPageDef.label,
-                status: 'PUBLISHED',
-                data: { sections },
+            await apiRequest(`/pages/by-slug/${activePage}`, {
+                method: 'PUT',
+                body: {
+                    title: currentPageDef.label,
+                    status: 'PUBLISHED',
+                    data: { sections },
+                }
             });
             showToast('Page layout and content saved successfully.', 'success');
         } catch (e: any) {
@@ -632,6 +945,56 @@ export default function SitePagesPage() {
         } finally {
             setIsSaving(false);
         }
+    };
+
+    // ─── Drag-and-drop reorder ────────────────────────────────────────────────
+
+    const handleDragStart = (index: number) => (e: React.DragEvent) => {
+        setDragIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+        // Firefox needs data set for drag to start
+        try { e.dataTransfer.setData('text/plain', String(index)); } catch { }
+    };
+
+    const handleDragOver = (index: number) => (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (dragOverIndex !== index) setDragOverIndex(index);
+    };
+
+    const handleDrop = (dropIndex: number) => (e: React.DragEvent) => {
+        e.preventDefault();
+        const from = dragIndex;
+        setDragIndex(null);
+        setDragOverIndex(null);
+        if (from === null || from === dropIndex) return;
+        const layout = [...(pageLayouts[activePage] || [])];
+        const [moved] = layout.splice(from, 1);
+        layout.splice(dropIndex, 0, moved);
+        setPageLayouts((prev) => ({ ...prev, [activePage]: layout }));
+    };
+
+    const handleDragEnd = () => {
+        setDragIndex(null);
+        setDragOverIndex(null);
+    };
+
+    // ─── Section variant picker ───────────────────────────────────────────────
+
+    const setSectionVariant = (sectionId: string, variantKey: string | null) => {
+        setPagesData((prev) => {
+            const prevSection = prev[activePage]?.[sectionId] ?? { enabled: true, data: {} };
+            const nextData = { ...(prevSection.data || {}) };
+            if (variantKey) nextData._variant = variantKey;
+            else delete nextData._variant;
+            return {
+                ...prev,
+                [activePage]: {
+                    ...prev[activePage],
+                    [sectionId]: { ...prevSection, data: nextData },
+                },
+            };
+        });
     };
 
     if (isLoading) {
@@ -653,17 +1016,17 @@ export default function SitePagesPage() {
     if (pageSchema.length === 0) {
         return (
             <div className="p-8 text-center max-w-lg mx-auto">
-                <Squares2X2Icon className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-                <h2 className="font-bold text-slate-800 text-lg">This theme doesn't support page editing</h2>
-                <p className="text-slate-500 text-sm mt-2 leading-relaxed">
-                    The active theme hasn't defined a <code className="bg-slate-100 px-1 rounded">pageSchema</code> in its <code className="bg-slate-100 px-1 rounded">theme.json</code>.
+                <Squares2X2Icon className="w-16 h-16 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
+                <h2 className="font-bold text-slate-800 dark:text-white text-lg">This theme doesn't support page editing</h2>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 leading-relaxed">
+                    The active theme hasn't defined a <code className="bg-slate-100 dark:bg-white/5 px-1 rounded">pageSchema</code> in its <code className="bg-slate-100 dark:bg-white/5 px-1 rounded">theme.json</code>.
                     Only themes built for this CMS expose their pages here.
                 </p>
-                <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-200 text-left">
-                    <p className="text-xs font-bold text-amber-800 mb-1">For theme developers:</p>
-                    <p className="text-xs text-amber-700 leading-relaxed">
-                        Add a <code className="bg-amber-100 px-1 rounded">pageSchema</code> array to your <code className="bg-amber-100 px-1 rounded">theme.json</code> to define which pages and sections are editable.
-                        See the <code className="bg-amber-100 px-1 rounded">cms-starter</code> theme as a reference implementation.
+                <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-900/30 text-left">
+                    <p className="text-xs font-bold text-amber-800 dark:text-amber-500 mb-1">For theme developers:</p>
+                    <p className="text-xs text-amber-700 dark:text-amber-600/80 leading-relaxed">
+                        Add a <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded">pageSchema</code> array to your <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded">theme.json</code> to define which pages and sections are editable.
+                        See the <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded">cms-starter</code> theme as a reference implementation.
                     </p>
                 </div>
             </div>
@@ -673,17 +1036,17 @@ export default function SitePagesPage() {
     return (
         <div className="max-w-5xl mx-auto pb-20">
             {/* Header — sticky so Save button stays reachable while scrolling */}
-            <div className="sticky top-0 z-10 flex items-center justify-between -mx-8 px-8 py-4 mb-4 bg-[#F8FAFC]/95 backdrop-blur-sm border-b border-slate-100">
+            <div className="sticky top-0 z-10 flex items-center justify-between -mx-8 px-8 py-4 mb-4 bg-[#F8FAFC]/95 dark:bg-transparent backdrop-blur-md border-b border-slate-100 dark:border-white/[0.06]">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
                         Site <span className="text-red-600">Pages</span>
                     </h1>
-                    <p className="text-xs text-slate-500 mt-1">Control which sections appear on each page and customise their content.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Control which sections appear on each page and customise their content.</p>
                 </div>
                 <button
                     onClick={save}
                     disabled={isSaving}
-                    className="flex items-center gap-2 bg-red-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-red-500/20 hover:bg-red-700 transition-all disabled:opacity-50"
+                    className="btn-destructive"
                 >
                     {isSaving ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving...</> : <><CheckIcon className="w-4 h-4" /> Save Page</>}
                 </button>
@@ -702,11 +1065,11 @@ export default function SitePagesPage() {
                             <button
                                 key={pageDef.slug}
                                 onClick={() => setActivePage(pageDef.slug)}
-                                className={`w-full text-left px-4 py-3 rounded-xl transition-all flex items-center justify-between group ${activePage === pageDef.slug ? 'bg-red-600 text-white shadow-lg shadow-red-500/20' : 'bg-white border border-slate-100 text-slate-700 hover:border-red-200 hover:text-red-600'}`}
+                                className={`w-full text-left px-4 py-3 rounded-xl transition-all flex items-center justify-between group ${activePage === pageDef.slug ? 'bg-red-600 text-white shadow-lg shadow-red-500/20' : 'bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 hover:border-red-200 hover:text-red-600 dark:hover:text-red-400'}`}
                             >
                                 <div>
                                     <div className="text-sm font-bold">{pageDef.label}</div>
-                                    <div className={`text-xs mt-0.5 ${activePage === pageDef.slug ? 'text-red-100' : 'text-slate-400'}`}>{enabledCount}/{total} sections</div>
+                                    <div className={`text-xs mt-0.5 ${activePage === pageDef.slug ? 'text-red-100' : 'text-slate-400 dark:text-slate-500'}`}>{enabledCount}/{total} sections</div>
                                 </div>
                                 <ChevronRightIcon className="w-4 h-4 opacity-40" />
                             </button>
@@ -721,19 +1084,19 @@ export default function SitePagesPage() {
                         <>
                             <div className="flex items-center justify-between mb-4">
                                 <div>
-                                    <h2 className="font-bold text-slate-800 text-lg">{currentPageDef.label}</h2>
-                                    <p className="text-xs text-slate-400">Manage your page layout and section content.</p>
+                                    <h2 className="font-bold text-slate-800 dark:text-white text-lg">{currentPageDef.label}</h2>
+                                    <p className="text-xs text-slate-400 dark:text-slate-500">Manage your page layout and section content.</p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     {isEnterprise && (
                                         <button
                                             onClick={() => setIsPaletteOpen(true)}
-                                            className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
+                                            className="btn-primary"
                                         >
                                             <PlusIcon className="w-4 h-4" /> Add Section
                                         </button>
                                     )}
-                                    <div className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                                    <div className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-50 dark:bg-white/5 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-white/[0.06]">
                                         <DocumentTextIcon className="w-4 h-4" />
                                         /{activePage}
                                     </div>
@@ -758,6 +1121,7 @@ export default function SitePagesPage() {
                                     <SectionCard
                                         key={id}
                                         isEnterprise={isEnterprise}
+                                        canUseVisualEditor={canUseVisualEditor}
                                         sectionDef={secDef}
                                         sectionData={currentSections[id] || { enabled: true, data: {} }}
                                         onToggle={() => toggleSection(id)}
@@ -765,7 +1129,17 @@ export default function SitePagesPage() {
                                         onRemove={() => removeSection(id)}
                                         onMoveUp={() => moveSection(i, 'up')}
                                         onMoveDown={() => moveSection(i, 'down')}
+                                        onVariantChange={(vk) => setSectionVariant(id, vk)}
                                         saving={isSaving}
+                                        dragProps={{
+                                            draggable: true,
+                                            onDragStart: handleDragStart(i),
+                                            onDragOver: handleDragOver(i),
+                                            onDrop: handleDrop(i),
+                                            onDragEnd: handleDragEnd,
+                                        }}
+                                        isDragging={dragIndex === i}
+                                        isDragOver={dragOverIndex === i && dragIndex !== i}
                                     />
                                 );
                             })}
@@ -774,20 +1148,21 @@ export default function SitePagesPage() {
                         <div className="text-center py-20 text-slate-400">Select a page to edit its sections.</div>
                     )}
                 </div>
+
             </div>
 
-            <SectionPaletteModal 
+            <SectionPaletteModal
                 isOpen={isPaletteOpen} 
                 onClose={() => setIsPaletteOpen(false)} 
                 onSelect={addSectionFromPalette} 
             />
 
             {/* Module Aliases info box */}
-            <div className="mt-10 bg-amber-50 border border-amber-200 rounded-2xl p-6">
-                <h3 className="font-bold text-amber-800 text-sm mb-2">About Content Modules</h3>
-                <p className="text-xs text-amber-700 leading-relaxed">
+            <div className="mt-10 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/30 rounded-2xl p-6">
+                <h3 className="font-bold text-amber-800 dark:text-amber-500 text-sm mb-2">About Content Modules</h3>
+                <p className="text-xs text-amber-700 dark:text-amber-600/80 leading-relaxed">
                     Dynamic content like team members, testimonials, and services is managed under <em>Content</em> in the sidebar.
-                    Theme developers can customise which sections appear on each page by editing <code>pageSchema</code> in <code>theme.json</code>.
+                    Theme developers can customise which sections appear on each page by editing <code className="dark:bg-amber-900/40">pageSchema</code> in <code className="dark:bg-amber-900/40">theme.json</code>.
                 </p>
             </div>
         </div>

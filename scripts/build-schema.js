@@ -1,114 +1,97 @@
 #!/usr/bin/env node
 /**
- * build-schema.js
+ * build-schema.js (Bulletproof Version)
  * Assembles backend/prisma/schema.prisma from module files.
- *
- * Usage:
- *   node scripts/build-schema.js blogs,projects,team
- *   node scripts/build-schema.js  (core only — for fresh installs)
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const BACKEND_ROOT = path.join(__dirname, '..', 'backend');
-const MODULES_DIR = path.join(BACKEND_ROOT, 'prisma', 'modules');
-const OUTPUT_FILE = path.join(BACKEND_ROOT, 'prisma', 'schema.prisma');
+const BACKEND_ROOT = path.resolve(__dirname, '..', 'backend');
+const MODULES_DIR = path.resolve(BACKEND_ROOT, 'prisma', 'modules');
+const OUTPUT_FILE = path.resolve(BACKEND_ROOT, 'prisma', 'schema.prisma');
 
-/**
- * Maps CMS module key → which .prisma files are required.
- * Categories/Tags are bundled in blogs.prisma (Category/Tag tables live there).
- * Comments depends on blogs (Comment.post FK → Post).
- * PlotCategories is bundled in plots.prisma.
- * Sitemap has no DB tables.
- */
 const MODULE_SCHEMA_MAP = {
   blogs: ['blogs'],
   categories: ['blogs'],
   tags: ['blogs'],
   comments: ['blogs', 'comments'],
-  plots: ['plots'],
-  'plot-categories': ['plots'],
-  team: ['team'],
-  services: ['services'],
-  testimonials: ['testimonials'],
   menus: ['menus'],
   pages: ['pages'],
-  leads: ['leads'],
   seo: ['seo'],
   redirects: ['redirects'],
-  sitemap: [],          // no DB tables needed
+  sitemap: [],
   robots: ['robots'],
   analytics: ['analytics'],
   themes: ['themes'],
+  leads: ['leads'],
+  team: ['team'],
+  testimonials: ['testimonials'],
+  services: ['services'],
+  demo: ['demo'],
+  // forms, collections, webhooks are already in _core.prisma
+  forms: [],
+  collections: [],
+  webhooks: [],
 };
 
-function buildSchema(enabledModules) {
-  // Resolve which .prisma module files to include (deduplicated)
+function buildSchema(keys) {
   const schemaFiles = new Set();
-  for (const mod of enabledModules) {
-    const files = MODULE_SCHEMA_MAP[mod];
-    if (files === undefined) {
-      console.warn(`Warning: Unknown module "${mod}" — skipping`);
-      continue;
+  keys.forEach(k => {
+    if (MODULE_SCHEMA_MAP[k]) {
+      MODULE_SCHEMA_MAP[k].forEach(f => schemaFiles.add(f));
     }
-    files.forEach(f => schemaFiles.add(f));
-  }
+  });
 
   const parts = [];
 
-  // 1. Always include datasource + generator block
-  parts.push(fs.readFileSync(path.join(MODULES_DIR, '_datasource.prisma'), 'utf8').trimEnd());
+  try {
+    // 1. Core Blocks
+    const datasourcePath = path.join(MODULES_DIR, '_datasource.prisma');
+    const corePath = path.join(MODULES_DIR, '_core.prisma');
 
-  // 2. Always include core models (User, Role, Setting, etc.) with conditional patching
-  let coreContent = fs.readFileSync(path.join(MODULES_DIR, '_core.prisma'), 'utf8');
-
-  // Remove User.posts Post[] backlink if blogs module is not included
-  if (!schemaFiles.has('blogs')) {
-    coreContent = coreContent.replace(/[ \t]+posts\s+Post\[\]\s*\n/, '');
-  }
-  // Remove User.comments Comment[] backlink if comments module is not included
-  if (!schemaFiles.has('comments')) {
-    coreContent = coreContent.replace(/[ \t]+comments\s+Comment\[\]\s*\n/, '');
-  }
-
-  parts.push(coreContent.trimEnd());
-
-  // 3. Include selected module files in alphabetical order (deterministic output)
-  const sortedFiles = [...schemaFiles].sort();
-
-  for (const file of sortedFiles) {
-    const filePath = path.join(MODULES_DIR, `${file}.prisma`);
-    if (!fs.existsSync(filePath)) {
-      console.warn(`Warning: Schema file not found: ${file}.prisma — skipping`);
-      continue;
+    parts.push(fs.readFileSync(datasourcePath, 'utf8').trimEnd());
+    
+    let coreContent = fs.readFileSync(corePath, 'utf8');
+    if (!schemaFiles.has('blogs')) {
+      coreContent = coreContent.replace(/[ \t]+posts\s+Post\[\]\s*\n/g, '');
     }
-    let content = fs.readFileSync(filePath, 'utf8');
+    if (!schemaFiles.has('comments')) {
+      coreContent = coreContent.replace(/[ \t]+comments\s+Comment\[\]\s*\n/g, '');
+    }
+    parts.push(coreContent.trimEnd());
 
-    // Patch blogs.prisma: remove Post.comments Comment[] if comments module not included
-    if (file === 'blogs' && !schemaFiles.has('comments')) {
-      content = content.replace(/[ \t]+comments\s+Comment\[\]\s*\n/, '');
+    // 2. Module Files
+    const sorted = [...schemaFiles].sort();
+    for (const file of sorted) {
+      const fPath = path.join(MODULES_DIR, file + '.prisma');
+      if (fs.existsSync(fPath)) {
+        let content = fs.readFileSync(fPath, 'utf8');
+        if (file === 'blogs' && !schemaFiles.has('comments')) {
+          content = content.replace(/[ \t]+comments\s+Comment\[\]\s*\n/g, '');
+        }
+        parts.push(content.trimEnd());
+      } else {
+        console.warn(`[SKIP] Missing module file: ${file}.prisma`);
+      }
     }
 
-    parts.push(content.trimEnd());
+    const finalSchema = parts.join('\n\n') + '\n';
+    fs.writeFileSync(OUTPUT_FILE, finalSchema, 'utf8');
+
+    console.log(`[SUCCESS] Schema assembled (${sorted.length} modules)`);
+    console.log(`[INFO] Enabled: ${sorted.join(', ')}`);
+    console.log(`[INFO] Output: ${OUTPUT_FILE}`);
+    process.exit(0);
+  } catch (err) {
+    console.error(`[ERROR] Schema assembly failed: ${err.message}`);
+    process.exit(1);
   }
-
-  const schema = parts.join('\n\n') + '\n';
-  fs.writeFileSync(OUTPUT_FILE, schema, 'utf8');
-
-  console.log(`✓ Schema assembled`);
-  console.log(`  Enabled schemas: ${sortedFiles.length > 0 ? sortedFiles.join(', ') : '(core only)'}`);
-  console.log(`  Output: ${OUTPUT_FILE}`);
 }
 
-// Parse CLI argument: comma-separated list of module keys
 const arg = process.argv[2] || '';
-let enabledModules;
+const keys = arg === 'all' 
+  ? Object.keys(MODULE_SCHEMA_MAP) 
+  : arg.split(',').map(s => s.trim()).filter(Boolean);
 
-if (arg === 'all') {
-  enabledModules = Object.keys(MODULE_SCHEMA_MAP);
-} else {
-  enabledModules = arg ? arg.split(',').map(s => s.trim()).filter(Boolean) : [];
-}
-
-buildSchema(enabledModules);
+buildSchema(keys);

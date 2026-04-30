@@ -12,19 +12,24 @@ import { AccessControlService } from './access-control.service';
 import { MailModule } from '../mail/mail.module';
 import { LicenseService } from './license.service';
 import { LicenseController } from './license.controller';
+import { PackagesModule } from '../packages/packages.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
     MailModule,
+    PackagesModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'secret',
+      // JWT_SECRET presence is enforced at boot by assertRequiredSecrets()
+      // in main.ts. No fallback — a missing secret means refuse to start.
+      secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '1d' },
     }),
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy, SecurityService, LicenseService],
   controllers: [AuthController, LicenseController],
   exports: [AuthService, SecurityService, LicenseService],
+  // LicenseController depends on SaasLicenseService which is exported from PackagesModule
 })
 export class AuthModule { }

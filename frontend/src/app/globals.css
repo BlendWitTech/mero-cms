@@ -1,151 +1,214 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Tell Tailwind v4 to use .dark class (set by next-themes) instead of prefers-color-scheme */
+@variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #020617; /* Slate 950 */
+
+  /* ── Mero brand tokens ────────────────────────────────────────
+     Light mode. The same brand red (#cb172b) and brand navy
+     (#023d91) the marketing theme uses, exposed as CSS variables
+     so admin components (cards, focus rings, accent badges) can
+     pick up the brand without hardcoding hex values everywhere.
+     A future feature ("dashboardBranding" capability) overrides
+     these per-customer for white-label installs. */
+  --brand:        #cb172b;  /* primary accent — buttons, focus, brand mark M */
+  --brand-deep:   #9e0f1f;  /* hover / active state */
+  --brand-soft:   #fff5f6;  /* tinted surfaces, light mode */
+  --navy:         #023d91;  /* secondary accent — link text, navy chips */
+  --navy-deep:    #001f5c;
+  --navy-soft:    #eef2fb;
+
+  /* Surface tokens. The admin reads from these for cards / panels
+     so dark mode is one rule change away. */
+  --accent:       #cb172b;  /* brand red is the new --accent */
+  --surface:      #ffffff;
+  --surface-2:    #f8fafc;  /* slate-50 — sidebar bg, tab strip */
+  --surface-3:    #f1f5f9;  /* slate-100 — input bg, muted card */
+  --border:       #e2e8f0;  /* slate-200 */
+  --border-soft:  #f1f5f9;
+  --ink:          #0f172a;  /* slate-900 — primary text */
+  --ink-2:        #475569;  /* slate-600 — secondary text */
+  --ink-3:        #94a3b8;  /* slate-400 — tertiary / placeholders */
 }
 
-@theme inline {
+.dark {
+  --background: #0f172a; /* Slate 900 - Softer Dark Mode */
+  --foreground: #f8fafc;
+
+  /* ── Mero brand tokens — dark mode ─────────────────────────
+     The brand red is darkened slightly so white-on-red text
+     keeps WCAG AA contrast (the marketing red is too bright for
+     dark UI). Brand navy lightens because the dark-mode panel
+     itself is navy-ish — we need real differentiation. */
+  --brand:        #e63946;  /* a touch lighter so it pops on dark */
+  --brand-deep:   #cb172b;  /* falls back to original red */
+  --brand-soft:   rgba(230, 57, 70, 0.12);  /* tinted surfaces, dark mode */
+  --navy:         #5fa8ff;  /* lighter blue-link variant */
+  --navy-deep:    #3b82f6;
+  --navy-soft:    rgba(59, 130, 246, 0.12);
+
+  --accent:       #e63946;
+  --surface:      #0f172a;  /* slate-900 — primary card bg */
+  --surface-2:    #1e293b;  /* slate-800 — sidebar bg */
+  --surface-3:    #334155;  /* slate-700 — input bg */
+  --border:       rgba(255, 255, 255, 0.06);
+  --border-soft:  rgba(255, 255, 255, 0.04);
+  --ink:          #f8fafc;
+  --ink-2:        #cbd5e1;
+  --ink-3:        #64748b;
+}
+
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-navy: var(--navy);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: var(--font-syne), var(--font-plus-jakarta), sans-serif;
-  --font-outfit: var(--font-outfit), sans-serif;
+  --font-display: var(--font-plus-jakarta), sans-serif;
 }
 
 @layer base {
-  .brand-typography {
-    font-family: var(--font-syne), sans-serif;
-    letter-spacing: -0.05em;
+  body {
+    @apply bg-background text-foreground transition-colors duration-500 ease-in-out;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  .premium-heading {
-    font-family: var(--font-syne), sans-serif;
-    text-transform: uppercase;
-    letter-spacing: -0.05em;
-    line-height: 0.85;
-    font-weight: 800;
+  /* App-chrome cursor + selection rules. The admin is an app shell —
+     nav, sidebar, buttons, and tabs shouldn't show the text I-beam
+     cursor or be selectable like body text. Page content (table cells,
+     form values, blog post bodies, license keys, etc.) stays
+     selectable so users can still copy what they need. */
+  nav,
+  aside,
+  button,
+  [role="tab"],
+  [role="button"],
+  [role="menuitem"],
+  [role="navigation"] {
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: default;
+  }
+  button,
+  [role="tab"],
+  [role="button"],
+  [role="menuitem"],
+  a[href],
+  label[for] {
+    cursor: pointer;
   }
 }
 
 @layer utilities {
   .bg-mesh {
-    background-color: #f8fafc;
-    background-image:
-      radial-gradient(at 0% 0%, hsla(217, 91%, 95%, 1) 0, transparent 50%),
-      radial-gradient(at 50% 0%, hsla(220, 100%, 94%, 1) 0, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(230, 100%, 96%, 1) 0, transparent 50%);
-    background-attachment: fixed;
+    @apply bg-white dark:bg-slate-950;
   }
 
   .glass {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200/50 dark:border-white/5;
   }
 
+  /* ── Brand mark — handles light + dark backgrounds ─────────
+     Applied to <img src="/emblem.svg"> or <img src="/logo.svg"> in
+     places that flip between light and dark surfaces (sidebar,
+     topbar, etc.). The Mero emblem renders as red+navy; the
+     wordmark is dark navy text. On dark surfaces the wordmark
+     would disappear, so we drop-shadow it lightly and tint
+     it bright via filter. The emblem's red pops on either side. */
+  .brand-mark { user-select: none; cursor: default; }
+
+  /* Wordmark variant — original is dark-navy text + small red M.
+     On dark surfaces, invert the whole image so the navy letters
+     become white. The small red M-mark goes a bit pinkish but
+     it's tiny inside the wordmark; the brand still reads. */
+  .brand-mark.brand-mark-wordmark {
+    filter: none;
+  }
+  .dark .brand-mark.brand-mark-wordmark {
+    filter: brightness(0) invert(1);
+    opacity: 0.92;
+  }
+
+  /* Emblem variant — the standalone M-shape (red + navy). The red
+     reads on any background, but the navy parts disappear on dark
+     surfaces. In dark mode we lift the navy luminance via a subtle
+     drop-shadow halo so both parts stay legible without altering
+     the actual hue. The shadow is brand red at low opacity, so it
+     reads as a brand-coloured glow rather than a generic glow. */
+  .brand-mark.brand-mark-emblem {
+    filter: drop-shadow(0 1px 2px rgba(13, 14, 20, 0.15));
+  }
+  .dark .brand-mark.brand-mark-emblem {
+    filter:
+      drop-shadow(0 0 8px rgba(203, 23, 43, 0.45))
+      drop-shadow(0 0 14px rgba(2, 61, 145, 0.35));
+  }
+
+  /* Custom Scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
+    width: 5px;
+    height: 5px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+    @apply bg-transparent;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 10px;
-    transition: all 0.3s;
+    @apply bg-slate-200 dark:bg-white/10 rounded-full transition-colors;
   }
 
   .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.1);
+    @apply bg-slate-300 dark:bg-white/20;
   }
 
-  .custom-scrollbar-hidden::-webkit-scrollbar {
-    display: none;
-  }
-  .custom-scrollbar-hidden {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
-  }
-
-  .hologram-scanlines {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%,
-        rgba(0, 0, 0, 0.15) 50%);
-    z-index: 0;
-    background-size: 100% 4px;
-    animation: scanline 10s linear infinite;
-    opacity: 0.3;
-  }
-
-  @keyframes scanline {
-    0% {
-      background-position: 0 0;
-    }
-
-    100% {
-      background-position: 0 100%;
-    }
-  }
-
-  .bg-grid {
-    background-size: 40px 40px;
-    z-index: 0;
-    background-image:
-      linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
-  }
-
-  .digital-grain {
-    position: absolute;
-    inset: 0;
-    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
-    opacity: 0.05;
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  .section-label {
-    @apply inline-block text-[10px] font-black uppercase tracking-[0.3em] text-blue-600;
-  }
-
-  .low-opacity {
-    @apply opacity-20;
-  }
-
-  /* ─── Skeleton shimmer ─────────────────────────────────────── */
+  /* Skeleton Shimmer */
   @keyframes shimmer {
     0%   { transform: translateX(-150%) skewX(-12deg); }
     100% { transform: translateX(150%)  skewX(-12deg); }
   }
 
+  /* Full skeleton card (used in loading.tsx) */
   .skeleton {
-    position: relative;
-    overflow: hidden;
-    background-color: #e8edf4;
+    @apply relative overflow-hidden bg-slate-200 dark:bg-white/8;
   }
 
   .skeleton::after {
     content: '';
-    position: absolute;
-    inset: 0;
+    @apply absolute inset-0;
     background: linear-gradient(
       105deg,
-      transparent        30%,
-      rgba(255,255,255,0.75) 50%,
-      transparent        70%
+      transparent 30%,
+      rgba(255, 255, 255, 0.65) 50%,
+      transparent 70%
     );
-    animation: shimmer 1.9s ease-in-out infinite;
+    animation: shimmer 1.6s ease-in-out infinite;
   }
 
-  /* ─── Top loading bar ─────────────────────────────────────── */
+  /* Inline content skeleton — for isLoading rows/cards inside pages */
+  .content-skeleton {
+    @apply relative overflow-hidden rounded-2xl bg-slate-200 dark:bg-white/8 animate-none;
+  }
+
+  .content-skeleton::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.65) 50%,
+      transparent 70%
+    );
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+
+  /* Loading Bar */
   @keyframes loadbar {
     0%   { width: 0%;   opacity: 1; }
     70%  { width: 85%;  opacity: 1; }
@@ -153,134 +216,135 @@
   }
 
   .loading-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #2563eb, #818cf8, #2563eb);
+    @apply fixed top-0 left-0 h-[2px] z-[9999] rounded-r-full;
+    background: linear-gradient(90deg, #DC1F2E, #F43F4F, #DC1F2E);
     background-size: 200% 100%;
-    animation: loadbar 2.2s ease-out forwards, shimmer 1.5s linear infinite;
-    z-index: 9999;
-    border-radius: 0 9999px 9999px 0;
-    box-shadow: 0 0 12px 2px #3b82f680;
+    animation: loadbar 2s ease-out forwards;
+    box-shadow: 0 0 10px rgba(220, 31, 46, 0.5);
+  }
+
+  /* Button System */
+  .btn-primary {
+    @apply flex items-center justify-center gap-2 bg-blue-600 dark:bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-outline {
+    @apply flex items-center justify-center gap-2 border border-slate-200 dark:border-white/10 bg-transparent text-slate-700 dark:text-slate-300 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-outline-primary {
+    @apply flex items-center justify-center gap-2 border border-blue-600/50 dark:border-blue-400/30 bg-transparent text-blue-600 dark:text-blue-400 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-50 dark:hover:bg-blue-400/5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-outline-success {
+    @apply flex items-center justify-center gap-2 border border-emerald-600/50 dark:border-emerald-400/30 bg-transparent text-emerald-600 dark:text-emerald-400 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-50 dark:hover:bg-emerald-400/5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-outline-danger {
+    @apply flex items-center justify-center gap-2 border border-red-600/50 dark:border-red-400/30 bg-transparent text-red-600 dark:text-red-400 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-red-50 dark:hover:bg-red-400/5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-outline-info {
+    @apply flex items-center justify-center gap-2 border border-sky-600/50 dark:border-sky-400/30 bg-transparent text-sky-600 dark:text-sky-400 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-sky-50 dark:hover:bg-sky-400/5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-outline-warning {
+    @apply flex items-center justify-center gap-2 border border-amber-600/50 dark:border-amber-400/30 bg-transparent text-amber-600 dark:text-amber-400 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-amber-50 dark:hover:bg-amber-400/5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-ghost {
+    @apply flex items-center justify-center gap-2 bg-transparent text-slate-500 dark:text-slate-400 px-4 py-2 rounded-xl font-bold text-sm hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-destructive {
+    @apply flex items-center justify-center gap-2 bg-red-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-red-500/20 hover:bg-red-700 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Typography Overrides */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-display font-black tracking-tight;
 }
 
-html,
-body {
-  background: var(--background);
-  color: var(--foreground);
-  overflow-x: hidden;
-  max-width: 100vw;
+/* ─── Admin Dashboard Branding (Org Enterprise capability) ─────────────────
+   When admin_primary_color / admin_*_font settings are present, SettingsContext
+   writes them as CSS variables on <html>. These rules let them take effect
+   inside the admin shell without each component having to know about them. */
+.admin-shell {
+  font-family: var(--admin-body-font, inherit);
+}
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell h4,
+.admin-shell h5,
+.admin-shell h6 {
+  font-family: var(--admin-heading-font, inherit);
+}
+.admin-shell .btn-admin-primary,
+.admin-shell [data-admin-primary="true"] {
+  background-color: var(--admin-primary, #2563eb);
+  color: #fff;
+}
+.admin-shell .text-admin-primary {
+  color: var(--admin-primary, #2563eb);
+}
+.admin-shell .ring-admin-primary:focus-visible {
+  outline-color: var(--admin-primary, #2563eb);
+}
+.admin-shell .border-admin-primary {
+  border-color: var(--admin-primary, #2563eb);
 }
 
-/* Tiptap Editor Custom Styles */
+/* ──────────────────────────────────────────────────────────────────────
+   Hot-rewire of the common primary button utility classes inside the
+   admin shell so changing admin_primary_color actually recolors the UI.
+   Each rule uses color-mix() to derive hover / border / shadow shades
+   from the single --admin-primary token. Browsers: Chrome 111+, Safari
+   16.4+, Firefox 113+ (all supported by our target admin users).
+
+   Outside .admin-shell the @apply Tailwind colors still win, so theme
+   preview iframes and public-site pages are unaffected.
+   ────────────────────────────────────────────────────────────────────── */
+
+.admin-shell .btn-primary {
+  background-color: var(--admin-primary, #2563eb);
+  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--admin-primary, #2563eb) 22%, transparent),
+              0 4px 6px -4px color-mix(in srgb, var(--admin-primary, #2563eb) 22%, transparent);
+}
+.admin-shell .btn-primary:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--admin-primary, #2563eb) 85%, black);
+}
+
+.admin-shell .btn-outline-primary {
+  color: var(--admin-primary, #2563eb);
+  border-color: color-mix(in srgb, var(--admin-primary, #2563eb) 50%, transparent);
+}
+.admin-shell .btn-outline-primary:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--admin-primary, #2563eb) 8%, transparent);
+}
+
+/* Focus ring that matches the brand across inputs and interactive elements. */
+.admin-shell :focus-visible {
+  --tw-ring-color: color-mix(in srgb, var(--admin-primary, #2563eb) 45%, transparent);
+}
+
+/* Opt-in accent helper — used by highlights, success pill in sidebar nav,
+   and anything that wants the secondary brand color (e.g. active pill). */
+.admin-shell .bg-admin-accent {
+  background-color: var(--admin-accent, #0ea5e9);
+  color: #fff;
+}
+.admin-shell .text-admin-accent {
+  color: var(--admin-accent, #0ea5e9);
+}
+
+/* Tiptap Custom Styles */
 .ProseMirror {
-  outline: none !important;
+  @apply outline-none min-h-[200px] py-4;
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  float: left;
-  color: #adb5bd;
-  pointer-events: none;
-  height: 0;
-}
-
-.ProseMirror ul {
-  list-style-type: disc;
-  padding-left: 1.5em;
-}
-
-.ProseMirror ol {
-  list-style-type: decimal;
-  padding-left: 1.5em;
-}
-
-.ProseMirror h1 {
-  font-size: 2.25rem;
-  font-weight: 800;
-  margin-top: 1.5em;
-  margin-bottom: 0.5em;
-}
-
-.ProseMirror h2 {
-  font-size: 1.875rem;
-  font-weight: 700;
-  margin-top: 1.4em;
-  margin-bottom: 0.4em;
-}
-
-.ProseMirror h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-top: 1.3em;
-  margin-bottom: 0.3em;
-}
-
-.ProseMirror img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 0;
-  background-color: transparent !important;
-  box-shadow: none !important;
-}
-
-/* Image alignment inside the editor */
-.ProseMirror .image-align-left {
-  float: left;
-  margin: 0.5em 1.5em 0.5em 0;
-  display: block;
-}
-.ProseMirror .image-align-right {
-  float: right;
-  margin: 0.5em 0 0.5em 1.5em;
-  display: block;
-}
-.ProseMirror .image-align-center {
-  float: none;
-  margin: 1em auto;
-  display: block;
-}
-/* Clear floats after image paragraphs */
-.ProseMirror p:has(img)::after {
-  content: '';
-  display: table;
-  clear: both;
-}
-
-/* Resize handle cursor when image is selected */
-.ProseMirror img.ProseMirror-selectednode {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-  cursor: ew-resize;
-}
-
-.ProseMirror mark {
-  background-color: #fef08a;
-  padding: 0 0.2em;
-  border-radius: 0.2em;
-}
-
-/* Task List Styles */
-.ProseMirror ul[data-type="taskList"] {
-  list-style: none;
-  padding: 0;
-}
-
-.ProseMirror ul[data-type="taskList"] li {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.ProseMirror ul[data-type="taskList"] input[type="checkbox"] {
-  cursor: pointer;
+  @apply float-left text-slate-400 pointer-events-none h-0;
 }

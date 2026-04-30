@@ -4,8 +4,7 @@
  *
  * Usage:
  *   node scripts/zip-theme.js <theme-slug>
- *   node scripts/zip-theme.js ktm-plots
- *   node scripts/zip-theme.js mero-starter
+ *   node scripts/zip-theme.js my-custom-theme
  *
  * Output: themes/<theme-slug>.zip
  *

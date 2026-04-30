@@ -4,9 +4,10 @@ import { PagesController } from './pages.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { SeoMetaModule } from '../seo-meta/seo-meta.module';
 import { UsersModule } from '../users/users.module';
+import { PackagesModule } from '../packages/packages.module';
 
 @Module({
-    imports: [PrismaModule, SeoMetaModule, UsersModule],
+    imports: [PrismaModule, SeoMetaModule, UsersModule, PackagesModule],
     controllers: [PagesController],
     providers: [PagesService],
     exports: [PagesService],

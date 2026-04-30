@@ -12,7 +12,9 @@ import {
     ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { getApiBaseUrl } from '@/lib/api';
+
+const API_URL = getApiBaseUrl();
 
 function RegisterForm({ settings }: { settings: any }) {
     const searchParams = useSearchParams();
@@ -236,7 +238,7 @@ function RegisterForm({ settings }: { settings: any }) {
 
 export default function RegisterPage() {
     const [settings, setSettings] = useState({
-        cms_title: 'Blendwit CMS',
+        cms_title: 'Mero CMS',
         cms_subtitle: 'Elevate Your Content Strategy',
         cms_login_avatar: '/assets/boy_idea_shock.png',
     });
@@ -244,9 +246,20 @@ export default function RegisterPage() {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const res = await fetch(`${API_URL}/settings`);
+                // Public endpoint — /settings now requires auth and this page
+                // is unauthenticated. /public/site-data exposes cmsTitle /
+                // cmsSubtitle / cmsLogo (branding only, no secrets).
+                const res = await fetch(`${API_URL}/public/site-data`);
                 const data = await res.json();
-                if (data.cms_title) setSettings(data);
+                const pub = data?.settings ?? {};
+                if (pub.cmsTitle) {
+                    setSettings(prev => ({
+                        ...prev,
+                        cms_title: pub.cmsTitle,
+                        cms_subtitle: pub.cmsSubtitle ?? prev.cms_subtitle,
+                        cms_logo: pub.cmsLogo ?? (prev as any).cms_logo,
+                    }));
+                }
             } catch { }
         };
         fetchSettings();

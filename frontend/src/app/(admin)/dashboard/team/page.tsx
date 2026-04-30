@@ -1,513 +1,310 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import {
-    PlusIcon,
-    PencilSquareIcon,
-    TrashIcon,
-    ArrowLeftIcon,
-    CloudArrowUpIcon,
-    PhotoIcon,
-    UserGroupIcon,
-    ExclamationCircleIcon
-} from '@heroicons/react/24/outline';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useSettings } from '@/context/SettingsContext';
-import MediaPickerModal from '@/components/ui/MediaPickerModal';
-import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
-import AlertDialog from '@/components/ui/AlertDialog';
-import { useNotification } from '@/context/NotificationContext';
-import { useForm } from '@/context/FormContext';
+import { useState, useEffect } from 'react';
+import { PlusIcon, PencilSquareIcon, TrashIcon, UserGroupIcon, XMarkIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline';
 import { apiRequest } from '@/lib/api';
-import ThemeCompatibilityBanner, { useThemeCompatibility } from '@/components/ui/ThemeCompatibilityBanner';
+import { useNotification } from '@/context/NotificationContext';
+import AlertDialog from '@/components/ui/AlertDialog';
+import { getApiBaseUrl } from '@/lib/api';
+import PageHeader from '@/components/ui/PageHeader';
+import EmptyState from '@/components/ui/EmptyState';
+import FilterBar from '@/components/ui/FilterBar';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
+const API_URL = getApiBaseUrl();
 
-function TeamPageContent() {
-    const searchParams = useSearchParams();
-    const router = useRouter();
+interface TeamMember {
+    id: string;
+    name: string;
+    role?: string;
+    bio?: string;
+    avatar?: string;
+    socialLinks?: Record<string, string>;
+    order: number;
+    isActive: boolean;
+}
+
+const EMPTY_FORM = {
+    name: '',
+    role: '',
+    bio: '',
+    avatar: '',
+    socialLinks: { linkedin: '', twitter: '', github: '' },
+    order: 0,
+    isActive: true,
+};
+
+export default function TeamPage() {
     const { showToast } = useNotification();
-    const { settings } = useSettings();
-    const { isDirty, setIsDirty } = useForm();
-    const [isReadOnly, setIsReadOnly] = useState(false);
-    const [contentTheme, setContentTheme] = useState<string | null>(null);
-    const { isSupported } = useThemeCompatibility('team');
-
-    // View derived from URL
-    const action = searchParams.get('action');
-    const actionId = searchParams.get('id');
-    const view = action === 'new' || (action === 'edit' && actionId) ? 'editor' : 'list';
-
-    const [team, setTeam] = useState<any[]>([]);
+    const [members, setMembers] = useState<TeamMember[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [canManageContent, setCanManageContent] = useState(false);
-
-    const defaultFormData = {
-        name: '',
-        role: '',
-        bio: '',
-        image: '',
-        socialLinks: { linkedin: '', twitter: '', instagram: '', facebook: '', youtube: '', whatsapp: '', email: '', phone: '' },
-        order: 0
-    };
-
-    const [formData, setFormData] = useState<any>(defaultFormData);
-    const [initialState, setInitialState] = useState<any>(defaultFormData);
-    const [showUnsavedAlert, setShowUnsavedAlert] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [deleteId, setDeleteId] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
-    const [currentMemberId, setCurrentMemberId] = useState<string | null>(null);
-    const [isMediaOpen, setIsMediaOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [form, setForm] = useState<typeof EMPTY_FORM>({ ...EMPTY_FORM });
 
-    useEffect(() => {
-        fetchInitialData();
-    }, []);
+    useEffect(() => { fetchMembers(); }, []);
 
-    // Effect to handle URL-based data loading for Edit mode
-    useEffect(() => {
-        if (view === 'editor' && action === 'edit' && actionId) {
-            // Find member in existing list or fetch if needed
-            const member = team.find(t => t.id === actionId);
-            if (member) {
-                populateForm(member);
-            } else if (!isLoading && team.length > 0) {
-                // If loaded but not found in list (maybe pagination later?), fetch individual
-                fetchMember(actionId);
-            }
-        } else if (view === 'editor' && action === 'new') {
-            // Reset for new
-            if (currentMemberId !== null) {
-                resetForm();
-            }
-        }
-    }, [view, action, actionId, team, isLoading]);
-
-    // Sync isDirty with FormContext
-    useEffect(() => {
-        const dirty = JSON.stringify(formData) !== JSON.stringify(initialState);
-        setIsDirty(dirty);
-    }, [formData, initialState, setIsDirty]);
-
-    const fetchInitialData = async () => {
+    async function fetchMembers() {
+        setIsLoading(true);
         try {
-            const [teamData, profile] = await Promise.all([
-                apiRequest('/team'),
-                apiRequest('/auth/profile')
-            ]);
-
-            setTeam(Array.isArray(teamData) ? teamData : []);
-
-            if (profile.role?.permissions?.manage_content || profile.role?.name === 'Super Admin' || profile.role?.name === 'Admin') {
-                setCanManageContent(true);
+            const data = await apiRequest('/team');
+            setMembers(Array.isArray(data) ? data : []);
+        } catch (err: any) {
+            if (!err?.message?.includes('not enabled') && !err?.message?.includes('403')) {
+                showToast('Failed to load team members', 'error');
             }
-        } catch (error) {
-            console.error('Failed to fetch data', error);
         } finally {
             setIsLoading(false);
         }
-    };
+    }
 
-    const fetchMember = async (id: string) => {
-        try {
-            const member = await apiRequest(`/team/${id}`);
-            if (member) populateForm(member);
-        } catch (error) {
-            showToast('Failed to load team member', 'error');
-            router.push('/dashboard/team');
-        }
-    };
+    function openNew() {
+        setEditingId(null);
+        setForm({ ...EMPTY_FORM });
+        setModalOpen(true);
+    }
 
-    const populateForm = (member: any) => {
-        const activeTheme = settings['active_theme'];
-        const memberTheme = member.theme;
+    function openEdit(m: TeamMember) {
+        setEditingId(m.id);
+        setForm({
+            name: m.name,
+            role: m.role || '',
+            bio: m.bio || '',
+            avatar: m.avatar || '',
+            socialLinks: { linkedin: '', twitter: '', github: '', ...(m.socialLinks || {}) },
+            order: m.order,
+            isActive: m.isActive,
+        });
+        setModalOpen(true);
+    }
 
-        if (memberTheme && activeTheme && memberTheme !== activeTheme) {
-            setIsReadOnly(true);
-            setContentTheme(memberTheme);
-        } else {
-            setIsReadOnly(false);
-            setContentTheme(null);
-        }
-
-        const data = {
-            name: member.name,
-            role: member.role,
-            bio: member.bio || '',
-            image: member.image || '',
-            socialLinks: { linkedin: '', twitter: '', instagram: '', facebook: '', youtube: '', whatsapp: '', email: '', phone: '', ...(member.socialLinks || {}) },
-            order: member.order
-        };
-        setFormData(data);
-        setInitialState(data);
-        setCurrentMemberId(member.id);
-    };
-
-    const resetForm = () => {
-        setIsReadOnly(false);
-        setContentTheme(null);
-        const data = { ...defaultFormData, order: team.length };
-        setFormData(data);
-        setInitialState(data);
-        setCurrentMemberId(null);
-    };
-
-    const handleCreate = () => {
-        resetForm();
-        router.push('/dashboard/team?action=new');
-    };
-
-    const handleEdit = (member: any) => {
-        // Optimistically populate to avoid flicker before URL effect kicks in
-        populateForm(member);
-        router.push(`/dashboard/team?action=edit&id=${member.id}`);
-    };
-
-    const handleBackClick = () => {
-        if (isDirty) {
-            setShowUnsavedAlert(true);
-        } else {
-            router.push('/dashboard/team');
-        }
-    };
-
-    const handleSave = async () => {
+    async function handleSave() {
+        if (!form.name.trim()) { showToast('Name is required', 'error'); return; }
         setIsSaving(true);
-        const url = currentMemberId ? `/team/${currentMemberId}` : '/team';
-        const method = currentMemberId ? 'PATCH' : 'POST';
-
         try {
-            await apiRequest(url, {
-                method,
-                body: formData
-            });
-
-            showToast('Team member saved successfully!', 'success');
-            setIsDirty(false); // Clear dirty state immediately
-            fetchInitialData();
-            // Update initial state to match saved to prevent dirty check on redirect
-            setInitialState(formData);
-            router.push('/dashboard/team');
-        } catch (error) {
-            console.error(error);
-            // apiRequest handles toast for errors usually, but if not:
-            // showToast('Failed to save team member.', 'error');
+            const payload = {
+                ...form,
+                socialLinks: Object.fromEntries(
+                    Object.entries(form.socialLinks).filter(([, v]) => v.trim())
+                ),
+            };
+            if (editingId) {
+                await apiRequest(`/team/${editingId}`, { method: 'PATCH', body: payload });
+                showToast('Team member updated', 'success');
+            } else {
+                await apiRequest('/team', { method: 'POST', body: payload });
+                showToast('Team member added', 'success');
+            }
+            setModalOpen(false);
+            fetchMembers();
+        } catch (err: any) {
+            showToast(err?.message || 'Save failed', 'error');
         } finally {
             setIsSaving(false);
         }
-    };
-
-    const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; memberId: string | null }>({
-        isOpen: false,
-        memberId: null
-    });
-
-    const handleDeleteClick = (id: string) => {
-        setDeleteConfirmation({ isOpen: true, memberId: id });
-    };
-
-    const confirmDelete = async () => {
-        if (!deleteConfirmation.memberId) return;
-
-        try {
-            await apiRequest(`/team/${deleteConfirmation.memberId}`, { method: 'DELETE' });
-            showToast('Team member deleted successfully!', 'success');
-            fetchInitialData();
-            setDeleteConfirmation({ isOpen: false, memberId: null });
-        } catch (error) {
-            console.error(error);
-            showToast('Failed to delete team member', 'error');
-            setDeleteConfirmation({ isOpen: false, memberId: null });
-        }
-    };
-
-    const cancelDelete = () => {
-        setDeleteConfirmation({ isOpen: false, memberId: null });
-    };
-
-    if (view === 'editor') {
-        return (
-            <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                <UnsavedChangesAlert
-                    isOpen={showUnsavedAlert}
-                    onSaveAndExit={async () => {
-                        await handleSave();
-                        // handleSave handles redirect
-                    }}
-                    onDiscardAndExit={() => {
-                        setIsDirty(false);
-                        router.push('/dashboard/team');
-                    }}
-                    onCancel={() => setShowUnsavedAlert(false)}
-                    isSaving={isSaving}
-                    variant="success"
-                />
-
-                {isReadOnly && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-                        <div className="bg-amber-100 p-2 rounded-xl">
-                            <ExclamationCircleIcon className="h-6 w-6 text-amber-600" />
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-amber-900">Incompatible Theme Content</h3>
-                            <p className="text-xs font-semibold text-amber-700 mt-0.5">
-                                This team member was added for the <span className="underline decoration-2 underline-offset-2 capitalize">{contentTheme || 'another'}</span> theme. 
-                                You can view their details, but to make changes, please switch the active theme in Settings.
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                <ThemeCompatibilityBanner moduleName="team" />
-
-                <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm sticky top-0 z-10">
-                    <div className="flex items-center gap-4">
-                        <button onClick={handleBackClick} className="p-2 hover:bg-slate-50 rounded-xl text-slate-500 transition-colors">
-                            <ArrowLeftIcon className="h-5 w-5" />
-                        </button>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{currentMemberId ? 'Editing Team Member' : 'New Team Member'}</p>
-                            <h1 className="text-xl font-bold text-slate-900 font-display">{formData.name || 'Untitled Member'}</h1>
-                        </div>
-                    </div>
-                     <button 
-                        onClick={() => handleSave()} 
-                        disabled={isSaving || isReadOnly || !isSupported}
-                        className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <CloudArrowUpIcon className="h-4 w-4" />
-                        {!isSupported ? 'Unsupported by Theme' : isSaving ? 'Saving...' : 'Save Changes'}
-                    </button>
-                </div>
-
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                    <div className="xl:col-span-2 space-y-6">
-                        <div className="bg-white rounded-2xl p-10 border border-slate-200 shadow-xl space-y-6">
-                            <div>
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Full Name</label>
-                                 <input
-                                    type="text"
-                                    placeholder="Enter team member name..."
-                                    value={formData.name}
-                                    disabled={isReadOnly}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full text-3xl font-bold text-slate-900 placeholder:text-slate-200 border-none focus:ring-0 p-0 font-display bg-transparent mt-2 disabled:opacity-50"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Role / Position</label>
-                                 <input
-                                    type="text"
-                                    value={formData.role}
-                                    disabled={isReadOnly}
-                                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 mt-2 disabled:opacity-50"
-                                    placeholder="e.g., Principal Architect, Senior Designer"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Biography</h3>
-                             <textarea
-                                value={formData.bio}
-                                disabled={isReadOnly}
-                                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                                rows={6}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 resize-none disabled:opacity-50"
-                                placeholder="Brief professional background and expertise..."
-                            />
-                        </div>
-
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Contact & Social Links</h3>
-                            <div className="space-y-3">
-                                {[
-                                    { key: 'email',     placeholder: 'Email address',  type: 'email' },
-                                    { key: 'phone',     placeholder: 'Phone / WhatsApp number', type: 'text' },
-                                    { key: 'linkedin',  placeholder: 'LinkedIn URL',   type: 'text' },
-                                    { key: 'twitter',   placeholder: 'Twitter / X URL', type: 'text' },
-                                    { key: 'instagram', placeholder: 'Instagram URL',  type: 'text' },
-                                    { key: 'facebook',  placeholder: 'Facebook URL',   type: 'text' },
-                                    { key: 'youtube',   placeholder: 'YouTube URL',    type: 'text' },
-                                    { key: 'whatsapp',  placeholder: 'WhatsApp number (digits only)', type: 'text' },
-                                ].map(({ key, placeholder, type }) => (
-                                    <input
-                                        key={key}
-                                        type={type}
-                                        value={formData.socialLinks[key] || ''}
-                                        disabled={isReadOnly}
-                                        onChange={(e) => setFormData({ ...formData, socialLinks: { ...formData.socialLinks, [key]: e.target.value } })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
-                                        placeholder={placeholder}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-6">
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Profile Photo</h3>
-                                 {formData.image && !isReadOnly && (
-                                    <button onClick={() => setFormData({ ...formData, image: '' })} className="text-[10px] font-bold text-red-500 uppercase tracking-widest hover:text-red-600 transition-colors">Remove</button>
-                                )}
-                            </div>
-                             <div
-                                onClick={() => {
-                                    if (isReadOnly) return;
-                                    setIsMediaOpen(true);
-                                }}
-                                className={`aspect-square bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 ${!isReadOnly ? 'hover:bg-slate-100/50 hover:border-blue-400 hover:text-blue-500 cursor-pointer' : 'cursor-not-allowed'} transition-all group overflow-hidden relative`}
-                            >
-                                {formData.image ? (
-                                    <img src={formData.image} className="w-full h-full object-cover" alt="" />
-                                ) : (
-                                    <>
-                                        <PhotoIcon className="h-8 w-8 mb-2 group-hover:scale-110 transition-transform" />
-                                        <span className="text-[10px] font-bold">Select from Library</span>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-
-                        <MediaPickerModal
-                            isOpen={isMediaOpen}
-                            onClose={() => setIsMediaOpen(false)}
-                            onSelect={(url) => {
-                                setFormData({ ...formData, image: url });
-                                setIsMediaOpen(false);
-                            }}
-                        />
-
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Display Order</h3>
-                             <input
-                                type="number"
-                                value={formData.order}
-                                disabled={isReadOnly}
-                                onChange={(e) => setFormData({ ...formData, order: e.target.value === '' ? '' : parseInt(e.target.value) })}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10 disabled:opacity-50"
-                            />
-                            <p className="text-[10px] text-slate-400">Lower numbers appear first</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
     }
 
+    async function handleDelete() {
+        if (!deleteId) return;
+        try {
+            await apiRequest(`/team/${deleteId}`, { method: 'DELETE' });
+            showToast('Team member deleted', 'success');
+            setDeleteId(null);
+            fetchMembers();
+        } catch {
+            showToast('Delete failed', 'error');
+        }
+    }
+
+    async function toggleActive(m: TeamMember) {
+        try {
+            await apiRequest(`/team/${m.id}`, { method: 'PATCH', body: { isActive: !m.isActive } });
+            fetchMembers();
+        } catch { showToast('Update failed', 'error'); }
+    }
+
+    const sortedMembers = [...members].sort((a, b) => a.order - b.order);
+
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-2">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight font-display">
-                        Team <span className="text-blue-600 font-bold">Management</span>
-                    </h1>
-                    <p className="mt-1 text-xs text-slate-500 font-semibold tracking-tight">Manage your team members and their profiles.</p>
-                </div>
-                 <div className="flex items-center gap-3">
-                    {canManageContent && (
-                        <button 
-                            onClick={handleCreate} 
-                            disabled={!isSupported}
-                            className="inline-flex items-center gap-x-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-all active:scale-95 leading-none disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <PlusIcon className="h-4 w-4" strokeWidth={3} />
-                            Add Member
-                        </button>
-                    )}
-                </div>
-            </div>
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <PageHeader 
+                title="Management" 
+                accent="Team" 
+                subtitle="Showcase the people behind your business"
+                actions={
+                    <button 
+                        onClick={openNew} 
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-lg shadow-blue-600/20 transition-all active:scale-95 shrink-0"
+                    >
+                        <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                        Add Member
+                    </button>
+                }
+            />
 
-            <ThemeCompatibilityBanner moduleName="team" />
+            <FilterBar 
+                search={{
+                    value: searchQuery,
+                    onChange: setSearchQuery,
+                    placeholder: "Search team members…"
+                }}
+            />
 
-            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full min-w-[700px] text-left border-collapse">
-                        <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50/30">
-                                <th className="pl-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Member</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Role</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order</th>
-                                <th className="pr-8 py-4 text-right"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {isLoading ? (
-                                [1, 2, 3].map(i => (
-                                    <tr key={i} className="animate-pulse">
-                                        <td colSpan={4} className="px-8 py-8"><div className="h-12 bg-slate-50 rounded-2xl" /></td>
-                                    </tr>
-                                ))
-                            ) : team.length === 0 ? (
-                                <tr>
-                                    <td colSpan={4} className="px-8 py-20 text-center">
-                                        <UserGroupIcon className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-                                        <p className="text-sm font-bold text-slate-500">No team members found. Add your first one!</p>
-                                    </td>
+            <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-900/5 border border-slate-100 dark:border-white/[0.06] overflow-hidden transition-all duration-500">
+                {isLoading ? (
+                    <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+                        <LoadingSpinner size="lg" />
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Loading Team...</p>
+                    </div>
+                ) : sortedMembers.length === 0 ? (
+                    <div className="py-24">
+                        <EmptyState 
+                            naked
+                            icon={UserGroupIcon}
+                            title="No Team Members Yet"
+                            description="Add your team members to showcase the people behind your business."
+                            action={{
+                                label: "Add first member",
+                                onClick: openNew
+                            }}
+                        />
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[700px] text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.02]">
+                                    <th className="pl-10 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Member Details</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Status</th>
+                                    <th className="pr-10 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">Actions</th>
                                 </tr>
-                            ) : (
-                                team.map((member) => (
-                                    <tr key={member.id} className="group hover:bg-slate-50/50 transition-colors">
-                                        <td className="pl-8 py-5">
+                            </thead>
+                            <tbody className="divide-y divide-slate-50 dark:divide-white/5">
+                                {sortedMembers
+                                    .filter(m => 
+                                        (m?.name?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '') || 
+                                        (m?.role?.toLowerCase() || '').includes(searchQuery?.toLowerCase() || '')
+                                    )
+                                    .map(m => (
+                                    <tr key={m.id} className={`group transition-colors ${m.isActive ? 'hover:bg-slate-50/50 dark:hover:bg-white/[0.02]' : 'opacity-60'}`}>
+                                        <td className="pl-10 py-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="h-12 w-12 rounded-full bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0">
-                                                    {member.image ? (
-                                                        <img src={member.image} alt="" className="h-full w-full object-cover" />
+                                                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center">
+                                                    {m.avatar ? (
+                                                        <img src={m.avatar.startsWith('/') ? `${API_URL}${m.avatar}` : m.avatar} alt={m.name} className="w-full h-full object-cover" />
                                                     ) : (
-                                                        <div className="h-full w-full flex items-center justify-center text-slate-300">
-                                                            <UserGroupIcon className="h-6 w-6" />
-                                                        </div>
+                                                        <div className="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-500 font-black text-lg">{m.name[0]}</div>
                                                     )}
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{member.name}</p>
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">{m.name}</span>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        {m.role && <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">{m.role}</span>}
+                                                        {m.role && m.bio && <span className="text-slate-300 dark:text-slate-600">•</span>}
+                                                        {m.bio && <span className="text-[10px] text-slate-400 dark:text-slate-500 max-w-xs truncate">{m.bio}</span>}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-4 py-5 font-bold text-slate-700 text-xs">{member.role}</td>
-                                        <td className="px-4 py-5 text-xs font-semibold text-slate-500">{member.order}</td>
-                                        <td className="pr-8 py-5 text-right">
-                                            {canManageContent && (
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <button onClick={() => handleEdit(member)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all">
-                                                        <PencilSquareIcon className="h-4 w-4" />
-                                                    </button>
-                                                    <button onClick={() => handleDeleteClick(member.id)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 transition-all">
-                                                        <TrashIcon className="h-4 w-4" />
-                                                    </button>
-                                                </div>
-                                            )}
+                                        <td className="px-8 py-6 text-center">
+                                            <button onClick={() => toggleActive(m)} className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors ${m.isActive ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-100' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200'}`}>
+                                                {m.isActive ? 'Active' : 'Hidden'}
+                                            </button>
+                                        </td>
+                                        <td className="pr-10 py-6 text-right">
+                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => openEdit(m)} className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-500/50 transition-all shadow-sm">
+                                                    <PencilSquareIcon className="h-4 w-4" />
+                                                </button>
+                                                <button onClick={() => setDeleteId(m.id)} className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-500/50 transition-all shadow-sm">
+                                                    <TrashIcon className="h-4 w-4" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
+
+            {modalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col ring-1 ring-slate-200 dark:ring-white/10">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+                            <h2 className="text-base font-black text-slate-900 dark:text-white">{editingId ? 'Edit Member' : 'Add Member'}</h2>
+                            <button onClick={() => setModalOpen(false)} className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                                <XMarkIcon className="h-5 w-5" />
+                            </button>
+                        </div>
+                        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Name *</label>
+                                <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                    className="w-full border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Role / Title</label>
+                                <input type="text" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} placeholder="e.g. Senior Developer"
+                                    className="w-full border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Bio</label>
+                                <textarea value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} rows={3} placeholder="Short bio..."
+                                    className="w-full border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 resize-none" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Avatar URL</label>
+                                <input type="url" value={form.avatar} onChange={e => setForm(f => ({ ...f, avatar: e.target.value }))} placeholder="/uploads/photo.jpg"
+                                    className="w-full border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                {['linkedin', 'twitter', 'github'].map(key => (
+                                    <div key={key}>
+                                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 capitalize">{key}</label>
+                                        <input type="url" value={(form.socialLinks as any)[key] || ''} onChange={e => setForm(f => ({ ...f, socialLinks: { ...f.socialLinks, [key]: e.target.value } }))}
+                                            placeholder={`https://${key}.com/...`}
+                                            className="w-full border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                                    </div>
+                                ))}
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Order</label>
+                                    <input type="number" value={form.order} onChange={e => setForm(f => ({ ...f, order: parseInt(e.target.value) || 0 }))} min={0}
+                                        className="w-full border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between py-2 border-t border-slate-100 dark:border-white/[0.06]">
+                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Visible on site</span>
+                                <div onClick={() => setForm(f => ({ ...f, isActive: !f.isActive }))}
+                                    className={`w-10 h-6 rounded-full transition-colors cursor-pointer relative ${form.isActive ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'}`}>
+                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.isActive ? 'translate-x-5' : 'translate-x-1'}`} />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 dark:border-white/[0.06] bg-slate-50 dark:bg-slate-950/50">
+                            <button onClick={() => setModalOpen(false)} className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
+                            <button onClick={handleSave} disabled={isSaving} className="px-5 py-2 text-sm font-semibold border border-blue-600/60 dark:border-blue-500/40 text-blue-600 dark:text-blue-400 bg-transparent rounded-xl hover:bg-blue-50 dark:hover:bg-blue-500/[0.08] disabled:opacity-50 transition-colors flex items-center gap-2">
+                                {isSaving && <div className="w-3.5 h-3.5 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />}
+                                {editingId ? 'Save Changes' : 'Add Member'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <AlertDialog
-                isOpen={deleteConfirmation.isOpen}
+                isOpen={!!deleteId}
+                onCancel={() => setDeleteId(null)}
+                onConfirm={handleDelete}
                 title="Delete Team Member"
-                description="Are you sure you want to delete this team member? This action cannot be undone."
-                confirmLabel="Delete Member"
-                cancelLabel="Cancel"
+                description="Are you sure you want to delete this team member? This cannot be undone."
+                confirmLabel="Delete"
                 variant="danger"
-                onConfirm={confirmDelete}
-                onCancel={cancelDelete}
             />
         </div>
-    );
-}
-
-export default function TeamPage() {
-    return (
-        <Suspense fallback={
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-        }>
-            <TeamPageContent />
-        </Suspense>
     );
 }

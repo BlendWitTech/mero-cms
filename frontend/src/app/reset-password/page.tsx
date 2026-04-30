@@ -5,8 +5,9 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { LockClosedIcon, EyeIcon, EyeSlashIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { useNotification } from '@/context/NotificationContext';
+import { getApiBaseUrl } from '@/lib/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = getApiBaseUrl();
 
 function ResetPasswordInner() {
     const { showToast } = useNotification();
@@ -24,7 +25,7 @@ function ResetPasswordInner() {
     const [isDone, setIsDone] = useState(false);
     const [isInvalid, setIsInvalid] = useState(false);
     const [settings, setSettings] = useState({
-        cms_title: 'Blendwit CMS',
+        cms_title: 'Mero CMS',
         cms_subtitle: 'Elevate Your Content Strategy',
         cms_login_avatar: '/assets/boy_idea_shock.png',
     });

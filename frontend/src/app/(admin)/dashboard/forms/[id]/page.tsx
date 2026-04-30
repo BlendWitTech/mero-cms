@@ -3,13 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
     ArrowLeftIcon,
-    ClipboardDocumentListIcon,
     TrashIcon,
     InboxIcon,
     ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter, useParams } from 'next/navigation';
-import { apiRequest } from '@/lib/api';
+import { apiRequest, getApiBaseUrl } from '@/lib/api';
 import { useNotification } from '@/context/NotificationContext';
 import AlertDialog from '@/components/ui/AlertDialog';
 
@@ -91,9 +90,9 @@ export default function FormSubmissionsPage() {
     if (isLoading) {
         return (
             <div className="p-6 max-w-5xl mx-auto">
-                <div className="h-8 w-48 bg-slate-100 animate-pulse rounded-xl mb-6" />
+                <div className="content-skeleton h-8 w-48 mb-6" />
                 <div className="space-y-3">
-                    {[1, 2, 3].map(i => <div key={i} className="h-16 bg-slate-50 animate-pulse rounded-2xl" />)}
+                    {[1, 2, 3].map(i => <div key={i} className="content-skeleton h-16" />)}
                 </div>
             </div>
         );
@@ -111,31 +110,28 @@ export default function FormSubmissionsPage() {
     }
 
     return (
-        <div className="p-6 max-w-5xl mx-auto">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => router.push('/dashboard/forms')}
-                        className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                        className="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors"
                     >
                         <ArrowLeftIcon className="h-4 w-4" />
                     </button>
-                    <div className="p-2 bg-blue-50 rounded-xl">
-                        <ClipboardDocumentListIcon className="h-5 w-5 text-blue-600" />
-                    </div>
                     <div>
-                        <h1 className="text-xl font-black text-slate-900">{form.name}</h1>
-                        <p className="text-xs text-slate-400">
+                        <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{form.name}</h1>
+                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
                             {submissions.length} submission{submissions.length !== 1 ? 's' : ''}
                         </p>
                     </div>
                 </div>
                 {submissions.length > 0 && (
                     <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/forms/${form.id}/submissions/export/csv`}
+                        href={`${getApiBaseUrl()}/forms/${form.id}/submissions/export/csv`}
                         download={`${form.slug}-submissions.csv`}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all whitespace-nowrap"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 font-black text-[11px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/[0.08] transition-all active:scale-95 whitespace-nowrap"
                     >
                         <ArrowDownTrayIcon className="h-4 w-4" />
                         Export CSV

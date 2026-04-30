@@ -3,6 +3,7 @@
 import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { setAuthToken } from '@/lib/auth';
+import { getApiBaseUrl } from '@/lib/api';
 
 /**
  * Token-login page — handles two flows:
@@ -24,11 +25,12 @@ function TokenLoginInner() {
         }
 
         if (isDemo) {
-            fetch('/api/demo/login')
+            const apiBase = getApiBaseUrl();
+            fetch(`${apiBase}/demo/login`)
                 .then(r => r.json())
                 .then(data => {
                     if (data?.access_token) {
-                        setAuthToken(data.access_token);
+                        setAuthToken(data.access_token, false, data.refresh_token);
                         router.replace('/dashboard');
                     } else {
                         router.replace('/');

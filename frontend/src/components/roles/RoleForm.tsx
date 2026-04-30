@@ -37,6 +37,7 @@ import { useForm } from '@/context/FormContext'; import {
     LockClosedIcon
 } from '@heroicons/react/24/outline';
 import IconPicker from '@/components/ui/IconPicker';
+import UnsavedChangesAlert from '@/components/ui/UnsavedChangesAlert';
 
 interface RoleFormProps {
     initialData?: any;
@@ -81,6 +82,7 @@ export default function RoleForm({ initialData, onSave, isLoading: externalLoadi
     });
     const [icon, setIcon] = useState('ShieldCheckIcon');
     const [isSaving, setIsSaving] = useState(false);
+    const [showUnsavedAlert, setShowUnsavedAlert] = useState(false);
 
     // Capture initial state for comparison
     const [initialState, setInitialState] = useState<{ name: string, icon: string, level: number, permissions: any }>({
@@ -175,11 +177,9 @@ export default function RoleForm({ initialData, onSave, isLoading: externalLoadi
 
     const handleCancelClick = () => {
         if (checkDirty()) {
-            if (confirm('You have unsaved changes. Are you sure you want to discard them?')) {
-                setIsDirty(false);
-                router.push('/dashboard/roles');
-            }
+            setShowUnsavedAlert(true);
         } else {
+            setIsDirty(false);
             router.push('/dashboard/roles');
         }
     };
@@ -521,6 +521,18 @@ export default function RoleForm({ initialData, onSave, isLoading: externalLoadi
                     })}
                 </div>
             </div>
+
+            <UnsavedChangesAlert
+                isOpen={showUnsavedAlert}
+                onSaveAndExit={saveChanges}
+                onDiscardAndExit={() => {
+                    setShowUnsavedAlert(false);
+                    setIsDirty(false);
+                    router.push('/dashboard/roles');
+                }}
+                onCancel={() => setShowUnsavedAlert(false)}
+                isSaving={isSaving}
+            />
         </form>
     );
 }

@@ -10,7 +10,8 @@ import {
     CheckBadgeIcon,
     ShieldCheckIcon,
     KeyIcon,
-    XMarkIcon
+    XMarkIcon,
+    UsersIcon
 } from '@heroicons/react/24/outline';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -25,6 +26,7 @@ import TwoFactorSetup from '@/components/auth/TwoFactorSetup';
 import { useNotification } from '@/context/NotificationContext';
 import { formatDistanceToNow } from 'date-fns';
 import PermissionGuard from '@/components/auth/PermissionGuard';
+import PageHeader from '@/components/ui/PageHeader';
 
 function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ');
@@ -151,6 +153,17 @@ function UsersPageContent() {
         }
     };
 
+    const handleUnlock = async (user: any) => {
+        try {
+            await apiRequest(`/users/${user.id}/unlock`, { method: 'PATCH' });
+            showToast(`Unlocked ${user.name || user.email}`, 'success');
+            fetchUsers();
+            fetchStats();
+        } catch (error: any) {
+            showToast(error.message || 'Failed to unlock user', 'error');
+        }
+    };
+
     const toggleUser = (id: string) => {
         if (selectedUsers.includes(id)) {
             setSelectedUsers(selectedUsers.filter(u => u !== id));
@@ -239,7 +252,7 @@ function UsersPageContent() {
     const endItem = Math.min(pagination.skip + pagination.take, totalUsers);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <InviteUserModal
                 isOpen={isInviteModalOpen}
                 onClose={() => setIsInviteModalOpen(false)}
@@ -266,69 +279,75 @@ function UsersPageContent() {
                 confirmText="Deactivate Account"
                 variant="danger"
             />
-            {/* Page Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-2">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight font-display">
-                        User <span className="text-blue-600 font-bold">Management</span>
-                    </h1>
-                    <p className="mt-1 text-xs text-slate-500 font-semibold tracking-tight">Manage your team members and their roles.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setIs2faModalOpen(true)}
-                        className="inline-flex items-center gap-x-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 transition-all active:scale-95 leading-none"
-                    >
-                        <ShieldCheckIcon className="h-4 w-4 text-emerald-600" />
-                        Configure 2FA
-                    </button>
-                    <PermissionGuard permission="users_create">
+            <PageHeader
+                title="User"
+                accent="Management"
+                subtitle="Manage your team members and their roles."
+                actions={
+                    <>
                         <button
-                            onClick={() => setIsInviteModalOpen(true)}
-                            className="inline-flex items-center gap-x-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 leading-none"
+                            onClick={() => setIs2faModalOpen(true)}
+                            className="btn-outline px-4 py-2.5 text-[11px]"
                         >
-                            <PlusIcon className="h-4 w-4" strokeWidth={3} />
-                            Invite New User
+                            <ShieldCheckIcon className="h-3.5 w-3.5 text-emerald-500" />
+                            2FA
                         </button>
-                    </PermissionGuard>
-                </div>
-            </div>
-
-            {/* Detailed Filters Component */}
-            <div className="px-2">
-                <UserFilters onFilterChange={handleFilterChange} />
-            </div>
+                        <PermissionGuard permission="users_create">
+                            <button
+                                onClick={() => setIsInviteModalOpen(true)}
+                                className="btn-primary px-6 py-3 text-sm"
+                            >
+                                <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                                Invite User
+                            </button>
+                        </PermissionGuard>
+                    </>
+                }
+            />
 
             {/* Stats Summary */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 px-2">
-                {[
-                    { label: 'Total Users', value: stats.total, detail: 'Accounts', color: 'blue' },
-                    { label: 'Standard Users', value: stats.active, detail: 'Verified', color: 'emerald' },
-                    { label: 'New This Month', value: stats.recent, detail: 'Last 30d', color: 'purple' },
-                    { label: 'Pending Invitations', value: stats.pending, detail: 'Awaiting', color: 'amber' },
-                ].map((stat) => (
-                    <div key={stat.label} className="relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm border border-slate-200 group hover:shadow-xl hover:shadow-slate-200 hover:-translate-y-1 transition-all duration-500 cursor-default">
-                        <div className={`absolute top-0 right-0 w-24 h-24 mt-[-20px] mr-[-20px] bg-${stat.color}-500/5 rounded-full blur-2xl group-hover:bg-${stat.color}-500/15 transition-all duration-700 group-hover:scale-150`}></div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest relative z-10">{stat.label}</p>
-                        <div className="mt-2 flex items-baseline gap-2 relative z-10">
-                            <p className="text-xl font-bold text-slate-900 tracking-tight group-hover:translate-x-0.5 transition-transform duration-500">{stat.value}</p>
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-${stat.color}-100 text-${stat.color}-600 ring-1 ring-${stat.color}-600/10 group-hover:scale-110 transition-transform duration-500`}>
-                                {stat.detail}
-                            </span>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {isLoading ? (
+                    [1, 2, 3, 4].map((i) => <div key={i} className="content-skeleton h-28 rounded-2xl" />)
+                ) : [
+                    { label: 'Total Users', value: stats.total, detail: 'Accounts', icon: UsersIcon, color: 'blue' },
+                    { label: 'Active Now', value: stats.active, detail: 'Verified', icon: ShieldCheckIcon, color: 'emerald' },
+                    { label: 'New This Month', value: stats.recent, detail: 'Last 30d', icon: UserCircleIcon, color: 'purple' },
+                    { label: 'Invitations', value: stats.pending, detail: 'Awaiting', icon: KeyIcon, color: 'amber' },
+                ].map((stat) => {
+                    const StatIcon = stat.icon;
+                    return (
+                        <div key={stat.label} className="group relative overflow-hidden rounded-[2rem] bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-6 shadow-2xl shadow-slate-900/5 border border-slate-100 dark:border-white/[0.06] hover:-translate-y-1 transition-all duration-500">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{stat.label}</p>
+                                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{stat.value}</h3>
+                                    <span className={`inline-flex items-center mt-2 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-${stat.color}-50 dark:bg-${stat.color}-900/30 text-${stat.color}-600 dark:text-${stat.color}-400`}>
+                                        {stat.detail}
+                                    </span>
+                                </div>
+                                <div className={`p-3 rounded-2xl bg-${stat.color}-500/10 text-${stat.color}-600 dark:text-${stat.color}-400 group-hover:bg-${stat.color}-600 group-hover:text-white transition-all duration-500`}>
+                                    <StatIcon className="h-6 w-6" />
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
-            {/* Table Section */}
-            <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden text-sm font-medium">
-                <div className="p-6 border-b border-slate-100 bg-slate-50/10 flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-slate-900 font-display">User Records</h3>
+            <UserFilters inline onFilterChange={handleFilterChange} />
+
+            {/* Unified Content Card */}
+            <div className="bg-white/50 dark:bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-900/5 border border-slate-100 dark:border-white/[0.06] overflow-hidden transition-all duration-500">
+                <div className="p-8 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                    <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">User Database</h3>
                     {selectedUsers.length > 0 && (
                         <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4 duration-300">
-                            <span className="text-xs font-bold text-slate-500">{selectedUsers.length} selected</span>
-                            <button className="text-xs font-bold text-red-600 hover:text-red-700">Bulk Delete</button>
-                            <button className="text-xs font-bold text-blue-600 hover:text-blue-700">Change Role</button>
+                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{selectedUsers.length} selected</span>
+                            <div className="flex items-center gap-2">
+                                <button className="btn-destructive px-3 py-1.5 text-[10px]">Bulk Delete</button>
+                                <button className="btn-outline px-3 py-1.5 text-[10px]">Change Role</button>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -336,24 +355,53 @@ function UsersPageContent() {
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[700px] text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-slate-100">
-                                <th className="pl-6 py-4 w-12 text-center">
+                            <tr className="border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.02]">
+                                <th className="pl-10 py-5 w-12 text-center">
                                     <input
                                         type="checkbox"
-                                        className="h-4 w-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-600/20"
-                                        checked={selectedUsers.length === users.length}
+                                        className="h-4 w-4 rounded-md border-slate-300 dark:border-white/10 dark:bg-slate-950 text-blue-600 focus:ring-blue-600/20"
+                                        checked={selectedUsers.length === users.length && users.length > 0}
                                         onChange={toggleAll}
                                     />
                                 </th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-display">User</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-display">Role</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-display">Status</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-display">Last Active</th>
-                                <th className="pr-6 py-4 text-right"></th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">User Details</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Security Role</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Status</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Activity</th>
+                                <th className="pr-10 py-5 text-right"></th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {users.map((user) => {
+                        <tbody className="divide-y divide-slate-50 dark:divide-white/5">
+                            {isLoading ? (
+                                [1, 2, 3, 4, 5].map((index) => (
+                                    <tr key={index}>
+                                        <td className="pl-6 py-4">
+                                            <div className="h-4 bg-slate-200 rounded-full w-4/5 animate-pulse" />
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <div className="h-4 bg-slate-200 rounded-full w-32 animate-pulse" />
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <div className="h-4 bg-slate-200 rounded-full w-20 animate-pulse" />
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <div className="h-4 bg-slate-200 rounded-full w-24 animate-pulse" />
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <div className="h-4 bg-slate-200 rounded-full w-16 animate-pulse ml-auto" />
+                                        </td>
+                                        <td className="pr-6 py-4 text-right">
+                                            <div className="h-4 bg-slate-200 rounded-full w-12 ml-auto animate-pulse" />
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : users.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="px-8 py-20 text-center text-slate-500">
+                                        No users found for the current filter.
+                                    </td>
+                                </tr>
+                            ) : users.map((user) => {
                                 const roleName = user.type === 'User'
                                     ? user.role?.name
                                     : (roles.find((r: any) => r.id === user.roleId)?.name ?? user.roleId);
@@ -371,12 +419,12 @@ function UsersPageContent() {
                                 return (
                                     <tr key={user.id} className={classNames(
                                         "group transition-colors",
-                                        user.status === 'DEACTIVATED' ? 'bg-slate-50/80 grayscale-[0.2]' : 'hover:bg-slate-50/50'
+                                        user.status === 'DEACTIVATED' ? 'bg-slate-50/80 dark:bg-slate-900/60 grayscale-[0.2]' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/50'
                                     )}>
                                         <td className="pl-6 py-4 text-center">
                                             <input
                                                 type="checkbox"
-                                                className="h-4 w-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-600/20"
+                                                className="h-4 w-4 rounded-md border-slate-300 dark:border-white/10 dark:bg-slate-950 text-blue-600 focus:ring-blue-600/20"
                                                 checked={selectedUsers.includes(user.id)}
                                                 onChange={() => toggleUser(user.id)}
                                             />
@@ -385,8 +433,8 @@ function UsersPageContent() {
                                             <div className="flex items-center gap-3">
                                                 <div className="relative">
                                                     <div className={classNames(
-                                                        "h-10 w-10 rounded-xl flex items-center justify-center text-slate-400 ring-1 ring-slate-200",
-                                                        user.status === 'DEACTIVATED' ? 'bg-slate-200' : 'bg-slate-100'
+                                                        "h-10 w-10 rounded-xl flex items-center justify-center text-slate-400 ring-1 ring-slate-200 dark:ring-white/10",
+                                                        user.status === 'DEACTIVATED' ? 'bg-slate-200 dark:bg-slate-800' : 'bg-slate-100 dark:bg-slate-900'
                                                     )}>
                                                         <UserCircleIcon className="h-6 w-6" />
                                                     </div>
@@ -400,7 +448,7 @@ function UsersPageContent() {
                                                     <div className="flex items-center gap-2">
                                                         <p className={classNames(
                                                             "text-sm font-bold leading-none",
-                                                            user.status === 'DEACTIVATED' ? 'text-slate-500 line-through decoration-slate-300' : 'text-slate-900'
+                                                            user.status === 'DEACTIVATED' ? 'text-slate-500 dark:text-slate-500 line-through decoration-slate-300 dark:decoration-slate-600' : 'text-slate-900 dark:text-white'
                                                         )}>{user.name || user.email.split('@')[0]}</p>
                                                         {user.twoFactorEnabled && (
                                                             <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-50 text-[8px] font-black text-emerald-600 ring-1 ring-emerald-600/10 uppercase tracking-tighter" title="2FA Active">
@@ -409,14 +457,14 @@ function UsersPageContent() {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-xs font-semibold text-slate-500 mt-1">{user.email}</p>
+                                                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">{user.email}</p>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-4 py-4">
                                             <span className={classNames(
                                                 "inline-flex items-center gap-x-1.5 rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider ring-1 ring-inset",
-                                                user.status === 'DEACTIVATED' ? 'bg-slate-100 text-slate-400 ring-slate-200' : roleInfo.color
+                                                user.status === 'DEACTIVATED' ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 ring-slate-200 dark:ring-white/10' : roleInfo.color
                                             )}>
                                                 <roleInfo.icon className="h-3 w-3" />
                                                 {roleName}
@@ -432,8 +480,8 @@ function UsersPageContent() {
                                                 )}></div>
                                                 <span className={classNames(
                                                     "text-xs font-bold",
-                                                    user.status === 'Pending' ? 'text-blue-600' :
-                                                        user.status === 'DEACTIVATED' ? 'text-red-600' : 'text-slate-700'
+                                                    user.status === 'Pending' ? 'text-blue-600 dark:text-blue-400' :
+                                                        user.status === 'DEACTIVATED' ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-slate-300'
                                                 )}>{user.type === 'User' ? (user.status === 'DEACTIVATED' ? 'Deactivated' : 'Active') : user.status}</span>
                                             </div>
                                         </td>
@@ -445,15 +493,15 @@ function UsersPageContent() {
                                         <td className="pr-6 py-4 text-right">
                                             {user.status === 'Pending' ? (
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <button onClick={() => handleResend(user.id)} className="px-3 py-1.5 text-[10px] font-bold text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-blue-100 uppercase tracking-widest whitespace-nowrap">Resend</button>
-                                                    <button onClick={() => handleRevoke(user.id)} className="px-3 py-1.5 text-[10px] font-bold text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all uppercase tracking-widest">Revoke</button>
+                                                    <button onClick={() => handleResend(user.id)} className="btn-outline px-3 py-1.5 text-[10px]">Resend</button>
+                                                    <button onClick={() => handleRevoke(user.id)} className="btn-ghost px-3 py-1.5 text-[10px] text-slate-400 hover:text-red-600">Revoke</button>
                                                 </div>
                                             ) : (
                                                 <div className="flex items-center justify-end gap-2">
                                                     {user.status === 'DEACTIVATED' ? (
                                                         <button
                                                             onClick={() => { setUserToReactivate(user); setIsReactivateModalOpen(true); }}
-                                                            className="px-3 py-1.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all border border-emerald-100 uppercase tracking-widest"
+                                                            className="btn-outline px-3 py-1.5 text-[10px] text-emerald-600 hover:text-emerald-700 border-emerald-100 hover:border-emerald-200"
                                                         >
                                                             Reactivate
                                                         </button>
@@ -462,14 +510,24 @@ function UsersPageContent() {
                                                             {/* Only show actions if current user is hierarchical superior and NOT targeting themselves */}
                                                             {currentUser && currentUser.id !== user.id && (currentUser.role.level === 0 || (user.role?.level !== undefined && currentUser.role.level < user.role.level)) ? (
                                                                 <>
+                                                                    {/* Unlock: only surfaced when the user is currently inside their lockout window. */}
+                                                                    {user.lockoutUntil && new Date(user.lockoutUntil) > new Date() && (
+                                                                        <button
+                                                                            onClick={() => handleUnlock(user)}
+                                                                            className="btn-outline px-3 py-1.5 text-[10px] text-amber-600 hover:text-amber-700 border-amber-200 hover:border-amber-300"
+                                                                            title="Clear failed-login lockout"
+                                                                        >
+                                                                            Unlock
+                                                                        </button>
+                                                                    )}
                                                                     <button
                                                                         onClick={() => handleDeactivate(user)}
-                                                                        className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all group/action"
+                                                                        className="btn-ghost p-2 text-slate-400 hover:text-red-600"
                                                                         title="Deactivate Account"
                                                                     >
                                                                         <XMarkIcon className="h-5 w-5" />
                                                                     </button>
-                                                                    <button className="p-2 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all">
+                                                                    <button className="btn-ghost p-2 text-slate-400">
                                                                         <EllipsisVerticalIcon className="h-5 w-5" />
                                                                     </button>
                                                                 </>
@@ -490,22 +548,22 @@ function UsersPageContent() {
                     </table>
                 </div>
 
-                <div className="p-6 border-t border-slate-100 flex items-center justify-between">
-                    <p className="text-xs font-bold text-slate-500">
-                        Showing <span className="text-slate-900">{startItem}</span> to <span className="text-slate-900">{endItem}</span> of <span className="text-slate-900">{totalUsers}</span> results
+                <div className="p-6 border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                        Showing <span className="text-slate-900 dark:text-white">{startItem}</span> to <span className="text-slate-900 dark:text-white">{endItem}</span> of <span className="text-slate-900 dark:text-white">{totalUsers}</span> results
                     </p>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={handlePrevPage}
                             disabled={pagination.skip === 0}
-                            className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50"
+                            className="btn-outline px-4 py-2 text-xs"
                         >
                             Previous
                         </button>
                         <button
                             onClick={handleNextPage}
                             disabled={pagination.skip + pagination.take >= totalUsers}
-                            className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50"
+                            className="btn-primary px-4 py-2 text-xs"
                         >
                             Next
                         </button>

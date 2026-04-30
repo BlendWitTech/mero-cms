@@ -44,6 +44,8 @@ import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import { useNotification } from '@/context/NotificationContext';
 import { apiRequest } from '@/lib/api';
 import RoleForm from '@/components/roles/RoleForm';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import PageHeader from '@/components/ui/PageHeader';
 
 function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ');
@@ -269,7 +271,7 @@ function RolesPageContent() {
     }
 
     return (
-        <div className="space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <ConfirmationModal
                 isOpen={confirmModal.isOpen}
                 onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
@@ -281,82 +283,69 @@ function RolesPageContent() {
                 confirmText="Delete Role"
             />
 
-            {/* Page Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-2">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight font-display">
-                        Roles & <span className="text-blue-600 font-bold">Permissions</span>
-                    </h1>
-                    <p className="mt-1 text-xs text-slate-500 font-semibold tracking-tight">Define access levels and security policies.</p>
-                </div>
+            <PageHeader 
+                title="Security" 
+                accent="Policies" 
+                subtitle="Define access levels and security permissions for your team."
+                actions={
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center p-1 bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-100 dark:border-white/5 shadow-sm">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={classNames(
+                                    "p-2 rounded-lg transition-all",
+                                    viewMode === 'grid' ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                )}
+                            >
+                                <Squares2X2Icon className="h-5 w-5" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={classNames(
+                                    "p-2 rounded-lg transition-all",
+                                    viewMode === 'list' ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                )}
+                            >
+                                <QueueListIcon className="h-5 w-5" />
+                            </button>
+                        </div>
 
-                <div className="flex items-center gap-4">
-                    {/* View Toggle */}
-                    <div className="flex items-center p-1 bg-slate-100/80 backdrop-blur-sm rounded-xl border border-slate-200">
                         <button
-                            onClick={() => setViewMode('grid')}
-                            className={classNames(
-                                "p-2 rounded-lg transition-all",
-                                viewMode === 'grid' ? "bg-white text-blue-600 shadow-sm ring-1 ring-black/5" : "text-slate-400 hover:text-slate-600"
-                            )}
+                            onClick={handleCreate}
+                            disabled={isLoading}
+                            className="inline-flex items-center gap-x-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 leading-none disabled:opacity-50"
                         >
-                            <Squares2X2Icon className="h-5 w-5" />
-                        </button>
-                        <button
-                            onClick={() => setViewMode('list')}
-                            className={classNames(
-                                "p-2 rounded-lg transition-all",
-                                viewMode === 'list' ? "bg-white text-blue-600 shadow-sm ring-1 ring-black/5" : "text-slate-400 hover:text-slate-600"
-                            )}
-                        >
-                            <QueueListIcon className="h-5 w-5" />
+                            <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                            New Role
                         </button>
                     </div>
+                }
+            />
 
-                    <button
-                        onClick={handleCreate}
-                        className="inline-flex items-center gap-x-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 leading-none"
-                    >
-                        <PlusIcon className="h-4 w-4" strokeWidth={3} />
-                        New Role
-                    </button>
-                </div>
-            </div>
-
-            {/* Content View */}
             {viewMode === 'grid' ? (
-                /* Grid View */
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {isLoading ? (
-                        [1, 2, 3].map(i => (
-                            <div key={i} className="h-64 rounded-[2.5rem] bg-slate-100 animate-pulse" />
-                        ))
+                        [1, 2, 3].map(i => <div key={i} className="content-skeleton h-64 rounded-[2.5rem]" />)
                     ) : (
                         roles.map((role) => {
                             const RoleIcon = iconMap[role.icon || 'ShieldCheckIcon'] || ShieldCheckIcon;
                             const isSystemRole = role.name === 'Super Admin' || role.name === 'Admin';
 
                             return (
-                                <div key={role.id} className="group relative overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-sm border border-slate-200 hover:shadow-xl hover:shadow-slate-200 hover:-translate-y-1 transition-all duration-500">
+                                <div key={role.id} className="group relative overflow-hidden rounded-[2.5rem] bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-8 shadow-2xl shadow-slate-900/5 border border-slate-100 dark:border-white/[0.06] hover:-translate-y-1 transition-all duration-500">
                                     <div className="flex items-start justify-between mb-6">
                                         <div className={classNames(
                                             "p-4 rounded-2xl border transition-all duration-500",
-                                            isSystemRole ? "bg-blue-600 border-blue-700 text-white shadow-lg shadow-blue-500/20" : "bg-slate-50 border-slate-100 text-slate-400 group-hover:bg-blue-600 group-hover:border-blue-700 group-hover:text-white"
+                                            isSystemRole ? "bg-blue-600 border-blue-700 text-white shadow-lg shadow-blue-500/20" : "bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/5 text-slate-400 group-hover:bg-blue-600 group-hover:border-blue-700 group-hover:text-white"
                                         )}>
                                             <RoleIcon className="h-6 w-6" />
                                         </div>
                                         <div className="flex items-center gap-2 relative z-10">
-                                            <button
-                                                onClick={() => handleEdit(role)}
-                                                className="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"
-                                            >
+                                            <button onClick={() => handleEdit(role)} className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-400 hover:text-blue-600 transition-all shadow-sm">
                                                 <PencilSquareIcon className="h-4 w-4" />
                                             </button>
                                             {!isSystemRole && (
-                                                <button
-                                                    onClick={() => handleDelete(role.id)}
-                                                    className="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 transition-all shadow-sm"
-                                                >
+                                                <button onClick={() => handleDelete(role.id)} className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-400 hover:text-red-600 transition-all shadow-sm">
                                                     <TrashIcon className="h-4 w-4" />
                                                 </button>
                                             )}
@@ -366,77 +355,62 @@ function RolesPageContent() {
                                     <div className="space-y-4">
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <h3 className="text-lg font-bold text-slate-900 font-display">{role.name}</h3>
-                                                {isSystemRole && (
-                                                    <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-[8px] font-black text-blue-600 ring-1 ring-blue-600/10 uppercase tracking-tighter">System</span>
-                                                )}
+                                                <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">{role.name}</h3>
+                                                {isSystemRole && <span className="px-1.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-[8px] font-black text-blue-600 dark:text-blue-400 ring-1 ring-blue-600/10 uppercase tracking-tighter">System</span>}
                                             </div>
-                                            <p className="text-xs font-bold text-slate-400 flex items-center gap-1.5 mt-1">
+                                            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5 mt-1">
                                                 <UsersIcon className="h-3 w-3" />
                                                 {role.users?.length || 0} Members Assigned
                                             </p>
                                         </div>
-
                                         <div className="flex flex-wrap gap-2 pt-2">
-                                            <div className="flex flex-wrap gap-2 pt-2">
-                                                {renderPermissionBadges(role)}
-                                            </div>
+                                            {renderPermissionBadges(role)}
                                         </div>
                                     </div>
-
-                                    {/* Decorative background element */}
-                                    <div className={classNames(
-                                        "absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full blur-3xl transition-colors duration-700",
-                                        isSystemRole ? "bg-blue-600/10" : "bg-blue-600/5 group-hover:bg-blue-600/10"
-                                    )}></div>
                                 </div>
                             );
                         })
                     )}
                 </div>
             ) : (
-                /* List View */
-                <div className="mx-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-900/5 border border-slate-100 dark:border-white/[0.06] overflow-hidden transition-all duration-500">
                     <div className="overflow-x-auto">
                         <table className="w-full min-w-[700px] text-left border-collapse">
                             <thead>
-                                <tr className="bg-slate-50/50 border-b border-slate-100">
-                                    <th className="pl-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Role Name</th>
-                                    <th className="px-6 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Members</th>
-                                    <th className="px-6 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Permissions</th>
-                                    <th className="pr-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                <tr className="border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.02]">
+                                    <th className="pl-10 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Role Details</th>
+                                    <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Members</th>
+                                    <th className="px-6 py-5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Permissions</th>
+                                    <th className="pr-10 py-5 text-right"></th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-50">
+                            <tbody className="divide-y divide-slate-50 dark:divide-white/5">
                                 {roles.map((role) => {
                                     const RoleIcon = iconMap[role.icon || 'ShieldCheckIcon'] || ShieldCheckIcon;
                                     const isSystemRole = role.name === 'Super Admin' || role.name === 'Admin';
-
                                     return (
-                                        <tr key={role.id} className="group hover:bg-slate-50/30 transition-colors">
-                                            <td className="pl-8 py-4">
+                                        <tr key={role.id} className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
+                                            <td className="pl-10 py-6">
                                                 <div className="flex items-center gap-4">
                                                     <div className={classNames(
                                                         "p-2.5 rounded-xl border transition-colors",
-                                                        isSystemRole ? "bg-blue-50 border-blue-100 text-blue-600" : "bg-white border-slate-200 text-slate-400 group-hover:border-blue-200 group-hover:text-blue-500"
+                                                        isSystemRole ? "bg-blue-50 dark:bg-blue-900/30 border-blue-100 dark:border-blue-500/20 text-blue-600 dark:text-blue-400" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 text-slate-400 group-hover:border-blue-200 group-hover:text-blue-500"
                                                     )}>
                                                         <RoleIcon className="h-5 w-5" />
                                                     </div>
-                                                    <div>
+                                                    <div className="flex flex-col">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-sm font-bold text-slate-900">{role.name}</span>
-                                                            {isSystemRole && <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-[9px] font-black text-blue-600 uppercase tracking-tighter">System</span>}
+                                                            <span className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">{role.name}</span>
+                                                            {isSystemRole && <span className="px-1.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter">System</span>}
                                                         </div>
-                                                        <span className="text-[11px] font-semibold text-slate-400 hidden sm:inline-block">
-                                                            {isSystemRole ? "Core System Role" : "Custom Role"}
-                                                        </span>
+                                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{isSystemRole ? "Core System Access" : "Custom Security Policy"}</span>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2 text-slate-500">
-                                                    <UsersIcon className="h-4 w-4 text-slate-400" />
-                                                    <span className="text-xs font-bold">{role.users?.length || 0}</span>
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-black text-slate-900 dark:text-white">{role.users?.length || 0}</span>
+                                                    <span className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest mt-0.5">Assigned Members</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
@@ -444,21 +418,13 @@ function RolesPageContent() {
                                                     {renderPermissionBadges(role, 4)}
                                                 </div>
                                             </td>
-                                            <td className="pr-8 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <button
-                                                        onClick={() => handleEdit(role)}
-                                                        className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                                        title="Edit Role"
-                                                    >
+                                            <td className="pr-10 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => handleEdit(role)} className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-400 hover:text-blue-600 transition-all shadow-sm">
                                                         <PencilSquareIcon className="h-4 w-4" />
                                                     </button>
                                                     {!isSystemRole && (
-                                                        <button
-                                                            onClick={() => handleDelete(role.id)}
-                                                            className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                                            title="Delete Role"
-                                                        >
+                                                        <button onClick={() => handleDelete(role.id)} className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-400 hover:text-red-600 transition-all shadow-sm">
                                                             <TrashIcon className="h-4 w-4" />
                                                         </button>
                                                     )}
@@ -471,8 +437,7 @@ function RolesPageContent() {
                         </table>
                     </div>
                 </div>
-            )
-            }
+            )}
         </div>
     );
 }
